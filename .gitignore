@@ -1,0 +1,15 @@
+# Dependencies and builds (recreated with npm install / npm run build / npm run package)
+node_modules
+dist
+release
+
+# Python environment for the model tools (recreated with pip)
+.venv-stems
+
+# Stem model (166 MB, over GitHub's file limit): recreate it with
+#   .venv-stems/bin/python tools/export_demucs_onnx.py public/models/htdemucs.onnx
+public/models/*.onnx
+
+# Local tooling and macOS
+.claude
+.DS_Store

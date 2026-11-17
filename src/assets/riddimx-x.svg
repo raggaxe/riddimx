@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- RiddimX: an X painted in the three colours of reggae (red, gold, green), one band each. -->
+  <defs>
+    <clipPath id="x">
+      <path d="M8 4 L32 4 L50 31 L68 4 L92 4 L62 50 L92 96 L68 96 L50 69 L32 96 L8 96 L38 50 Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#x)">
+    <rect x="0" y="0" width="100" height="32" fill="#e5484d"/>
+    <rect x="0" y="32" width="100" height="36" fill="#f2c230"/>
+    <rect x="0" y="68" width="100" height="32" fill="#35c46a"/>
+  </g>
+</svg>

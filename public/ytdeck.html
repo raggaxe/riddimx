@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>RiddimX YouTube deck</title>
+<style>
+  html, body, #player { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+</style>
+<div id="player"></div>
+<script>
+  // One official YouTube player per deck, hosted in its own page so the desktop app can route
+  // this page's sound through the deck's EQ / filter / stems. Driven over a BroadcastChannel.
+  const deck = new URLSearchParams(location.search).get('deck') || 'A'
+  const channel = new BroadcastChannel('vx-yt-' + deck)
+  const wall = () => performance.timeOrigin + performance.now()
+  let player = null
+  let ready = false
+
+  function report(type) {
+    if (!ready) return
+    const data = (player.getVideoData && player.getVideoData()) || {}
+    channel.postMessage({
+      type,
+      state: player.getPlayerState(),
+      time: player.getCurrentTime() || 0,
+      at: wall(),
+      rate: player.getPlaybackRate() || 1,
+      duration: player.getDuration() || 0,
+      videoId: data.video_id || '',
+      title: data.title || '',
+      author: data.author || '',
+    })
+  }
+
+  window.onYouTubeIframeAPIReady = () => {
+    player = new YT.Player('player', {
+      width: '100%',
+      height: '100%',
+      playerVars: { controls: 0, disablekb: 1, playsinline: 1, rel: 0, origin: location.origin },
+      events: {
+        onReady() {
+          ready = true
+          player.setVolume(100)
+          report('ready')
+        },
+        onStateChange: () => report('statechange'),
+        onPlaybackRateChange: () => report('ratechange'),
+        onError: (e) => channel.postMessage({ type: 'error', code: e.data }),
+      },
+    })
+  }
+
+  // Commands that arrive while a newly cued video is still loading wait until it is in place.
+  let wanted = ''
+  let waiting = []
+  const cued = () => !wanted || ((player.getVideoData && player.getVideoData()) || {}).video_id === wanted
+
+  function run(m) {
+    if (m.cmd === 'stop') player.stopVideo()
+    else if (m.cmd === 'play') player.playVideo()
+    else if (m.cmd === 'pause') player.pauseVideo()
+    else if (m.cmd === 'seek') player.seekTo(m.t, true)
+    else if (m.cmd === 'rate') player.setPlaybackRate(m.r)
+  }
+
+  channel.onmessage = (e) => {
+    const m = e.data
+    if (!m || !m.cmd || !ready) return
+    if (m.cmd === 'hello') report('ready')
+    else if (m.cmd === 'cue') {
+      wanted = m.id
+      waiting = []
+      player.cueVideoById(m.id)
+    } else if (cued()) run(m)
+    else waiting.push(m)
+  }
+  setInterval(() => {
+    if (ready && waiting.length && cued()) waiting.splice(0).forEach(run)
+  }, 50)
+  setInterval(() => report('state'), 50)
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>

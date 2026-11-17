@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- RiddimX app icon: the painted X on the app's dark panel, in the macOS icon grid (824 px tile, 100 px margin). -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f1c16"/>
+      <stop offset="1" stop-color="#110f0c"/>
+    </linearGradient>
+    <clipPath id="x">
+      <path d="M8 4 L32 4 L50 31 L68 4 L92 4 L62 50 L92 96 L68 96 L50 69 L32 96 L8 96 L38 50 Z"/>
+    </clipPath>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)"/>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="#3a352d" stroke-width="3"/>
+  <g transform="translate(262 262) scale(5)">
+    <g clip-path="url(#x)">
+      <rect x="0" y="0" width="100" height="32" fill="#e5484d"/>
+      <rect x="0" y="32" width="100" height="36" fill="#f2c230"/>
+      <rect x="0" y="68" width="100" height="32" fill="#35c46a"/>
+    </g>
+  </g>
+</svg>
