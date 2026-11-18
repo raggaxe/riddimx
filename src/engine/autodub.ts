@@ -24,7 +24,7 @@ const SCENES: Record<string, Scene> = {
   full: { name: 'Tudo', stems: ALL },
   riddim: { name: 'Sem voz', stems: { ...ALL, vocal: false } },
   drumbass: { name: 'Baixo e bateria', stems: { vocal: false, instr: false, bass: true, kick: true, hat: true } },
-  bass: { name: 'Só baixo e bombo', stems: { vocal: false, instr: false, bass: true, kick: true, hat: false } },
+  bass: { name: 'Só baixo e bumbo', stems: { vocal: false, instr: false, bass: true, kick: true, hat: false } },
   drums: { name: 'Só bateria', stems: { vocal: false, instr: false, bass: false, kick: true, hat: true } },
   skank: { name: 'Instrumentos e bateria', stems: { vocal: false, instr: true, bass: false, kick: true, hat: true } },
   voice: { name: 'Voz com o baixo', stems: { vocal: true, instr: false, bass: true, kick: true, hat: false } },

@@ -159,3 +159,20 @@ export async function findBpm(title: string, author = ''): Promise<LookupResult 
   }
   return best
 }
+
+/**
+ * Album cover for a track with none in its file: the first Deezer match (same catalogue the BPM
+ * lookup uses), as a picture URL, or null.
+ */
+export async function findCover(title: string, author = ''): Promise<string | null> {
+  const { artist, track } = parseTitle(title, author)
+  const query = (artist ? artist + ' ' : '') + track
+  if (query.trim().length < 3) return null
+  try {
+    const json = await jsonp('https://api.deezer.com/search?limit=3&q=' + encodeURIComponent(query))
+    const hit = (json?.data || []).find((t: any) => t?.album?.cover_medium)
+    return hit?.album?.cover_medium ?? null
+  } catch {
+    return null
+  }
+}

@@ -22,7 +22,7 @@ const CHOICES: [Choice<'dry'>, Choice<'release'>, Choice<'mode'>] = [
     key: 'dry',
     label: 'Música',
     options: [
-      { value: 'keep', label: 'Continua a tocar' },
+      { value: 'keep', label: 'Continua tocando' },
       { value: 'cut', label: 'Some, só eco' },
     ],
   },
@@ -38,7 +38,7 @@ const CHOICES: [Choice<'dry'>, Choice<'release'>, Choice<'mode'>] = [
     key: 'mode',
     label: 'Botão',
     options: [
-      { value: 'hold', label: 'Manter premido' },
+      { value: 'hold', label: 'Segurar' },
       { value: 'latch', label: 'Liga / desliga' },
     ],
   },
@@ -105,7 +105,7 @@ export function DubPanel() {
         ))}
       </div>
       <p className="hint">
-        Vale para o botão DUB dos dois decks e para a controladora. Os ajustes mudam também um eco que já está a soar. Sem BPM, o tempo do
+        Vale para o botão DUB dos dois decks e para a controladora. Os ajustes mudam também um eco que já está soando. Sem BPM, o tempo do
         eco conta como 120 BPM.
       </p>
     </section>

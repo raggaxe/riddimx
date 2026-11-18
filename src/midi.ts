@@ -6,12 +6,12 @@ import { PADS, sampler } from './engine/sampler'
 import { dubBox } from './engine/dubbox'
 import { MOVES, moves, type Move } from './engine/moves'
 import { browseLoad, browseStep } from './browse'
-import { padModes, samplerBase } from './padmode'
+import { padModes, riddimOn, riddimPad } from './padmode'
 import { sirenKeys } from './engine/sirenkeys'
-import { liveDeck, outboard } from './engine/outboard'
+import { DIVISIONS, liveDeck, outboard } from './engine/outboard'
 import { autoDub } from './engine/autodub'
 import { isolator } from './engine/isolator'
-import { mic } from './engine/mic'
+import { mic, VOICE_PRESETS } from './engine/mic'
 import { ui } from './ui'
 
 /**
@@ -26,6 +26,8 @@ export interface Action {
   group: string
   type: ActionType
   run(value: number): void
+  /** A fader's current value (0..1), so a game controller's stick can nudge it from where it is. */
+  get?(): number
 }
 
 /** The pitch range chosen on screen for a deck (8, 16 or 50 %). */
@@ -52,7 +54,9 @@ function deckActions(deck: Deck, other: Deck): Action[] {
     a('play', 'Play / Pausa', 'button', () => deck.toggle()),
     a('cue', 'Cue', 'button', () => deck.cue()),
     a('sync', 'Sync', 'button', () => deck.sync(other)),
-    a('pfl', 'Pré-escuta (auscultadores)', 'button', () => deck.togglePfl()),
+    a('pfl', 'Cue no headphone (PFL)', 'button', () => deck.togglePfl()),
+    a('tap', 'TAP (tempo da música)', 'button', () => deck.tap()),
+    a('markBar', 'Marcar o 1 do compasso aqui', 'button', () => deck.markBar()),
     ...[0, 1, 2, 3].map((i) => a('hotcue' + (i + 1), 'Hot cue ' + (i + 1), 'button', () => deck.hotcue(i))),
     ...[1, 2, 4, 8].map((b) => a('loop' + b, 'Loop ' + b, 'button', () => deck.toggleLoop(b))),
     a('volume', 'Volume', 'fader', (v) => deck.setVolume(v)),
@@ -96,14 +100,14 @@ function deckActions(deck: Deck, other: Deck): Action[] {
     a('padModeCue', 'Modo dos pads: CUE', 'button', () => padModes.setMode(deck.name as 'A' | 'B', 'cue')),
     a('padModeLoop', 'Modo dos pads: LOOP', 'button', () => padModes.setMode(deck.name as 'A' | 'B', 'loop')),
     a('padModeStems', 'Modo dos pads: STEMS', 'button', () => padModes.setMode(deck.name as 'A' | 'B', 'stems')),
-    a('padModeSampler', 'Modo dos pads: SAMPLER', 'button', () => padModes.setMode(deck.name as 'A' | 'B', 'sampler')),
+    a('padModeRiddim', 'Modo dos pads: RIDDIM', 'button', () => padModes.setMode(deck.name as 'A' | 'B', 'riddim')),
   ]
 }
 
 /**
  * A pad, by the deck's pad mode. CUE: hot cue (2nd: delete it). LOOP: 4 beats, 8 beats, in, out
  * (2nd: ½, ×2, 1 beat, 16 beats). STEMS: voice, instruments, bass, kick on / off (2nd: hear only that part).
- * SAMPLER: sampler pads 1-4 on deck A, 5-8 on deck B (2nd: stop it).
+ * RIDDIM: version, acapella, drum & bass, all (2nd: same).
  */
 function pad(deck: Deck, i: number, alt: boolean): void {
   const mode = padModes.get()[deck.name as 'A' | 'B']
@@ -112,34 +116,98 @@ function pad(deck: Deck, i: number, alt: boolean): void {
     if (alt) return [() => deck.loopScale(0.5), () => deck.loopScale(2), () => deck.toggleLoop(1), () => deck.toggleLoop(16)][i]()
     return [() => deck.toggleLoop(4), () => deck.toggleLoop(8), () => deck.loopIn(), () => deck.loopOut()][i]()
   }
-  if (mode === 'sampler') {
-    const slot = samplerBase(deck.name) + i
-    return alt ? sampler.stop(slot) : sampler.trigger(slot)
-  }
+  if (mode === 'riddim') return riddimPad(deck, i)
   const stem = STEMS[i]
   if (alt) deck.soloStem(stem)
   else deck.toggleStem(stem)
 }
 
 /** The rack's tape echo, spring and weight. */
+/** Where a band was before a trigger started pulling it, so letting go puts it back. */
+const pulled: Partial<Record<'low' | 'mid' | 'top', number>> = {}
+function pullBand(band: 'low' | 'mid' | 'top', v: number): void {
+  if (v > 0.02) {
+    pulled[band] ??= isolator.get()[band]
+    isolator.update({ [band]: pulled[band]! * (1 - v) })
+  } else if (pulled[band] !== undefined) {
+    isolator.update({ [band]: pulled[band] })
+    delete pulled[band]
+  }
+}
+let weightBase: number | null = null
+function pushWeight(v: number): void {
+  if (v > 0.02) {
+    weightBase ??= outboard.get().weight
+    outboard.update({ weight: weightBase + v * (1 - weightBase) })
+  } else if (weightBase !== null) {
+    outboard.update({ weight: weightBase })
+    weightBase = null
+  }
+}
+function stepDivision(dir: 1 | -1): void {
+  const i = DIVISIONS.findIndex((d) => d.id === outboard.get().division)
+  const next = DIVISIONS[Math.max(0, Math.min(DIVISIONS.length - 1, i + dir))]
+  outboard.update({ division: next.id, timeMode: 'sync' })
+}
+
+/** The deck a held THROW (of the deck playing) went to, so the release lets go of the same one. */
+let thrown: 'A' | 'B' | null = null
+
 function rackActions(): Action[] {
-  const a = (id: string, label: string, type: ActionType, run: (v: number) => void): Action => ({
+  const a = (id: string, label: string, type: ActionType, run: (v: number) => void, get?: () => number): Action => ({
     id: 'rack.' + id,
     label,
     group: 'Rack',
     type,
     run,
+    get,
   })
   return [
     a('throwA', 'Eco de fita: THROW A (manter)', 'hold', (v) => outboard.throw('A', v > 0)),
     a('throwB', 'Eco de fita: THROW B (manter)', 'hold', (v) => outboard.throw('B', v > 0)),
-    a('echoFeedback', 'Eco de fita: REPETIR', 'fader', (v) => outboard.update({ feedback: v * 1.1 })),
-    a('echoTone', 'Eco de fita: TOM', 'fader', (v) => outboard.update({ tone: v })),
-    a('echoWobble', 'Eco de fita: FITA', 'fader', (v) => outboard.update({ wobble: v })),
-    a('spring', 'Eco de fita: MOLA', 'fader', (v) => outboard.update({ spring: v })),
-    a('echoLevel', 'Eco de fita: NÍVEL', 'fader', (v) => outboard.update({ echoLevel: v })),
+    a(
+      'echoFeedback',
+      'Eco de fita: REPETIR',
+      'fader',
+      (v) => outboard.update({ feedback: v * 1.1 }),
+      () => outboard.get().feedback / 1.1,
+    ),
+    a(
+      'echoTone',
+      'Eco de fita: TOM',
+      'fader',
+      (v) => outboard.update({ tone: v }),
+      () => outboard.get().tone,
+    ),
+    a(
+      'echoWobble',
+      'Eco de fita: FITA',
+      'fader',
+      (v) => outboard.update({ wobble: v }),
+      () => outboard.get().wobble,
+    ),
+    a(
+      'spring',
+      'Eco de fita: MOLA',
+      'fader',
+      (v) => outboard.update({ spring: v }),
+      () => outboard.get().spring,
+    ),
+    a(
+      'echoLevel',
+      'Eco de fita: NÍVEL',
+      'fader',
+      (v) => outboard.update({ echoLevel: v }),
+      () => outboard.get().echoLevel,
+    ),
     a('crash', 'Pancada na mola', 'button', () => outboard.crash()),
-    a('weight', 'PESO (sub-grave)', 'fader', (v) => outboard.update({ weight: v })),
+    a(
+      'weight',
+      'PESO (sub-grave)',
+      'fader',
+      (v) => outboard.update({ weight: v }),
+      () => outboard.get().weight,
+    ),
     a('drop', 'DROP', 'button', () => outboard.drop()),
     a('autodub', 'DUB AUTO: ligar / desligar', 'button', () => autoDub.toggle()),
     a('tap', 'Eco de fita: TAP (tempo à mão)', 'button', () => outboard.tap()),
@@ -153,33 +221,142 @@ function rackActions(): Action[] {
     a('killLow', 'Isolator: KILL graves', 'button', () => isolator.kill('low', !isolator.get().killLow)),
     a('killMid', 'Isolator: KILL médios', 'button', () => isolator.kill('mid', !isolator.get().killMid)),
     a('killTop', 'Isolator: KILL agudos', 'button', () => isolator.kill('top', !isolator.get().killTop)),
+    a('killLowHold', 'Isolator: KILL graves enquanto segura', 'hold', (v) => isolator.kill('low', v > 0)),
+    a('killMidHold', 'Isolator: KILL médios enquanto segura', 'hold', (v) => isolator.kill('mid', v > 0)),
+    a('killTopHold', 'Isolator: KILL agudos enquanto segura', 'hold', (v) => isolator.kill('top', v > 0)),
+    // The deck the crowd hears now, whichever it is: thrown into the echo, or swept with its filter.
+    a('throwLive', 'Eco de fita: THROW do deck que toca (manter)', 'hold', (v) => {
+      if (v > 0) thrown = (liveDeck()?.name as 'A' | 'B' | undefined) ?? null
+      if (thrown) outboard.throw(thrown, v > 0)
+      if (v === 0) thrown = null
+    }),
+    a('liveFilter', 'Filtro do deck que toca', 'center', (v) => liveDeck()?.setFilter(v)),
+    a('liveRewind', 'Rewind (pull up) do deck que toca', 'button', () => liveDeck()?.rewind()),
+    a('liveDub', 'DUB do deck que toca (manter)', 'hold', (v) => liveDeck()?.dubPress(v > 0)),
+    a('echoTail', 'Eco de fita: cortar a cauda (as repetições morrem)', 'button', () => outboard.damp(1.5)),
+    a('echoSync', 'Eco de fita: tempo volta a seguir a música', 'button', () => outboard.update({ timeMode: 'sync' })),
+    a('divPrev', 'Eco de fita: divisão mais curta', 'button', () => stepDivision(-1)),
+    a('divNext', 'Eco de fita: divisão mais longa', 'button', () => stepDivision(1)),
+    // Analog triggers: the deeper the pull, the more of the band goes; let go and it is back as it was.
+    a('isoLowPull', 'Isolator: tirar graves (gatilho, analógico)', 'fader', (v) => pullBand('low', v)),
+    a('isoMidPull', 'Isolator: tirar médios (gatilho, analógico)', 'fader', (v) => pullBand('mid', v)),
+    a('isoTopPull', 'Isolator: tirar agudos (gatilho, analógico)', 'fader', (v) => pullBand('top', v)),
+    a('weightPush', 'PESO: empurrar o sub (gatilho, analógico)', 'fader', (v) => pushWeight(v)),
     // Microphone
     a('talk', 'Microfone: FALAR (ligar / desligar)', 'button', () => mic.setTalk(!mic.get().talk)),
-    a('talkHold', 'Microfone: FALAR enquanto premido', 'hold', (v) => mic.setTalk(v > 0)),
-    a('micLevel', 'Microfone: NÍVEL', 'fader', (v) => mic.update({ level: v * 1.5 })),
+    a('talkHold', 'Microfone: FALAR enquanto segura', 'hold', (v) => mic.setTalk(v > 0)),
+    a('padShift', 'Comando: SHIFT (manter, 2.ª função dos outros botões)', 'hold', () => undefined),
+    a(
+      'micLevel',
+      'Microfone: NÍVEL',
+      'fader',
+      (v) => mic.update({ level: v * 1.5 }),
+      () => mic.get().level / 1.5,
+    ),
+    a('voiceThrow', 'Voz: THROW para o eco da voz (manter, abre o mic)', 'hold', (v) => mic.throwVoice(v > 0)),
+    a(
+      'voiceEcho',
+      'Voz: eco (envio)',
+      'fader',
+      (v) => mic.update({ echo: v }),
+      () => mic.get().echo,
+    ),
+    a(
+      'voiceRepeats',
+      'Voz: eco (repetições)',
+      'fader',
+      (v) => mic.update({ repeats: v * 0.95 }),
+      () => mic.get().repeats / 0.95,
+    ),
+    a(
+      'voiceTone',
+      'Voz: eco (tom)',
+      'fader',
+      (v) => mic.update({ tone: v }),
+      () => mic.get().tone,
+    ),
+    a(
+      'voiceSpring',
+      'Voz: mola',
+      'fader',
+      (v) => mic.update({ spring: v }),
+      () => mic.get().spring,
+    ),
+    a('voiceFilter', 'Voz: filtro (escuro ↔ rádio)', 'center', (v) => mic.update({ filter: v })),
+    a(
+      'voiceDrive',
+      'Voz: drive (megafone)',
+      'fader',
+      (v) => mic.update({ drive: v }),
+      () => mic.get().drive,
+    ),
+    a(
+      'voiceFx',
+      'Voz: nível dos efeitos',
+      'fader',
+      (v) => mic.update({ fx: v * 1.5 }),
+      () => mic.get().fx / 1.5,
+    ),
+    a('voiceNext', 'Voz: voz pronta seguinte', 'button', () => {
+      const i = VOICE_PRESETS.findIndex((p) => p.id === mic.preset)
+      mic.usePreset(VOICE_PRESETS[(i + 1) % VOICE_PRESETS.length].id)
+    }),
   ]
 }
 
 function dubBoxActions(): Action[] {
-  const a = (id: string, label: string, type: ActionType, run: (v: number) => void): Action => ({
+  const a = (id: string, label: string, type: ActionType, run: (v: number) => void, get?: () => number): Action => ({
     id: 'dubbox.' + id,
     label,
     group: 'Dub Box',
     type,
     run,
+    get,
   })
   const log = (v: number, lo: number, hi: number): number => lo * Math.pow(hi / lo, v)
+  const unlog = (x: number, lo: number, hi: number): number => Math.log(x / lo) / Math.log(hi / lo)
+  const patch = () => dubBox.get().patch
   return [
     a('fire', 'Disparar (FIRE)', 'hold', (v) => dubBox.fire(v > 0)),
     a('throw', 'Throw para o eco (manter)', 'hold', (v) => dubBox.throw(v > 0)),
     a('level', 'Volume do canal', 'fader', (v) => dubBox.setLevel(v)),
     a('filter', 'Filtro', 'center', (v) => dubBox.setFilter(v)),
-    a('pitch', 'Tom', 'fader', (v) => dubBox.updatePatch({ pitch: log(v, 60, 3000) })),
-    a('lfoRate', 'Velocidade da oscilação', 'fader', (v) => dubBox.updatePatch({ lfoRate: log(v, 0.1, 20) })),
-    a('lfoDepth', 'Profundidade da oscilação', 'fader', (v) => dubBox.updatePatch({ lfoDepth: v * 24 })),
-    a('echo', 'Eco (envio)', 'fader', (v) => dubBox.updatePatch({ echo: v })),
-    a('feedback', 'Eco (repetições)', 'fader', (v) => dubBox.updatePatch({ feedback: v * 0.95 })),
-    a('pfl', 'Pré-escuta (auscultadores)', 'button', () => dubBox.togglePfl()),
+    a(
+      'pitch',
+      'Tom',
+      'fader',
+      (v) => dubBox.updatePatch({ pitch: log(v, 60, 3000) }),
+      () => unlog(patch().pitch, 60, 3000),
+    ),
+    a(
+      'lfoRate',
+      'Velocidade da oscilação',
+      'fader',
+      (v) => dubBox.updatePatch({ lfoRate: log(v, 0.1, 20) }),
+      () => unlog(patch().lfoRate, 0.1, 20),
+    ),
+    a(
+      'lfoDepth',
+      'Profundidade da oscilação',
+      'fader',
+      (v) => dubBox.updatePatch({ lfoDepth: v * 24 }),
+      () => patch().lfoDepth / 24,
+    ),
+    a(
+      'echo',
+      'Eco (envio)',
+      'fader',
+      (v) => dubBox.updatePatch({ echo: v }),
+      () => patch().echo,
+    ),
+    a(
+      'feedback',
+      'Eco (repetições)',
+      'fader',
+      (v) => dubBox.updatePatch({ feedback: v * 0.95 }),
+      () => patch().feedback / 0.95,
+    ),
+    a('pfl', 'Cue no headphone (PFL)', 'button', () => dubBox.togglePfl()),
     ...[0, 1, 2, 3].map((i) => a('slot' + (i + 1), 'Botão rápido ' + (i + 1), 'hold', (v) => dubBox.fireSlot(i, v > 0))),
     // The sound the keyboard (and FIRE) plays: one of the 4 quick buttons, without firing it.
     ...[0, 1, 2, 3].map((i) =>
@@ -191,8 +368,8 @@ function dubBoxActions(): Action[] {
       }),
     ),
     a('surprise', 'Surpresa', 'button', () => dubBox.surprise()),
-    a('next', 'Predefinição seguinte', 'button', () => dubBox.stepPreset(1)),
-    a('prev', 'Predefinição anterior', 'button', () => dubBox.stepPreset(-1)),
+    a('next', 'Preset seguinte', 'button', () => dubBox.stepPreset(1)),
+    a('prev', 'Preset anterior', 'button', () => dubBox.stepPreset(-1)),
   ]
 }
 
@@ -216,18 +393,18 @@ export const actions: Action[] = [
   { id: 'mixer.fadeB', label: 'Passar para B (8 batidas)', group: 'Mixer', type: 'button', run: () => mixer.autoFade(1, eightBeats()) },
   {
     id: 'mixer.cueMaster',
-    label: 'Master nos auscultadores (ligar / desligar)',
+    label: 'Master no headphone (ligar / desligar)',
     group: 'Mixer',
     type: 'button',
     run: () => mixer.setCueMix(mixer.get().cueMix > 0.5 ? 0 : 1),
   },
   { id: 'mixer.beatmatch', label: 'Beatmatch: sincronizar o deck que vai entrar', group: 'Mixer', type: 'button', run: () => beatmatch() },
   { id: 'mixer.master', label: 'Master', group: 'Mixer', type: 'fader', run: (v) => mixer.setMaster(v) },
-  { id: 'mixer.hpVolume', label: 'Volume auscultadores', group: 'Mixer', type: 'fader', run: (v) => mixer.setHeadphoneVolume(v) },
+  { id: 'mixer.hpVolume', label: 'Volume headphone', group: 'Mixer', type: 'fader', run: (v) => mixer.setHeadphoneVolume(v) },
   { id: 'mixer.rec', label: 'Gravar / parar', group: 'Mixer', type: 'button', run: () => mixer.toggleRecording() },
   { id: 'mixer.cueMix', label: 'Mistura cue / master', group: 'Mixer', type: 'fader', run: (v) => mixer.setCueMix(v) },
   { id: 'browser.open', label: 'Abrir a biblioteca', group: 'Browser', type: 'button', run: () => ui.open('library') },
-  { id: 'browser.scroll', label: 'Rodar (mexe a seleção)', group: 'Browser', type: 'jog', run: (v) => browseStep(Math.sign(v)) },
+  { id: 'browser.scroll', label: 'Girar (move a seleção)', group: 'Browser', type: 'jog', run: (v) => browseStep(Math.sign(v)) },
   { id: 'browser.down', label: 'Seleção para baixo', group: 'Browser', type: 'button', run: () => browseStep(1) },
   { id: 'browser.up', label: 'Seleção para cima', group: 'Browser', type: 'button', run: () => browseStep(-1) },
   { id: 'browser.pageDown', label: 'Descer 10', group: 'Browser', type: 'button', run: () => browseStep(10) },
@@ -340,7 +517,7 @@ function herculesInpulse200Mk2(): Record<string, string> {
     map[`n:${ch}:15`] = p + 'padModeCue'
     map[`s:n:${ch}:15`] = p + 'padModeLoop'
     map[`n:${ch}:16`] = p + 'padModeStems'
-    map[`s:n:${ch}:16`] = p + 'padModeSampler'
+    map[`s:n:${ch}:16`] = p + 'padModeRiddim'
     // SHIFT + …: rewind on PLAY (pull up!), pitch to zero on CUE, key lock on SYNC, dub throw on the headphones button.
     map[`s:n:${ch}:7`] = p + 'rewind'
     map[`s:n:${ch}:6`] = p + 'pitchReset'
@@ -350,8 +527,111 @@ function herculesInpulse200Mk2(): Record<string, string> {
   return map
 }
 
+/**
+ * The computer keyboard, for playing without a controller (physical keys, so it is the same on any
+ * layout). Left hand deck A, right hand deck B, the dub moves in the middle; SHIFT gives the second
+ * function of a pad. Digits stay free for the sampler tab, arrows and Enter for the library.
+ *   A: Q W E R pads · A play · S cue · D sync · F pad mode · Z throw · X dub · C rewind · V headphones
+ *   B: U I O P pads · J play · K cue · L sync · Ç pad mode · - throw · . dub · , rewind · M headphones
+ *   T / Y pass to A / B · G siren (held) · H spring · B drop · space throw the deck playing · \ talk (held)
+ */
+function keyboardMap(): Record<string, string> {
+  const map: Record<string, string> = {}
+  const deck = (name: 'A' | 'B', pads: string[], keys: Record<string, string>) => {
+    pads.forEach((k, i) => {
+      map['kb:' + k] = `deck${name}.pad${i + 1}`
+      map['kb:s:' + k] = `deck${name}.padAlt${i + 1}`
+    })
+    for (const [k, id] of Object.entries(keys)) map['kb:' + k] = id.includes('.') ? id : `deck${name}.${id}`
+  }
+  deck('A', ['KeyQ', 'KeyW', 'KeyE', 'KeyR'], {
+    KeyA: 'play',
+    KeyS: 'cue',
+    KeyD: 'sync',
+    KeyF: 'padModeNext',
+    's:KeyF': 'padModePrev',
+    KeyZ: 'rack.throwA',
+    KeyX: 'dub',
+    KeyC: 'rewind',
+    KeyV: 'pfl',
+  })
+  deck('B', ['KeyU', 'KeyI', 'KeyO', 'KeyP'], {
+    KeyJ: 'play',
+    KeyK: 'cue',
+    KeyL: 'sync',
+    Semicolon: 'padModeNext',
+    's:Semicolon': 'padModePrev',
+    Slash: 'rack.throwB',
+    Period: 'dub',
+    Comma: 'rewind',
+    KeyM: 'pfl',
+  })
+  Object.assign(map, {
+    'kb:KeyT': 'mixer.fadeA',
+    'kb:KeyY': 'mixer.fadeB',
+    'kb:KeyG': 'dubbox.fire',
+    'kb:s:KeyG': 'dubbox.next',
+    'kb:KeyH': 'rack.crash',
+    'kb:s:KeyH': 'rack.autodub',
+    'kb:KeyB': 'rack.drop',
+    'kb:Space': 'rack.throwLive',
+    'kb:Backslash': 'rack.talkHold',
+  })
+  return map
+}
+
 /** A preset either maps the main controller (plain keys) or one named device ("d:<device>|…" keys) alongside it. */
-export const presets: { name: string; match?: RegExp; device?: string; build(): Record<string, string> }[] = [
+export const presets: { name: string; match?: RegExp; device?: string; prefix?: string; build(): Record<string, string> }[] = [
+  { name: 'Teclado do computador', prefix: 'kb:', build: keyboardMap },
+  {
+    // A PlayStation pad (DualShock 4 / DualSense) over Bluetooth, read through the Gamepad API: the dub side.
+    name: 'Comando PlayStation: dub',
+    prefix: 'gp:',
+    build: () => ({
+      // ── normal ──
+      'gp:b:0': 'dubbox.fire', // ✕ siren while held
+      'gp:b:1': 'rack.throwLive', // ○ throw the deck playing into the tape echo
+      'gp:b:2': 'rack.crash', // □ kick the spring
+      'gp:b:3': 'rack.drop', // △ drop the bass for a bar
+      'gp:b:4': 'rack.padShift', // L1 held: the second layer below
+      'gp:b:5': 'rack.talkHold', // R1 held: the MC speaks
+      'gp:b:6': 'rack.isoLowPull', // L2 / R2, analog: bass / top pulled out as deep as the trigger
+      'gp:b:7': 'rack.isoTopPull',
+      'gp:b:8': 'rack.tap', // SHARE: echo time by hand
+      'gp:b:9': 'rack.autodub', // OPTIONS: automatic dub on / off
+      'gp:b:10': 'dubbox.next', // L3: next sound for ✕ (FIRE)
+      'gp:b:11': 'rack.echoTail', // R3: the repeats die away
+      'gp:b:12': 'dubbox.slot1', // D-pad: the 4 quick sounds
+      'gp:b:15': 'dubbox.slot2',
+      'gp:b:13': 'dubbox.slot3',
+      'gp:b:14': 'dubbox.slot4',
+      'gp:b:16': 'rack.talk', // PS: microphone open / closed
+      'gp:b:17': 'rack.liveRewind', // touchpad: pull up!
+      'gp:a:0': 'dubbox.filter', // left stick ↔ siren filter (springs back), ↕ siren pitch (nudged, stays)
+      'gp:a:1': 'dubbox.pitch',
+      'gp:a:2': 'rack.liveFilter', // right stick ↔ filter of the deck playing, ↕ echo repeats (nudged, stays)
+      'gp:a:3': 'rack.echoFeedback',
+      // ── with L1 (SHIFT) held ──
+      'gp:s:b:0': 'dubbox.throw', // ✕ the siren into the echo
+      'gp:s:b:1': 'rack.liveDub', // ○ DUB effect of the deck playing
+      'gp:s:b:2': 'rack.killMidHold', // □ mids gone while held
+      'gp:s:b:3': 'dubbox.pfl', // △ siren in the headphones
+      'gp:s:b:5': 'rack.voiceThrow', // R1 the voice into its echo (PS opens / closes the mic)
+      'gp:s:b:11': 'rack.voiceNext', // R3 next ready-made voice
+      'gp:s:b:6': 'rack.isoMidPull', // L2 mids pulled out
+      'gp:s:b:7': 'rack.weightPush', // R2 more sub
+      'gp:s:b:8': 'rack.echoSync', // SHARE echo back on the beat
+      'gp:s:b:10': 'dubbox.surprise', // L3 a random variation of the sound (on purpose: it changes it)
+      'gp:s:b:12': 'dubbox.prev', // ↑ ↓ siren sound before / after
+      'gp:s:b:13': 'dubbox.next',
+      'gp:s:b:14': 'rack.divPrev', // ← → echo shorter / longer (1/8 … 3/4)
+      'gp:s:b:15': 'rack.divNext',
+      'gp:s:a:0': 'dubbox.lfoRate', // left stick: siren wobble speed ↔, depth ↕
+      'gp:s:a:1': 'dubbox.lfoDepth',
+      'gp:s:a:2': 'rack.echoTone', // right stick: echo tone ↔, spring ↕
+      'gp:s:a:3': 'rack.spring',
+    }),
+  },
   {
     // Any key plays the Dub Box siren as notes; the pitch wheel bends it, the modulation wheel wobbles it.
     // Kept to its own mappings, so its channel 1 never moves the Hercules mixer.
@@ -398,6 +678,7 @@ export interface MidiState {
   learning: string | null // action id waiting for a control
   last: string | null
   error: string | null
+  gamepad: string | null // name of the game controller in use, if any
 }
 
 const LS_MAP = 'vx_midi_map'
@@ -409,23 +690,80 @@ const sorted = (map: Record<string, string>) => Object.fromEntries(Object.entrie
 
 function loadMappings(): Record<string, string> {
   try {
-    return JSON.parse(localStorage.getItem(LS_MAP) || '{}')
+    const map: Record<string, string> = JSON.parse(localStorage.getItem(LS_MAP) || '{}')
+    // The SAMPLER pad mode became RIDDIM: a control mapped to it keeps its place.
+    for (const k in map) map[k] = map[k].replace(/\.padModeSampler$/, '.padModeRiddim')
+    return map
   } catch {
     return {}
   }
 }
+
+/** Version of the built-in controller layout: a new one replaces the old on the next connection. */
+const PAD_LAYOUT = '4'
+/** Same, for the computer keyboard. */
+const KB_LAYOUT = '1'
+
+/** PlayStation names of the Gamepad API's standard buttons and axes. */
+const PAD_BUTTONS = ['✕', '○', '□', '△', 'L1', 'R1', 'L2', 'R2', 'SHARE', 'OPTIONS', 'L3', 'R3', '↑', '↓', '←', '→', 'PS', 'touchpad']
+const PAD_AXES = ['stick esquerdo ↔', 'stick esquerdo ↕', 'stick direito ↔', 'stick direito ↕']
 
 /** Human-readable name for a mapping key such as "n:0:36" or "c:1:7". */
 export function describeKey(key: string): string {
   const device = key.match(/^d:([^|]*)\|(.*)$/)
   if (device) return device[1] + ' · ' + describeKey(device[2])
   if (key.startsWith('s:')) return 'SHIFT + ' + describeKey(key.slice(2))
+  const kb = key.match(/^kb:(s:)?(.+)$/)
+  if (kb) return 'Teclado · ' + (kb[1] ? 'SHIFT + ' : '') + keyName(kb[2])
+  const gp = key.match(/^gp:(s:)?([ba]):(\d+)$/)
+  if (gp)
+    return (
+      'Comando · ' +
+      (gp[1] ? 'SHIFT + ' : '') +
+      (gp[2] === 'b' ? (PAD_BUTTONS[Number(gp[3])] ?? 'botão ' + gp[3]) : (PAD_AXES[Number(gp[3])] ?? 'eixo ' + gp[3]))
+    )
   const [type, ch, num] = key.split(':')
   const channel = 'ch' + (Number(ch) + 1)
   if (type === 'n') return 'Nota ' + num + ' ' + channel
   if (type === 'g') return 'Programa ' + (Number(num) + 1) + ' ' + channel
   if (type === 'c') return 'CC ' + num + ' ' + channel
   return 'Pitch bend ' + channel
+}
+
+/** "KeyQ" → "Q", "Semicolon" → "Ç" (the key in that place on a Portuguese keyboard). */
+function keyName(code: string): string {
+  const named: Record<string, string> = {
+    Space: 'Espaço',
+    Semicolon: 'Ç',
+    Quote: 'º',
+    Comma: ',',
+    Period: '.',
+    Slash: '-',
+    Backslash: '\\',
+    Backquote: '<',
+    BracketLeft: '+',
+    BracketRight: '´',
+    Minus: "'",
+    Equal: '«',
+    Enter: 'Enter',
+    Tab: 'Tab',
+    Backspace: '⌫',
+    Escape: 'Esc',
+    ArrowUp: '↑',
+    ArrowDown: '↓',
+    ArrowLeft: '←',
+    ArrowRight: '→',
+  }
+  return named[code] ?? code.replace(/^(Key|Digit|Numpad)/, '')
+}
+
+/** Which kind of control a mapping key belongs to: learning one kind keeps the others' mappings. */
+const sourceOf = (key: string): string => (key.startsWith('kb:') ? 'kb' : key.startsWith('gp:') ? 'gp' : 'midi')
+
+/** Keys being typed into a field are not shortcuts. */
+function typing(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null
+  return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)
 }
 
 /** SHIFT held on each deck of the controller. */
@@ -460,17 +798,14 @@ function ledFor(id: string): number {
       const mode = padModes.get()[deck.name as 'A' | 'B']
       if (mode === 'cue') return s.hotcues[i] != null ? 1 : 0
       if (mode === 'loop') return i < 2 ? (s.loop?.beats === [4, 8][i] ? 1 : 0) : i === 2 ? (s.loopIn !== null ? 1 : 0) : s.loop ? 1 : 0
-      if (mode === 'sampler') {
-        const slot = sampler.get().pads[samplerBase(deck.name) + i]
-        return slot.playing ? 0.5 : slot.name ? 1 : 0 // loaded: lit; sounding: blinking
-      }
+      if (mode === 'riddim') return i < 3 && riddimOn(s.stems, i) ? 1 : 0
       return s.stems[STEMS[i]] ? 1 : 0
     }
     if (what === 'padModeCue') return padModes.get()[deck.name as 'A' | 'B'] === 'cue' ? 1 : 0
     if (what === 'padModeLoop') return padModes.get()[deck.name as 'A' | 'B'] === 'loop' ? 1 : 0
     if (what === 'padModeStems') {
       const m = padModes.get()[deck.name as 'A' | 'B']
-      return m === 'stems' ? 1 : m === 'sampler' ? 0.5 : 0 // SAMPLER is SHIFT + STEMS: its light blinks
+      return m === 'stems' ? 1 : m === 'riddim' ? 0.5 : 0 // RIDDIM is SHIFT + STEMS: its light blinks
     }
     return 0
   }
@@ -507,11 +842,27 @@ class Midi extends Store<MidiState> {
       learning: null,
       last: null,
       error: null,
+      gamepad: null,
     })
     // Desktop app: MIDI is on from the start, so a controller just plugged in works straight away.
     if (this.state.supported && localStorage.getItem(LS_ON) !== '0') void this.connect()
     // Lights: follow the decks, transitions and mixer; a loaded deck that is not playing blinks its PLAY.
     for (const store of [...decks, moves, mixer, ui, padModes, sampler, autoDub, isolator, mic]) store.subscribe(() => this.queueLeds())
+    // The computer keyboard: its own mapping (kb: keys), set up the first time and when the built-in one improves.
+    window.addEventListener('keydown', (e) => this.onKey(e, true))
+    window.addEventListener('keyup', (e) => this.onKey(e, false))
+    window.addEventListener('blur', () => this.releaseKeys())
+    try {
+      if (localStorage.getItem('vx_kb_layout') !== KB_LAYOUT || !Object.keys(this.state.mappings).some((k) => k.startsWith('kb:'))) {
+        const mine = Object.entries(this.state.mappings).filter(([k]) => k.startsWith('kb:'))
+        const factory = keyboardMap()
+        // A keyboard layout changed by hand is left alone.
+        if (mine.every(([k, v]) => factory[k] === v)) this.applyPreset('Teclado do computador')
+        localStorage.setItem('vx_kb_layout', KB_LAYOUT)
+      }
+    } catch {
+      /* set up again next time */
+    }
     // Closing the app leaves the controller dark, not frozen with the last lights on.
     window.addEventListener('beforeunload', () => {
       for (const key of this.lit.keys()) {
@@ -567,7 +918,7 @@ class Midi extends Store<MidiState> {
     }
     const known = presets.find((p) => p.match && !p.device && names.some((n) => p.match!.test(n)))
     if (known) {
-      const main = Object.fromEntries(Object.entries(this.state.mappings).filter(([k]) => !k.startsWith('d:')))
+      const main = Object.fromEntries(Object.entries(this.state.mappings).filter(([k]) => sourceOf(k) === 'midi' && !k.startsWith('d:')))
       const now = JSON.stringify(sorted(main))
       const fresh = JSON.stringify(sorted(known.build()))
       const factory = !Object.keys(main).length || presets.some((p) => !p.device && JSON.stringify(sorted(p.build())) === now)
@@ -619,9 +970,11 @@ class Midi extends Store<MidiState> {
     const preset = presets.find((p) => p.name === name)
     if (!preset) return
     const map = preset.build()
-    const prefix = preset.device ? 'd:' + preset.device + '|' : null
+    const prefix = preset.prefix ?? (preset.device ? 'd:' + preset.device + '|' : null)
     // Only this preset's own part is replaced: the other controller keeps its mappings.
-    const keep = Object.entries(this.state.mappings).filter(([k]) => (prefix ? !k.startsWith(prefix) : k.startsWith('d:')))
+    const keep = Object.entries(this.state.mappings).filter(([k]) =>
+      prefix ? !k.startsWith(prefix) : k.startsWith('d:') || k.startsWith('gp:') || k.startsWith('kb:'),
+    )
     this.saveMappings({ ...Object.fromEntries(keep), ...map })
     // Remembered, so a later version of the preset can replace it as long as nothing was changed by hand.
     if (!prefix) localStorage.setItem(LS_APPLIED, JSON.stringify(sorted(map)))
@@ -629,6 +982,73 @@ class Midi extends Store<MidiState> {
 
   keyFor(actionId: string): string | undefined {
     return Object.keys(this.state.mappings).find((k) => this.state.mappings[k] === actionId)
+  }
+
+  /** Every control mapped to an action (controller, game controller, keyboard). */
+  keysFor(actionId: string): string[] {
+    return Object.keys(this.state.mappings).filter((k) => this.state.mappings[k] === actionId)
+  }
+
+  // ───────────── computer keyboard ─────────────
+
+  /** Which mapping a key held down went to (plain or SHIFT), so its release goes to the same one. */
+  private keyRoute = new Map<string, string>()
+
+  private onKey(e: KeyboardEvent, down: boolean): void {
+    const code = e.code
+    if (!code || /^(Shift|Control|Alt|Meta|CapsLock)/.test(code)) return
+    // A key the control in focus already used (a knob's arrows, the CUE button's space) is not a shortcut too.
+    if (down && (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || typing(e.target))) return
+    const learning = this.state.learning
+    // Ajustes open: keys are for it (and for learning), not for playing.
+    if (!learning && ui.get().settings) return
+    if (learning && down) {
+      e.preventDefault()
+      if (code === 'Escape') return this.learn(null)
+      const key = 'kb:' + (e.shiftKey ? 's:' : '') + code
+      const next = Object.fromEntries(Object.entries(this.state.mappings).filter(([k, id]) => id !== learning || sourceOf(k) !== 'kb'))
+      next[key] = learning
+      this.saveMappings(next)
+      this.set({ learning: null, last: describeKey(key) })
+      return
+    }
+    const mappings = this.state.mappings
+    let route = this.keyRoute.get(code)
+    if (down && !route) {
+      const shifted = 'kb:s:' + code
+      route = e.shiftKey && mappings[shifted] ? shifted : 'kb:' + code
+      if (!mappings[route]) return // not a shortcut: the key does what it normally does
+      this.keyRoute.set(code, route)
+    }
+    if (!route) return
+    if (!down) this.keyRoute.delete(code)
+    const action = actionById.get(mappings[route] ?? '')
+    if (!action) return
+    e.preventDefault() // e.g. space would also press the button in focus or scroll the page
+    if (down && e.repeat && action.type !== 'jog') return
+    switch (action.type) {
+      case 'button':
+        if (down) action.run(1)
+        break
+      case 'jog':
+        if (down) action.run(1)
+        break
+      default:
+        action.run(down ? 1 : 0) // hold; a fader or knob on a key: full while held
+    }
+    if (down && !e.repeat) {
+      const sound = /^dubbox\.(next|prev|surprise|pick\d)$/.test(action.id) ? (dubBox.get().preset ?? dubBox.get().patch.sampleName) : ''
+      this.set({ last: describeKey(route) + (sound ? ' · ' + sound : '') })
+    }
+  }
+
+  /** Let go of every held key (the window lost focus while a key was down: its release never comes). */
+  private releaseKeys(): void {
+    for (const route of this.keyRoute.values()) {
+      const action = actionById.get(this.state.mappings[route] ?? '')
+      if (action && action.type !== 'button' && action.type !== 'jog') action.run(0)
+    }
+    this.keyRoute.clear()
   }
 
   private saveMappings(mappings: Record<string, string>): void {
@@ -641,6 +1061,129 @@ class Midi extends Store<MidiState> {
     localStorage.setItem(LS_MAP, JSON.stringify(mappings))
     this.set({ mappings })
     this.queueLeds()
+  }
+
+  // ───────────── game controller (Gamepad API, see src/gamepad.ts) ─────────────
+
+  /** A game controller came or went; its dub preset is set up the first time it is seen. */
+  setGamepad(name: string | null): void {
+    this.set({ gamepad: name })
+    if (!name) return
+    // The controller's layout is set up the first time, and again when the built-in one improves.
+    let seen = ''
+    try {
+      seen = localStorage.getItem('vx_pad_layout') ?? ''
+    } catch {
+      /* first time */
+    }
+    if (seen !== PAD_LAYOUT || !Object.keys(this.state.mappings).some((k) => k.startsWith('gp:'))) {
+      this.applyPreset('Comando PlayStation: dub')
+      try {
+        localStorage.setItem('vx_pad_layout', PAD_LAYOUT)
+      } catch {
+        /* applied again next time */
+      }
+    }
+  }
+
+  private padHeld = new Map<string, boolean>()
+  /** SHIFT of the game controller held (the control mapped to rack.padShift). */
+  private padShift = false
+  /** Which mapping a control in use went to (plain or SHIFT), kept until it is let go. */
+  private padRoute = new Map<string, string>()
+  /** Sticks on faders, deflected now: nudged every frame by padTick. */
+  private padStick = new Map<string, number>()
+  private padValue = new Map<string, number>()
+
+  /**
+   * One control of the game controller. Buttons: `value` 0..1 (triggers are analog);
+   * sticks (`axis`): -1..1, up and right positive.
+   */
+  fromGamepad(key: string, value: number, axis: boolean): void {
+    const strong = Math.abs(value) > 0.6
+    // Pressed / released, with a little hysteresis so a trigger at half way does not flicker.
+    const was = this.padHeld.get(key) ?? false
+    const down = was ? Math.abs(value) > 0.4 : strong
+    this.padHeld.set(key, down)
+    const mappings = this.state.mappings
+    const isShift = mappings[key] === 'rack.padShift'
+    const learning = this.state.learning
+    if (learning) {
+      if (!down || was || (isShift && learning !== 'rack.padShift')) {
+        if (isShift) this.padShift = down
+        return
+      }
+      const target = this.padShift ? 'gp:s:' + key.slice(3) : key
+      const next = Object.fromEntries(Object.entries(mappings).filter(([k, id]) => id !== learning || sourceOf(k) !== 'gp'))
+      next[target] = learning
+      this.saveMappings(next)
+      this.set({ learning: null, last: describeKey(target) })
+      return
+    }
+    if (isShift) {
+      this.padShift = down
+      if (down !== was) this.set({ last: down ? 'Comando · SHIFT' : null })
+      return
+    }
+    // The layer is chosen when the control starts moving and kept until it is let go,
+    // so letting go of SHIFT first never leaves a held effect stuck on.
+    const active = Math.abs(value) > 0.02
+    let route = this.padRoute.get(key)
+    if (!route && active) {
+      const shifted = 'gp:s:' + key.slice(3)
+      route = this.padShift && mappings[shifted] ? shifted : key
+      this.padRoute.set(key, route)
+    }
+    if (!active) this.padRoute.delete(key)
+    route ??= key
+    const action = actionById.get(mappings[route] ?? '')
+    if (!action) {
+      if (down && !was) this.set({ last: describeKey(route) + ' (sem mapeamento)' })
+      return
+    }
+    switch (action.type) {
+      case 'button':
+        if (down && !was) action.run(1)
+        break
+      case 'hold':
+        if (down !== was) action.run(down ? 1 : 0)
+        break
+      case 'center':
+        // A stick springs back to the middle: the effect goes back to neutral by itself.
+        action.run(axis ? value : value * 2 - 1)
+        break
+      case 'fader':
+      case 'jog':
+        // A trigger sets the value directly. A stick nudges it (padTick): pushed up / right it rises,
+        // let go and it stays where it got to (a stick always springs back, so it cannot be a fader).
+        if (!axis && action.type === 'fader') action.run(value)
+        else if (value === 0) this.padStick.delete(route)
+        else this.padStick.set(route, value)
+        break
+    }
+    if (down && !was) {
+      // Changing the sound from the controller: say which one it is now (the panel may be out of sight).
+      const sound = /^dubbox\.(next|prev|surprise|pick\d)$/.test(action.id) ? (dubBox.get().preset ?? dubBox.get().patch.sampleName) : ''
+      this.set({ last: describeKey(route) + (sound ? ' · ' + sound : action.id === 'dubbox.surprise' ? ' · som surpresa' : '') })
+    }
+  }
+
+  /** Every frame while a game controller is connected: the sticks held on faders move them. */
+  padTick(dt: number): void {
+    for (const [route, v] of this.padStick) {
+      const action = actionById.get(this.state.mappings[route] ?? '')
+      if (!action) continue
+      if (action.type === 'jog') {
+        action.run(v * dt * 30)
+        continue
+      }
+      const now = action.get?.() ?? this.padValue.get(route) ?? 0.5
+      // Full push: bottom to top in about 1.5 s; a light push moves slowly, for fine settings.
+      const next = Math.min(1, Math.max(0, now + Math.sign(v) * v * v * dt * 0.7))
+      this.padValue.set(route, next)
+      action.run(next)
+      this.set({ last: describeKey(route) + ' · ' + Math.round(next * 100) + '%' })
+    }
   }
 
   private handle(e: MIDIMessageEvent, device = ''): void {
@@ -707,7 +1250,9 @@ class Midi extends Store<MidiState> {
     const learning = this.state.learning
     if (learning) {
       if (released) return
-      const mappings = Object.fromEntries(Object.entries(this.state.mappings).filter(([, id]) => id !== learning))
+      const mappings = Object.fromEntries(
+        Object.entries(this.state.mappings).filter(([k, id]) => id !== learning || sourceOf(k) !== 'midi'),
+      )
       mappings[key] = learning
       this.saveMappings(mappings)
       this.set({ learning: null, last: describeKey(key) })

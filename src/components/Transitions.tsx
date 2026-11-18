@@ -21,8 +21,8 @@ export function TransitionRoute() {
       disabled={!!mv.running}
       title={
         mv.direction === 'auto'
-          ? 'Transições em automático: sai o deck que se ouve, entra o outro. Clica para fixar A → B'
-          : 'Transições fixas. Clica para ' + (mv.direction === 'AB' ? 'B → A' : 'voltar ao automático')
+          ? 'Transições em automático: sai o deck que se ouve, entra o outro. Clique para fixar A → B'
+          : 'Transições fixas. Clique para ' + (mv.direction === 'AB' ? 'B → A' : 'voltar ao automático')
       }
     >
       <b className={way ? way.from.name.toLowerCase() : ''}>{way?.from.name ?? '—'}</b>
@@ -44,7 +44,7 @@ export function TransitionTiming() {
         className="mx-tr-beats"
         value={mv.beats}
         aria-label="Duração das transições longas"
-        title="Duração da troca de grave e do varrimento, em batidas"
+        title="Duração da troca de grave e do varredura, em batidas"
         onChange={(e) => moves.settings({ beats: Number(e.target.value) as 4 | 8 | 16 })}
       >
         {[4, 8, 16].map((n) => (
@@ -58,8 +58,8 @@ export function TransitionTiming() {
         onClick={() => moves.settings({ quant: mv.quant === 'bar' ? 'beat' : 'bar' })}
         title={
           mv.quant === 'bar'
-            ? 'As transições começam no próximo compasso (no um). Clica para começar na próxima batida'
-            : 'As transições começam na próxima batida. Clica para esperar pelo compasso'
+            ? 'As transições começam no próximo compasso (no um). Clique para começar na próxima batida'
+            : 'As transições começam na próxima batida. Clique para esperar pelo compasso'
         }
       >
         {mv.quant === 'bar' ? 'COMPASSO' : 'BATIDA'}
@@ -96,7 +96,7 @@ export function TransitionMoves() {
           className={(mv.running === m ? 'on' : '') + (mv.running === m && mv.waiting ? ' armed' : '')}
           disabled={!way || (!!mv.running && mv.running !== m)}
           onClick={() => moves.run(m)}
-          title={mv.running === m ? 'Clica para cancelar e repor tudo' : MOVES[m].hint}
+          title={mv.running === m ? 'Clique para cancelar e restaurar tudo' : MOVES[m].hint}
         >
           {MOVES[m].label}
           <i aria-hidden="true" />

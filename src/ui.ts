@@ -1,6 +1,9 @@
 import { Store, clamp } from './store'
 
-export type Tab = 'library' | 'sampler' | 'dubbox' | 'echo' | 'master' | 'audio' | 'midi' | 'spotify'
+export type Tab = 'library' | 'sampler' | 'dubbox' | 'echo' | 'voice' | 'master' | 'spotify'
+
+/** Pages of the Ajustes window (a modal over the app). */
+export type SettingsPage = 'geral' | 'decks' | 'audio' | 'midi' | 'contas' | 'ia'
 
 /** Heights of the resizable parts of the window (the decks and mixer take what is left). */
 export interface Layout {
@@ -9,8 +12,8 @@ export interface Layout {
 }
 
 /** Decks and mixer: never shorter than this, and by default just as tall as their controls need. */
-const STAGE_MIN = 232
-const STAGE_FIT = 242
+const STAGE_MIN = 250
+const STAGE_FIT = 272
 const CHROME = 30 + 14 // top bar and the two dividers
 let rack = 52 // height of the rack of outboard units above the decks (always one row)
 const LS = 'vx_layout_v3' // v3: compact decks; older saved heights are dropped so the browser gets the room
@@ -30,9 +33,9 @@ function saved(): Layout {
 }
 
 /** Which bottom tab is open, and how the window is divided; shared so any control can change them. */
-class Ui extends Store<{ tab: Tab; layout: Layout }> {
+class Ui extends Store<{ tab: Tab; layout: Layout; settings: SettingsPage | null }> {
   constructor() {
-    super({ tab: 'library', layout: saved() })
+    super({ tab: 'library', layout: saved(), settings: null })
     this.resize({}) // a layout saved before the rack existed may leave the decks too little room
     // Room the decks do not need (left over from a taller rack, or a bigger window) goes to the browser.
     const spare = window.innerHeight - CHROME - rack - this.state.layout.track - this.state.layout.bottom - STAGE_FIT
@@ -41,6 +44,11 @@ class Ui extends Store<{ tab: Tab; layout: Layout }> {
 
   open(tab: Tab): void {
     this.set({ tab })
+  }
+
+  /** Ajustes: opens on a page (or the last one), closes with null. */
+  openSettings(page: SettingsPage | null = 'geral'): void {
+    this.set({ settings: page })
   }
 
   /** The rack reports its height (it grows a row when its units wrap); the browser gives way if needed. */

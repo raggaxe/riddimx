@@ -5,13 +5,14 @@
  * YouTube decks get no EQ, filter or stems. Here each YouTube deck lives in its own muted
  * <webview>, and the shell hands that page's audio to the app without any "share audio" prompt.
  */
-const { app, BrowserWindow, ipcMain, net, session, shell, webContents } = require('electron')
+const { app, BrowserWindow, ipcMain, net, session, shell, systemPreferences, webContents } = require('electron')
 const crypto = require('node:crypto')
 const { once } = require('node:events')
 const { spawn, execFile } = require('node:child_process')
 const fs = require('node:fs')
 const http = require('node:http')
 const path = require('node:path')
+const { setupUpdater } = require('./updater.cjs')
 
 const ORIGIN = 'http://127.0.0.1:5173'
 const DECK_PAGE = ORIGIN + '/ytdeck.html'
@@ -113,12 +114,32 @@ if (!app.requestSingleInstanceLock()) app.quit()
 
 const AUDIO_FILE = /\.(mp3|wav|flac|m4a|aac|ogg|oga|opus|aiff?|webm)$/i
 const STEM_NAMES = ['vocals', 'drums', 'bass', 'other']
+// The model the app separates with (src/engine/ai/demucs.ts MODEL). Stems made by another one are done again.
+const STEM_MODEL = 'htdemucs'
 const stemsDir = (id) => path.join(app.getPath('userData'), 'stems', id)
 
+/**
+ * The model that made this track's stored stems, or null when there are none. Stems by an older model
+ * are kept and used until the app has separated the track again with the current one (STEM_MODEL).
+ */
+function stemsModel(dir) {
+  if (!fs.existsSync(dir)) return null
+  // The 6-stem model tried for a while: its "other" lacks the guitar and piano, not worth keeping.
+  if (fs.existsSync(path.join(dir, 'guitar.m4a'))) {
+    fs.rmSync(dir, { recursive: true, force: true })
+    return null
+  }
+  if (!STEM_NAMES.every((name) => fs.existsSync(path.join(dir, name + '.m4a')))) return null
+  try {
+    return fs.readFileSync(path.join(dir, 'model.txt'), 'utf8').trim() || 'htdemucs'
+  } catch {
+    return 'htdemucs' // saved before the marker existed
+  }
+}
+
 function readStems(dir) {
-  const files = STEM_NAMES.map((name) => path.join(dir, name + '.m4a'))
-  if (!files.every((f) => fs.existsSync(f))) return null
-  return Object.fromEntries(STEM_NAMES.map((name, i) => [name, fs.readFileSync(files[i])]))
+  if (!stemsModel(dir)) return null
+  return Object.fromEntries(STEM_NAMES.map((name) => [name, fs.readFileSync(path.join(dir, name + '.m4a'))]))
 }
 
 function run(cmd, args, onLine, env) {
@@ -161,7 +182,10 @@ function wav16(pcm, rate) {
  * so the next time it loads they are there at once. afconvert comes with every Mac.
  */
 async function saveStems(id, stems, rate) {
-  const dir = stemsDir(id)
+  // Made in a folder of its own and swapped in at the end: stems already there stay usable until then.
+  const final = stemsDir(id)
+  const dir = final + '.new'
+  fs.rmSync(dir, { recursive: true, force: true })
   fs.mkdirSync(dir, { recursive: true })
   try {
     for (const name of STEM_NAMES) {
@@ -171,11 +195,14 @@ async function saveStems(id, stems, rate) {
       fs.renameSync(path.join(dir, name + '.part'), path.join(dir, name + '.m4a'))
       fs.rmSync(wav)
     }
+    fs.writeFileSync(path.join(dir, 'model.txt'), STEM_MODEL)
+    fs.rmSync(final, { recursive: true, force: true })
+    fs.renameSync(dir, final)
   } catch (e) {
     fs.rmSync(dir, { recursive: true, force: true })
     throw e
   }
-  return readStems(dir)
+  return readStems(final)
 }
 
 app.on('second-instance', () => {
@@ -223,6 +250,15 @@ app.whenReady().then(async () => {
     },
   })
 
+  // ⌘+ / ⌘− / ⌘0: the page's Settings own the interface size (instead of the menu's zoom).
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown' || !(input.meta || input.control) || input.alt) return
+    const step = input.key === '=' || input.key === '+' ? 1 : input.key === '-' ? -1 : input.key === '0' ? 0 : null
+    if (step === null) return
+    event.preventDefault()
+    win.webContents.send('vx:zoom-key', step)
+  })
+
   // A <webview> may only ever be one of our deck pages, with no extra privileges.
   win.webContents.on('will-attach-webview', (event, prefs, params) => {
     delete prefs.preload
@@ -267,6 +303,19 @@ app.whenReady().then(async () => {
     }
   })
   ipcMain.handle('vx:stems-available', () => true)
+  // New versions from GitHub: checked, downloaded and installed when the DJ restarts (see updater.cjs).
+  const updater = setupUpdater(win)
+  ipcMain.handle('vx:update-state', (event) => (event.sender === win.webContents ? updater.state() : null))
+  ipcMain.handle('vx:update-check', (event) => event.sender === win.webContents && updater.check(true))
+  ipcMain.handle('vx:update-install', (event) => event.sender === win.webContents && updater.installNow())
+  updater.start()
+  ipcMain.handle('vx:set-zoom', (event, factor) => {
+    if (event.sender !== win.webContents || typeof factor !== 'number' || !(factor >= 0.5 && factor <= 2)) return
+    win.webContents.setZoomFactor(factor)
+  })
+  ipcMain.handle('vx:stems-has', (event, id) =>
+    event.sender === win.webContents && /^[0-9a-f]{40}$/.test(id) ? stemsModel(stemsDir(id)) : null,
+  )
   ipcMain.handle('vx:stems-cached', (event, id) => {
     if (event.sender !== win.webContents || !/^[0-9a-f]{40}$/.test(id)) return null
     return readStems(stemsDir(id))
@@ -280,6 +329,15 @@ app.whenReady().then(async () => {
   // Lyrics: timed lines transcribed on this Mac by whisper.cpp, cached per track and language.
   ipcMain.handle('vx:lyrics-available', () => !!whisperBin() && fs.existsSync(WHISPER_MODEL))
   // The lyrics model: is it here, and installing it on request (the renderer asks the DJ first).
+  // The microphone: macOS only lets the app hear it once the user said yes, and Chromium does not ask by itself.
+  ipcMain.handle('vx:mic-access', async () => {
+    if (process.platform !== 'darwin') return 'granted'
+    const status = systemPreferences.getMediaAccessStatus('microphone')
+    if (status !== 'not-determined') return status
+    return (await systemPreferences.askForMediaAccess('microphone')) ? 'granted' : 'denied'
+  })
+  ipcMain.handle('vx:mic-settings', () => shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone'))
+
   ipcMain.handle('vx:lyrics-model', () => ({
     bin: !!whisperBin(),
     ready: fs.existsSync(WHISPER_MODEL),
@@ -393,7 +451,7 @@ function installModel(progress) {
       }
       out.end()
       await once(out, 'finish')
-      if (got !== MODEL_SIZE || hash.digest('hex') !== MODEL_SHA256) throw new Error('o ficheiro descarregado não confere')
+      if (got !== MODEL_SIZE || hash.digest('hex') !== MODEL_SHA256) throw new Error('o arquivo baixado não confere')
       await fs.promises.rename(part, WHISPER_MODEL)
     } catch (e) {
       out.destroy()

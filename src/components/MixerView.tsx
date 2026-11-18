@@ -51,8 +51,8 @@ function Strip({ deck }: { deck: Deck }) {
         <button
           className={'pfl' + (s.pfl ? ' on' : '')}
           aria-pressed={s.pfl}
-          aria-label={'Pré-escuta do deck ' + deck.name + ' nos auscultadores'}
-          title="Pré-escuta: ouvir este deck nos auscultadores"
+          aria-label={'Pré-escuta do deck ' + deck.name + ' no headphone'}
+          title="Pré-escuta: ouvir este deck no headphone"
           onClick={() => deck.togglePfl()}
         >
           {phones}
@@ -71,7 +71,7 @@ function Strip({ deck }: { deck: Deck }) {
         </div>
         <div className="fader-row">
           <Meter node={deck.meterTap} label={'Nível do deck ' + deck.name} />
-          <Scale marks={FADER_MARKS} />
+          <Scale marks={FADER_MARKS} bare />
           <input
             className="vfader"
             type="range"
@@ -120,7 +120,7 @@ function CurveButton() {
       className={'xf-curve' + (m.xfCurve !== 'smooth' ? ' on' : '')}
       aria-label={'Curva do crossfader: ' + CURVE_LABEL[m.xfCurve]}
       onClick={() => mixer.setCrossfaderCurve(NEXT_CURVE[m.xfCurve])}
-      title={CURVE_HINT[m.xfCurve] + '. Clica para mudar'}
+      title={CURVE_HINT[m.xfCurve] + '. Clique para mudar'}
     >
       <svg viewBox="0 0 20 12" width="20" height="12" aria-hidden="true">
         {m.xfCurve === 'cut' ? (
@@ -149,7 +149,7 @@ function Crossfader() {
         onClick={() => mixer.autoFade(n, fadeSeconds())}
         title={
           fading
-            ? 'A passar para o deck ' + 'AB'[n] + '. Clica para parar'
+            ? 'Passando para o deck ' + 'AB'[n] + '. Clique para parar'
             : 'Passar o crossfader para o deck ' + 'AB'[n] + ' em 8 batidas (' + fadeSeconds().toFixed(1) + ' s)'
         }
       >
@@ -165,7 +165,7 @@ function Crossfader() {
           <button
             className="xf-off"
             onClick={() => mixer.setCrossfaderCurve('smooth')}
-            title="O crossfader está desligado (THRU). Clica para o ligar"
+            title="O crossfader está desligado (THRU). Clique para ligar"
           >
             DESLIGADO · LIGAR
           </button>
@@ -188,7 +188,7 @@ function Crossfader() {
           }
           onChange={(e) => mixer.setCrossfader(Number(e.target.value))}
           onDoubleClick={() => mixer.setCrossfader(0.5)}
-          title="Crossfader: duplo clique centra. Clica em A ou B para passar sozinho"
+          title="Crossfader: duplo clique centraliza. Clique em A ou B para passar sozinho"
         />
       </div>
       {side(1)}
@@ -212,8 +212,8 @@ function SoundPads({ page, setPage }: { page: number; setPage(p: number): void }
               onClick={() => (pad.name ? sampler.trigger(i) : ui.open('sampler'))}
               title={
                 pad.name
-                  ? pad.name + (pad.playing ? ': clica para parar' : ': tocar')
-                  : 'Pad ' + (i + 1) + ' vazio: escolhe um som no separador Sampler'
+                  ? pad.name + (pad.playing ? ': clique para parar' : ': tocar')
+                  : 'Pad ' + (i + 1) + ' vazio: escolha um som na aba Sampler'
               }
             >
               {pad.playing && <i className="dbx-pad-bar" style={{ animationDuration: pad.duration + 's' }} />}
@@ -295,8 +295,8 @@ export function DubBoxStrip() {
           }}
           title={
             slot
-              ? `${slot.name}: carregar para tocar. Botão direito: guardar aqui o som atual`
-              : 'Vazio: clica para guardar aqui o som atual, ou arrasta uma predefinição'
+              ? `${slot.name}: clique para tocar. Botão direito: salvar aqui o som atual`
+              : 'Vazio: clique para salvar aqui o som atual, ou arraste um preset'
           }
         >
           {slot ? (
@@ -330,7 +330,7 @@ export function DubBoxStrip() {
         e.stopPropagation()
         void dubBox.loadSampleFile(file)
       }}
-      title="Larga aqui um ficheiro de áudio para o tocar na Dub Box"
+      title="Solte aqui um arquivo de áudio para tocar na Dub Box"
     >
       <div className="dbx-head">
         {/* Noises (presets fired with FIRE) or sounds (the sampler's pads): same row, one click apart. */}
@@ -358,7 +358,7 @@ export function DubBoxStrip() {
             <button
               className="dbx-more"
               aria-label="Abrir ajustes da Dub Box"
-              title="Todos os ajustes (separador Dub Box)"
+              title="Todos os ajustes (aba Dub Box)"
               onClick={() => ui.open('dubbox')}
             >
               <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
@@ -376,8 +376,8 @@ export function DubBoxStrip() {
         <button
           className={'pfl' + (d.pfl ? ' on' : '')}
           aria-pressed={d.pfl}
-          aria-label="Pré-escuta da Dub Box nos auscultadores"
-          title="Pré-escuta: ouvir a Dub Box nos auscultadores"
+          aria-label="Pré-escuta da Dub Box no headphone"
+          title="Pré-escuta: ouvir a Dub Box no headphone"
           onClick={() => dubBox.togglePfl()}
         >
           {phones}
@@ -392,7 +392,7 @@ export function DubBoxStrip() {
           }}
           onPointerUp={() => dubBox.fire(false)}
           onPointerCancel={() => dubBox.fire(false)}
-          title={d.mode === 'hold' ? 'Manter premido para tocar' : 'Um toque liga, outro desliga'}
+          title={d.mode === 'hold' ? 'Segure para tocar' : 'Um toque liga, outro desliga'}
         >
           FIRE
         </button>
@@ -413,7 +413,7 @@ export function DubBoxStrip() {
           }}
           onPointerUp={() => dubBox.throw(false)}
           onPointerCancel={() => dubBox.throw(false)}
-          title="Throw: manter premido atira tudo para o eco"
+          title="Throw: segurar atira tudo para o eco"
         >
           ECO
         </button>
@@ -465,7 +465,7 @@ export function MixerView() {
           <VuPair />
           <div className="fader-row">
             <Meter node={mixer.masterOut} label="Nível do master (esquerda e direita)" stereo />
-            <Scale marks={DB_MARKS} className="db" />
+            <Scale marks={DB_MARKS} className="db" bare />
             <input
               className="vfader master-fader"
               type="range"
@@ -481,7 +481,7 @@ export function MixerView() {
           </div>
           <div
             className={'phones-knobs' + (m.hpDevice ? '' : ' bypassed')}
-            title={m.hpDevice ? '' : 'Escolhe a saída dos auscultadores no separador Áudio'}
+            title={m.hpDevice ? '' : 'Escolha o output do headphone em Ajustes › Placa de áudio'}
           >
             <Knob label="FONES" value={m.hpVolume} min={0} max={1} reset={0.8} format={pct} onChange={(v) => mixer.setHeadphoneVolume(v)} />
             <Knob

@@ -138,7 +138,7 @@ const VOICES: { value: Voice; label: string; hint: string }[] = [
   { value: 'siren', label: 'Sirene', hint: 'Oscilador com oscilação de tom: a sirene clássica' },
   { value: 'noise', label: 'Ruído', hint: 'Ruído filtrado: whoosh, vento, trovão' },
   { value: 'spring', label: 'Mola', hint: 'Pancada na reverb de mola: o crash do dub' },
-  { value: 'sample', label: 'Sample', hint: 'Um som teu, ou um dos efeitos da app, tocado com tom, oscilação e eco' },
+  { value: 'sample', label: 'Sample', hint: 'Um som seu, ou um dos efeitos da app, tocado com tom, oscilação e eco' },
 ]
 
 const WAVES: { value: OscillatorType; label: string }[] = [
@@ -230,13 +230,13 @@ export function DubBoxPanel() {
             onDragStart={(e) => e.dataTransfer.setData(DUB_PRESET_DRAG, x.name)}
             className={'side-item' + (d.preset === x.name ? ' active' : '')}
             aria-pressed={d.preset === x.name}
-            title="Clique: usar. Arrasta para um botão rápido (1 a 4)"
+            title="Clique: usar. Arraste para um botão rápido (1 a 4)"
             onClick={() => dubBox.usePreset(x.name)}
           >
             {x.name}
           </button>
         ))}
-        {d.user.length > 0 && <h5>Os teus</h5>}
+        {d.user.length > 0 && <h5>Seus</h5>}
         {d.user.map((x) => (
           <div
             key={x.name}
@@ -261,7 +261,7 @@ export function DubBoxPanel() {
             className="dbx-throw big"
             on={d.throwing}
             label="ECO"
-            title="Throw: manter premido atira tudo para o eco"
+            title="Throw: segurar atira tudo para o eco"
             press={(down) => dubBox.throw(down)}
           />
           <strong className="dbp-name" title="Som que o FIRE toca agora">
@@ -303,7 +303,7 @@ export function DubBoxPanel() {
               disabled={!hp && !d.rehearse}
               onClick={() => dubBox.setRehearse(!d.rehearse)}
               title={
-                hp ? 'Ouvir a Dub Box só nos auscultadores, sem sair para a pista' : 'Escolhe a saída dos auscultadores no separador Áudio'
+                hp ? 'Ouvir a Dub Box só no headphone, sem sair para a pista' : 'Escolha o output do headphone em Ajustes › Placa de áudio'
               }
             >
               {d.rehearse ? 'A ensaiar' : 'Ensaiar'}
@@ -325,11 +325,11 @@ export function DubBoxPanel() {
             <button
               className="btn small"
               onClick={() => picker.current?.click()}
-              title="Também podes arrastar um ficheiro para aqui ou para a Dub Box no mixer"
+              title="Também dá para arrastar um arquivo para cá ou para a Dub Box no mixer"
             >
-              Ficheiro teu…
+              Arquivo seu…
             </button>
-            {failed && <span className="deck-msg error">Não consegui ler esse ficheiro de áudio.</span>}
+            {failed && <span className="deck-msg error">Não consegui ler esse arquivo de áudio.</span>}
             <input ref={picker} type="file" accept="audio/*" hidden onChange={(e) => void loadFile(e.target.files?.[0])} />
           </div>
         )}
@@ -378,7 +378,7 @@ export function DubBoxPanel() {
               <Slider k="release" label={p.voice === 'spring' ? 'Duração' : 'Ao soltar'} show={sec} hint="Quanto demora a desaparecer" />
               <Pick label="Oscilação" value={p.lfoShape} options={SHAPES} onChange={(lfoShape) => set({ lfoShape })} />
               <Slider k="sweep" label="Varrimento" show={semis} hint={'Em cada disparo ' + target + ' sobe (+) ou desce (−) isto'} />
-              <Slider k="sweepTime" label="Tempo varr." show={sec} hint="Tempo do varrimento" />
+              <Slider k="sweepTime" label="Tempo varr." show={sec} hint="Tempo do varredura" />
             </>
           )}
           {page === 'echo' && (
@@ -400,7 +400,7 @@ export function DubBoxPanel() {
                 label="Botão FIRE"
                 value={d.mode}
                 options={[
-                  { value: 'hold', label: 'Manter premido' },
+                  { value: 'hold', label: 'Segurar' },
                   { value: 'latch', label: 'Liga / desliga' },
                 ]}
                 onChange={(mode) => dubBox.setMode(mode)}
@@ -413,7 +413,7 @@ export function DubBoxPanel() {
       </section>
 
       <aside className="dbp-side" aria-label="Botões rápidos e guardar">
-        <h5 title="Os botões 1 a 4 do mixer tocam o som guardado, sem mudar o que estás a editar. Também podes arrastar um som da lista para aqui.">
+        <h5 title="Os botões 1 a 4 do mixer tocam o som salvo, sem mudar o que você está editando. Também dá para arrastar um som da lista para cá.">
           Botões rápidos
         </h5>
         {d.slots.map((slot, i) => (
@@ -443,8 +443,8 @@ export function DubBoxPanel() {
             <button
               className="row-btn show"
               onClick={() => dubBox.assignSlot(i)}
-              title="Guardar o som atual neste botão"
-              aria-label={'Guardar o som atual no botão ' + (i + 1)}
+              title="Salvar o som atual neste botão"
+              aria-label={'Salvar o som atual no botão ' + (i + 1)}
             >
               ↓
             </button>
@@ -469,12 +469,12 @@ export function DubBoxPanel() {
           <input
             value={name}
             maxLength={30}
-            placeholder="Nome do teu som"
-            aria-label="Nome do som a guardar"
+            placeholder="Nome do seu som"
+            aria-label="Nome do som para salvar"
             onChange={(e) => setName(e.target.value)}
           />
           <button className="btn small" disabled={!name.trim() || FACTORY.some((x) => x.name === name.trim())}>
-            Guardar
+            Salvar
           </button>
         </form>
       </aside>

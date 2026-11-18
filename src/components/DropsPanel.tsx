@@ -282,7 +282,7 @@ export function DropsPanel() {
               value={text}
               maxLength={160}
               aria-label="Texto do drop"
-              placeholder="Escreve o drop: o nome do teu sound, uma saudação…"
+              placeholder="Digite o drop: o nome do seu sound, uma saudação…"
               onChange={(e) => update({ text: e.target.value })}
               onKeyDown={(e) => e.key === 'Enter' && void make()}
             />
@@ -318,7 +318,7 @@ export function DropsPanel() {
               {recording ? 'Parar e usar' : 'Gravar'}
             </button>
             <p>
-              Grava o teu drop ao microfone, perto e com força. O silêncio no início e no fim sai sozinho. Usa só a tua voz ou a de quem
+              Grave seu drop no microfone, perto e com força. O silêncio no início e no fim sai sozinho. Use só a sua voz ou a de quem
               autorizou.
             </p>
           </div>
@@ -456,7 +456,7 @@ export function DropsPanel() {
           <button className="btn small" disabled={!drop} onClick={() => void place()} title="Substitui o som desse pad">
             {placed === pad ? 'No pad ✓' : 'Pôr no pad'}
           </button>
-          <button className="btn small" disabled={!drop} onClick={save} title="Guardar como ficheiro WAV">
+          <button className="btn small" disabled={!drop} onClick={save} title="Salvar como arquivo WAV">
             WAV
           </button>
         </div>

@@ -6,7 +6,7 @@
  * Out: { id, engine } · { id, progress } · { id, stems } · { id, error }
  */
 import * as ort from 'onnxruntime-web/webgpu'
-import { separate, SOURCES } from './demucs'
+import { separate, SOURCES, MODEL_URL } from './demucs'
 import ortMjs from '../../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.mjs?url'
 import ortWasm from '../../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm?url'
 
@@ -26,7 +26,7 @@ function open(): Promise<{ s: ort.InferenceSession; engine: string }> {
     for (const [engine, options] of tries) {
       if (engine === 'GPU' && !('gpu' in self.navigator)) continue
       try {
-        return { s: await ort.InferenceSession.create('/models/htdemucs.onnx', options), engine }
+        return { s: await ort.InferenceSession.create(MODEL_URL, options), engine }
       } catch (e) {
         errors.push(engine + ': ' + String((e as Error)?.stack ?? e))
       }

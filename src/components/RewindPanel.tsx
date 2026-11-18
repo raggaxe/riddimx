@@ -90,7 +90,7 @@ export function RewindPanel() {
           </select>
         </label>
       </div>
-      <p className="hint">Vale para o botão ◀◀ dos dois decks e para a controladora. Experimenta com uma música a tocar.</p>
+      <p className="hint">Vale para o botão ◀◀ dos dois decks e para a controladora. Teste com uma música tocando.</p>
     </section>
   )
 }

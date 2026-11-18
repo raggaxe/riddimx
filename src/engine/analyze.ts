@@ -195,6 +195,50 @@ export function detectBeatAnchor(buf: AudioBuffer, bpm: number): number {
 }
 
 /**
+ * Where the bars start: of the four beats of a bar, the one where the low end (kick and bass) hits
+ * hardest is taken as the one. Returns the first bar head of the track (0 ≤ t < one bar), on the
+ * grid given by `anchor`. A guess: the DJ can put the one elsewhere (Shift+TAP).
+ */
+export function detectDownbeat(buf: AudioBuffer, bpm: number, anchor: number): number {
+  const sr = buf.sampleRate
+  const left = buf.getChannelData(0)
+  const right = buf.numberOfChannels > 1 ? buf.getChannelData(1) : left
+  const beat = 60 / bpm
+  const bar = 4 * beat
+  const hop = Math.round(sr / 200)
+  const n = Math.floor(Math.min(left.length, 240 * sr) / hop)
+  // Low band (below ≈150 Hz) loudness per hop, then its rises (onsets).
+  const k = 1 - Math.exp((-2 * Math.PI * 150) / sr)
+  let lp = 0
+  const env = new Float32Array(n)
+  for (let i = 0; i < n; i++) {
+    let sum = 0
+    for (let j = i * hop, end = j + hop; j < end; j++) {
+      lp += k * ((left[j] + right[j]) * 0.5 - lp)
+      sum += lp * lp
+    }
+    env[i] = Math.sqrt(sum / hop)
+  }
+  const rate = sr / hop
+  const score = [0, 0, 0, 0]
+  const first = anchor - Math.floor(anchor / beat) * beat
+  for (let b = 0; ; b++) {
+    const t = first + b * beat
+    const i = Math.round(t * rate)
+    if (i + 4 >= n) break
+    // Strongest rise within ±20 ms of the beat.
+    let rise = 0
+    for (let d = -4; d <= 4; d++) {
+      const at = i + d
+      if (at > 0 && at < n) rise = Math.max(rise, env[at] - env[at - 1])
+    }
+    score[b % 4] += rise
+  }
+  const best = score.indexOf(Math.max(...score))
+  return first + best * beat - Math.floor((first + best * beat) / bar) * bar
+}
+
+/**
  * Beat phase inside a loudness envelope for a known beat period (in envelope samples):
  * slides a pulse train over the onset strength. `offset` is the index of the first beat;
  * `strength` compares the best alignment with the average one (≈1 = no audible beat).

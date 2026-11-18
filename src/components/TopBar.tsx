@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { BeatCounter } from './BeatCounter'
+import { settings } from '../settings'
+import { ui } from '../ui'
+import { updateText, updates } from '../updates'
 import { mixer } from '../engine/mixer'
 import { deckA, deckB } from '../engine/deck'
 import { dubBox } from '../engine/dubbox'
@@ -114,7 +118,7 @@ function HotSource() {
       ref={label}
       className="tb-hot"
       role="status"
-      title="Acende quando a pista está alta demais (o limiter trabalha muito): baixa o ganho ou o fader dessa fonte"
+      title="Acende quando a pista está alta demais (o limiter trabalha muito): abaixe o ganho ou o fader dessa fonte"
     />
   )
 }
@@ -144,6 +148,9 @@ export function TopBar() {
   const a = useStore(deckA)
   const b = useStore(deckB)
   const lyr = useStore(lyrics)
+  const set = useStore(settings)
+  const open = useStore(ui).settings !== null
+  const up = useStore(updates)
   const [, tick] = useState(0)
 
   useEffect(() => {
@@ -158,8 +165,15 @@ export function TopBar() {
     if (s.aiStems === 'working') busy.push('Stems ' + 'AB'[i] + ' ' + Math.round(s.aiProgress * 100) + '%')
   })
   for (const [name, p] of Object.entries(lyr.working)) busy.push('Letra ' + name + ' ' + Math.round(p * 100) + '%')
-  if (lib.analyzing) busy.push('A medir BPM e tom')
-  if (bpm.looking.length) busy.push('A procurar BPM de ' + bpm.looking.length)
+  if (lib.analyzing) busy.push('Medindo BPM e tom')
+  if (lib.separating)
+    busy.push(
+      'Stems biblioteca ' +
+        Math.round(lib.sepProgress * 100) +
+        '%' +
+        (lib.stemsWaiting.length ? ' (+' + lib.stemsWaiting.length + ')' : ''),
+    )
+  if (bpm.looking.length) busy.push('Procurando BPM de ' + bpm.looking.length)
 
   return (
     <header className="topbar">
@@ -170,27 +184,7 @@ export function TopBar() {
           <img className="rx-x" src={logo} alt="" />
         </b>
       </h1>
-      {/* What is on the decks, at a glance: track, tempo as played, and how far apart the two tempos are. */}
-      <div className="tb-decks" aria-label="Decks">
-        {[a, b].map((d, i) =>
-          d.kind === 'none' ? null : (
-            <span key={i} className={'tb-deck ' + 'ab'[i] + (d.playing ? ' playing' : '')}>
-              <b>{'AB'[i]}</b>
-              <i aria-label={d.playing ? 'a tocar' : 'parado'} />
-              <em>{d.title}</em>
-              {d.bpm ? <strong>{(d.bpm * d.rate).toFixed(1)}</strong> : null}
-            </span>
-          ),
-        )}
-        {a.bpm && b.bpm && a.kind !== 'none' && b.kind !== 'none' && (
-          <span
-            className={'tb-delta' + (Math.abs(a.bpm * a.rate - b.bpm * b.rate) < 0.05 ? ' locked' : '')}
-            title="Diferença de tempo entre os dois decks (0.0 = em sincronia)"
-          >
-            Δ {Math.abs(a.bpm * a.rate - b.bpm * b.rate).toFixed(1)}
-          </span>
-        )}
-      </div>
+      {set.beatCounter && <BeatCounter />}
       <div className="tb-status" aria-live="polite">
         {busy.map((text) => (
           <span key={text} className="tb-busy">
@@ -200,6 +194,29 @@ export function TopBar() {
         ))}
       </div>
       <div className="top-actions">
+        {(up.status === 'downloading' || up.status === 'ready' || (up.status === 'available' && !up.error)) && (
+          <button
+            className={'tb-update' + (up.status === 'ready' ? ' ready' : '')}
+            onClick={() => (up.status === 'ready' ? updates.install() : ui.openSettings('geral'))}
+            title={(up.notes ? 'Novidades:\n' + up.notes + '\n\n' : '') + updateText(up)}
+          >
+            <i aria-hidden="true" />
+            {up.status === 'ready'
+              ? 'Reiniciar e atualizar para ' + up.version
+              : 'Versão ' + up.version + (up.status === 'downloading' ? ' · ' + Math.round((up.progress ?? 0) * 100) + '%' : '')}
+          </button>
+        )}
+        <button
+          className={'tb-gear' + (open ? ' on' : '')}
+          onClick={() => ui.openSettings(open ? null : 'geral')}
+          title="Ajustes: placa de áudio, controladora, teclado, tamanho e cores"
+          aria-label="Ajustes"
+          aria-expanded={open}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8.6 4.9-1.9-.4a7 7 0 0 1-.6 1.5l1.1 1.6-1.6 1.6-1.6-1.1a7 7 0 0 1-1.5.6l-.4 1.9h-2.2l-.4-1.9a7 7 0 0 1-1.5-.6l-1.6 1.1-1.6-1.6 1.1-1.6a7 7 0 0 1-.6-1.5l-1.9-.4v-2.2l1.9-.4a7 7 0 0 1 .6-1.5L4.4 6.9 6 5.3l1.6 1.1a7 7 0 0 1 1.5-.6L9.5 4h2.2l.4 1.9a7 7 0 0 1 1.5.6l1.6-1.1 1.6 1.6-1.1 1.6a7 7 0 0 1 .6 1.5l1.9.4z" />
+          </svg>
+        </button>
         <Clock />
         <HotSource />
         <MasterMeter />
@@ -207,7 +224,7 @@ export function TopBar() {
           className={'rec' + (mix.recording ? ' on' : '')}
           aria-pressed={mix.recording}
           onClick={() => mixer.toggleRecording()}
-          title={mix.recording ? 'Parar e guardar a gravação' : 'Gravar a mistura'}
+          title={mix.recording ? 'Parar e salvar a gravação' : 'Gravar a mistura'}
         >
           <i />
           {mix.recording ? Math.floor(recorded / 60) + ':' + String(recorded % 60).padStart(2, '0') : 'REC'}

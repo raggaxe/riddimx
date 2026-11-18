@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { settings } from '../settings'
 import { Store, clamp } from '../store'
 import { mixer } from './mixer'
-import { computeDetail, computePeaks, detectBeatAnchor, detectBpm } from './analyze'
+import { computeDetail, computePeaks, detectBeatAnchor, detectBpm, detectDownbeat } from './analyze'
 import { loadYT } from './youtube'
 import { CAPTURE_LATENCY, RemotePlayer, desktop } from './ytremote'
 import { tapEnvelope } from './envelope'
@@ -11,6 +12,7 @@ import { FxUnit, type FxType } from './fx'
 import { LiveChroma, detectKey, keyStore, transpose } from './key'
 import { KEYLOCK_LATENCY, createPitchShifter, setPitch } from './keylock'
 import { coverOf } from './cover'
+import { findCover } from './lookup'
 import { Tape } from './tape'
 import { dubSettings } from './dub'
 import { rewindSettings } from './rewind'
@@ -18,7 +20,7 @@ import { lyrics } from './lyrics'
 import { sampler } from './sampler'
 import { spotify, type SpotifyOwner } from './spotify'
 import { bpmStore } from './bpm'
-import { separateStems, SAMPLE_RATE } from './ai/stems'
+import { stemsFor } from './ai/stems'
 import { ALL_STEMS, STEMS, createStems, setStems, type Stem, type StemState } from './stems'
 
 type AiPart = 'vocals' | 'drums' | 'bass' | 'other'
@@ -45,6 +47,7 @@ export interface DeckState {
   bpm: number | null // at original tempo
   ref: string | null // streaming track key ("youtube:<id>"), used to remember its BPM
   anchor: number | null // beat grid: position (s) of one beat; null = grid unknown
+  barAt: number | null // position (s) of the one of a bar (on the grid); null = not known, bars counted from the anchor
   syncOn: boolean // following the other deck's tempo and beat phase
   blocked: boolean // YouTube refuses to play this video outside youtube.com
   cue: number
@@ -158,6 +161,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       bpm: null,
       ref: null,
       anchor: null,
+      barAt: null,
       syncOn: false,
       blocked: false,
       cue: 0,
@@ -240,7 +244,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   private unload(): void {
     this.token++
     this.metaCb = null
-    if (this.state.cover) URL.revokeObjectURL(this.state.cover)
+    if (this.state.cover?.startsWith('blob:')) URL.revokeObjectURL(this.state.cover)
     this.wave.close()
     this.stopSource()
     this.buffer = null
@@ -282,6 +286,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       cover: null,
       ref: null,
       anchor: null,
+      barAt: null,
       syncOn: false,
       blocked: false,
       cue: 0,
@@ -321,17 +326,21 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       }
       this.buffer = buffer
       this.set({ cover })
+      // No picture in the file: the album's cover from the online catalogue, if it knows the track.
+      if (!cover) this.findCoverOnline(token)
       this.localDetail = computeDetail(buffer)
       void detectKey(buffer).then((key) => {
         if (token === this.token) this.set({ key })
       })
       const bpm = detectBpm(buffer)
+      const anchor = bpm ? detectBeatAnchor(buffer, bpm) : null
       this.set({
         loading: false,
         duration: buffer.duration,
         peaks: computePeaks(buffer),
         bpm,
-        anchor: bpm ? detectBeatAnchor(buffer, bpm) : null,
+        anchor,
+        barAt: bpm && anchor !== null ? detectDownbeat(buffer, bpm, anchor) : null,
       })
       void this.loadAiStems(token, fingerprint).finally(() => this.autoLyrics(token, fingerprint))
     } catch {
@@ -348,7 +357,13 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     this.unload()
     const token = this.token
     this.metaCb = onMeta ?? null
-    this.set({ kind: 'youtube', title: known?.title || 'YouTube ' + videoId, artist: known?.artist || '', loading: true })
+    this.set({
+      kind: 'youtube',
+      title: known?.title || 'YouTube ' + videoId,
+      artist: known?.artist || '',
+      loading: true,
+      cover: 'https://i.ytimg.com/vi/' + encodeURIComponent(videoId) + '/hqdefault.jpg', // the clip's thumbnail
+    })
     this.recall('youtube:' + videoId)
     if (desktop) {
       this.wave.open('youtube:' + videoId, videoId)
@@ -417,12 +432,23 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       const title: string = track.name
       const artist: string = (track.artists || []).map((a: any) => a.name).join(', ')
       this.spUri = 'spotify:track:' + trackId
-      this.set({ loading: false, title, artist, duration: track.duration_ms / 1000 })
+      const art = (track.album?.images ?? []).find((i: any) => i?.url)?.url ?? null // biggest first
+      this.set({ loading: false, title, artist, duration: track.duration_ms / 1000, cover: art })
       this.metaCb?.(title, artist)
       if (this.state.ref && !this.state.bpm) bpmStore.lookup(this.state.ref, `${artist} - ${title}`, artist)
     } catch (e) {
       this.fail(token, e)
     }
+  }
+
+  /** Looks the track up by its title and artist (a moment later, once the library has named it). */
+  private findCoverOnline(token: number): void {
+    window.setTimeout(() => {
+      if (token !== this.token || this.state.cover) return
+      void findCover(this.state.title, this.state.artist).then((url) => {
+        if (url && token === this.token && !this.state.cover) this.set({ cover: url })
+      })
+    }, 600)
   }
 
   // ───────────────────────── youtube events ─────────────────────────
@@ -505,7 +531,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     const s = this.state
     switch (s.kind) {
       case 'local': {
-        if (this.scratchState) return this.scratchState.pos
+        if (this.scratchState) return this.scratchHand()
         if (!this.src) return this.anchorOffset
         let pos = this.anchorOffset + (mixer.ctx.currentTime - this.anchorTime) * s.rate * this.bend
         if (s.loop && pos >= s.loop.out) pos = s.loop.in + ((pos - s.loop.in) % (s.loop.out - s.loop.in))
@@ -971,13 +997,36 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   private jogLastFrame = 0
   private jogKind: 'nudge' | 'seek' | 'scratch' = 'nudge'
   private scratchState: {
-    pos: number
+    pos: number // where the hand has put the record
+    heard: number // where the sound is (follows the hand a few ms behind)
     dir: 1 | -1
     node: AudioBufferSourceNode | null
     wasPlaying: boolean
     touch: boolean // held by a touch sensor (ends on release), else ends when the hand stops moving
   } | null = null
   private reversed: AudioBuffer | null = null
+
+  /**
+   * A stopped deck moved by hand sticks a little to the head of each bar (the one), so the DJ can
+   * cue on it easily; moving on a bit more pulls it off again. Playing decks are never pulled.
+   */
+  magnet(t: number): number {
+    const s = this.state
+    if (!settings.get().snapBars || !s.bpm || s.anchor === null) return t
+    const beat = 60 / s.bpm
+    const bar = 4 * beat
+    const one = s.barAt ?? s.anchor
+    const head = one + Math.round((t - one) / bar) * bar
+    return head >= 0 && Math.abs(t - head) < Math.min(0.09, beat * 0.2) ? head : t
+  }
+
+  /** Where the hand has the record: exactly under it while playing; stopped, pulled to a bar head nearby. */
+  private scratchHand(): number {
+    const st = this.scratchState!
+    return st.wasPlaying && this.state.playing ? st.pos : this.magnet(st.pos)
+  }
+
+  private seekRaw: number | null = null // stopped deck under the ring: where the hand is, before the magnet
 
   /** Relative jog movement: nudges the tempo while playing, glides through the track while stopped. */
   jog(ticks: number): void {
@@ -987,24 +1036,32 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     this.jogInput(ticks)
   }
 
-  /** Vinyl mode, top of the platter: scratch while playing (files); otherwise the same as jog(). */
+  /**
+   * Vinyl mode, top of the platter (files): the record goes exactly where the hand takes it, playing
+   * or stopped (to find a point by ear). Streaming tracks: the same as jog().
+   */
   scratch(ticks: number): void {
     const s = this.state
-    if (s.kind !== 'local' || !this.buffer || (!s.playing && !this.scratchState)) return this.jog(ticks)
+    if (s.kind !== 'local' || !this.buffer) return this.jog(ticks)
     if (!this.scratchState) this.scratchBegin(false)
     this.jogKind = 'scratch'
+    this.scratchState!.pos = clamp(this.scratchState!.pos + ticks * Deck.TICK, 0, s.duration - 0.01)
     this.jogInput(ticks)
   }
 
-  /** Touch sensor on the platter (vinyl mode): a hand on a playing record holds it; lifting it lets it go. */
+  /** Touch sensor on the platter (vinyl mode): a hand on the record holds it; lifting it lets it go. */
   jogTouch(down: boolean): void {
     if (down) {
-      if (this.state.kind === 'local' && this.state.playing && !this.scratchState) {
-        this.scratchBegin(true)
+      if (this.state.kind === 'local' && this.buffer) {
+        if (this.scratchState) this.scratchState.touch = true
+        else this.scratchBegin(true)
         this.jogKind = 'scratch'
         this.jogInput(0)
       }
-    } else if (this.scratchState) this.scratchEnd()
+    } else if (this.scratchState) {
+      this.scratchState.touch = false
+      this.scratchEnd()
+    }
   }
 
   private jogInput(ticks: number): void {
@@ -1031,16 +1088,20 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     if (this.jogKind === 'nudge') {
       if (!this.state.playing) done = true
       else {
-        // The tempo leans towards the hand's speed like a heavy platter: never more than ~1.5% per frame.
-        const target = 1 + clamp(this.jogVel * 0.12, -0.3, 0.3)
-        const lean = this.bend + clamp(target - this.bend, -0.9 * dt, 0.9 * dt)
-        this.setBend(lean)
+        // The tempo follows the hand's speed at once (like VirtualDJ's pitch bend) and comes back when it stops.
+        const target = 1 + clamp(this.jogVel * 0.15, -0.35, 0.35)
+        const lean = this.bend + (target - this.bend) * (1 - Math.exp(-dt / 0.04))
+        this.setBend(Math.abs(lean - 1) < 0.0005 ? 1 : lean)
         done = idle > 250 && Math.abs(this.jogVel) < 0.01 && Math.abs(this.bend - 1) < 0.002
         if (done) this.setBend(1)
       }
     } else if (this.jogKind === 'seek') {
-      if (moved) this.seek(this.getPosition() + moved, true)
+      if (moved) {
+        this.seekRaw = clamp((this.seekRaw ?? this.getPosition()) + moved, 0, this.state.duration)
+        this.seek(this.magnet(this.seekRaw), true)
+      }
       done = idle > 120
+      if (done) this.seekRaw = null
     } else {
       done = this.scratchFrame(dt, idle)
     }
@@ -1066,7 +1127,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     const pos = this.getPosition()
     const wasPlaying = this.state.playing
     this.stopSource()
-    this.scratchState = { pos, dir: 1, node: null, wasPlaying, touch }
+    this.scratchState = { pos, heard: pos, dir: 1, node: null, wasPlaying, touch }
     this.scratchNode(1, 0)
   }
 
@@ -1080,7 +1141,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     n.buffer = dir === 1 ? this.buffer! : this.reverseBuffer()
     n.playbackRate.value = speed
     n.connect(this.srcBus)
-    const offset = dir === 1 ? st.pos : this.buffer!.duration - st.pos
+    const offset = dir === 1 ? st.heard : this.buffer!.duration - st.heard
     n.start(ctx.currentTime, clamp(offset, 0, this.buffer!.duration - 0.01))
     st.node = n
     st.dir = dir
@@ -1090,13 +1151,17 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   private scratchFrame(dt: number, idle: number): boolean {
     const st = this.scratchState
     if (!st) return true
-    const v = this.jogVel
-    st.pos = clamp(st.pos + v * dt, 0, this.state.duration - 0.01)
-    const dir: 1 | -1 = v > 0.02 ? 1 : v < -0.02 ? -1 : st.dir
+    // The sound chases the hand: it covers the gap in ~25 ms, so it is locked to the platter, not to a
+    // smoothed speed. A hand at rest stops the sound dead.
+    const gap = this.scratchHand() - st.heard
+    let v = Math.abs(gap) < 0.0005 ? 0 : clamp(gap / 0.025, -8, 8)
+    if (Math.abs(v * dt) > Math.abs(gap)) v = gap / dt
+    st.heard = clamp(st.heard + v * dt, 0, this.state.duration - 0.01)
+    const dir: 1 | -1 = v > 0.01 ? 1 : v < -0.01 ? -1 : st.dir
     if (dir !== st.dir) this.scratchNode(dir, Math.abs(v))
-    else st.node?.playbackRate.setTargetAtTime(Math.abs(v) < 0.02 ? 0 : Math.abs(v), mixer.ctx.currentTime, 0.008)
+    else st.node?.playbackRate.setTargetAtTime(Math.abs(v) < 0.01 ? 0 : Math.abs(v), mixer.ctx.currentTime, 0.005)
     // Without a touch sensor the scratch ends when the hand has stopped for a moment.
-    if (!st.touch && idle > 180 && Math.abs(v) < 0.02) {
+    if (!st.touch && idle > 180 && Math.abs(gap) < 0.002) {
       this.scratchEnd()
       return true
     }
@@ -1110,8 +1175,11 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     this.scratchState = null
     st.node?.stop()
     st.node?.disconnect()
-    this.anchorOffset = st.pos
-    if (st.wasPlaying && this.state.playing) this.startSource(st.pos)
+    const stopped = !(st.wasPlaying && this.state.playing)
+    const pos = stopped ? this.magnet(st.pos) : st.pos
+    this.anchorOffset = pos
+    if (!stopped) this.startSource(pos)
+    else this.seek(pos, true)
   }
 
   // ───────────────────────── sync ─────────────────────────
@@ -1123,7 +1191,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       return
     }
     if (!this.state.bpm || !other.get().bpm) {
-      this.set({ error: 'SYNC precisa de BPM nos dois decks (usa TAP)' })
+      this.set({ error: 'SYNC precisa de BPM nos dois decks (use TAP)' })
       return
     }
     if (!this.canPitch) {
@@ -1266,6 +1334,23 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     this.setAnchor((phase < 0 ? phase + 1 : phase) * beat)
   }
 
+  /**
+   * Shift+TAP: the beat nearest to the playhead is the one of a bar. With no grid yet, the grid
+   * starts there too.
+   */
+  markBar(): void {
+    const s = this.state
+    if (s.kind === 'none' || !s.bpm) return
+    const pos = this.getPosition()
+    if (s.anchor === null) {
+      this.setAnchor(pos)
+      this.set({ barAt: pos })
+      return
+    }
+    const beat = 60 / s.bpm
+    this.set({ barAt: s.anchor + Math.round((pos - s.anchor) / beat) * beat })
+  }
+
   /** A BPM the user vouches for (tap, ½, ×2): keep it and remember it for this track. */
   private commitBpm(bpm: number): void {
     this.bpmTrusted = true
@@ -1361,7 +1446,9 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     const ref = this.state.ref
     if (ref) bpmStore.remember(ref, null)
     const bpm = this.buffer ? detectBpm(this.buffer) : null
-    this.set({ bpm, anchor: this.buffer && bpm ? detectBeatAnchor(this.buffer, bpm) : null, error: null })
+    const anchor = this.buffer && bpm ? detectBeatAnchor(this.buffer, bpm) : null
+    const barAt = this.buffer && bpm && anchor !== null ? detectDownbeat(this.buffer, bpm, anchor) : null
+    this.set({ bpm, anchor, barAt, error: null })
     if (ref) bpmStore.rememberAnchor(ref, null)
     this.live?.clear()
     this.scanGrid?.clear()
@@ -1565,7 +1652,13 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     const id = [...new Uint8Array(await fingerprint)].map((b) => b.toString(16).padStart(2, '0')).join('')
     if (token !== this.token) return
     const s = this.state
-    void lyrics.fromAudio('file:' + s.title, s.title, s.artist, s.duration, id, this.stemBuffers?.vocals ?? this.buffer, this.name)
+    const key = 'file:' + s.title
+    const voice = this.stemBuffers?.vocals ?? this.buffer
+    const clean = this.stemBuffers !== null
+    // Found online or transcribed, the lines are then lined up with this file's own singing.
+    await lyrics.fromAudio(key, s.title, s.artist, s.duration, id, voice, this.name)
+    await lyrics.linesReady(key, s.title, s.artist, s.duration)
+    if (token === this.token) await lyrics.align(key, voice, clean)
   }
 
   /** Loads the AI stems of this file: from the cache at once, or separated now (about half a minute). */
@@ -1575,19 +1668,22 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     const id = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
     if (token !== this.token) return
     this.fileId = id
-    let files = await desktop.stemsCached(id)
-    if (token !== this.token) return
-    if (!files) {
-      this.set({ aiStems: 'working', aiProgress: 0 })
-      try {
-        // Separated inside the app (built-in model), then stored per track by the desktop shell.
-        const stems = await separateStems(this.buffer, (p) => token === this.token && this.set({ aiProgress: p * 0.97 }))
-        files = await desktop.stemsSave(id, stems, SAMPLE_RATE)
-      } catch (e) {
-        console.warn('AI stems failed', e)
-        if (token === this.token) this.set({ aiStems: 'error' })
-        return
-      }
+    const buffer = this.buffer
+    let files
+    try {
+      // From the store, or separated inside the app (built-in model) and stored per track by the desktop shell.
+      // Stems by an older model are used as they are (the library separates the track again in the background).
+      files =
+        (await desktop.stemsCached(id)) ??
+        (await stemsFor(
+          id,
+          async () => buffer,
+          (p) => token === this.token && this.set({ aiStems: 'working', aiProgress: p * 0.97 }),
+        ))
+    } catch (e) {
+      console.warn('AI stems failed', e)
+      if (token === this.token) this.set({ aiStems: 'error' })
+      return
     }
     if (!files || token !== this.token) return
     const parts = await Promise.all(AI_PARTS.map((part) => mixer.ctx.decodeAudioData(files[part].slice().buffer)))

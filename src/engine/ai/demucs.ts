@@ -1,5 +1,6 @@
 /**
- * RiddimX's built-in stem separator: Demucs htdemucs (drums, bass, other, vocals) run as an ONNX model,
+ * RiddimX's built-in stem separator: Demucs htdemucs (drums, bass, other, vocals) run as an ONNX model
+ * (htdemucs_ft was tried: cleaner on paper, worse to the ear here, and 4x slower),
  * with everything around the model done here, exactly as Demucs does it:
  *  · the mix is normalised, cut into 7.8 s segments that overlap by a quarter, and stitched back
  *    with triangular weights (demucs.apply.apply_model, split=True, overlap=0.25, shifts=0);
@@ -10,6 +11,9 @@
  */
 
 export const SAMPLE_RATE = 44100
+/** The model file, and its name: stems saved by another model are separated again (electron/main.cjs). */
+export const MODEL = 'htdemucs'
+export const MODEL_URL = '/models/' + MODEL + '.onnx'
 export const SOURCES = ['drums', 'bass', 'other', 'vocals'] as const
 export type Source = (typeof SOURCES)[number]
 
@@ -20,7 +24,9 @@ const SEGMENT = Math.floor((39 / 5) * SAMPLE_RATE) // 343980 samples, the model'
 const FRAMES = Math.ceil(SEGMENT / HOP) // 336
 const OVERLAP = 0.25
 
-/** What the ONNX model does: mix [1,2,L] + mag [1,4,2048,T] → spec [1,4,4,2048,T] + wave [1,4,2,L]. */
+const S = SOURCES.length
+
+/** What the ONNX model does: mix [1,2,L] + mag [1,4,2048,T] → spec [1,S,4,2048,T] + wave [1,S,2,L] (S sources). */
 export type RunModel = (mix: Float32Array, mag: Float32Array) => Promise<{ spec: Float32Array; wave: Float32Array }>
 
 // ───────────── FFT (radix 2, in place, float64) ─────────────
@@ -169,7 +175,7 @@ function ispec(sr: Float32Array, si: Float32Array, srOffset: number, siOffset: n
   void le
 }
 
-/** One model pass over a segment (2 × SEGMENT samples): 4 sources × 2 channels × SEGMENT. */
+/** One model pass over a segment (2 × SEGMENT samples): S sources × 2 channels × SEGMENT. */
 async function segmentPass(left: Float32Array, right: Float32Array, run: RunModel): Promise<Float32Array> {
   const mix = new Float32Array(2 * SEGMENT)
   mix.set(left, 0)
@@ -183,9 +189,9 @@ async function segmentPass(left: Float32Array, right: Float32Array, run: RunMode
   mag.set(sr.re, 2 * plane)
   mag.set(sr.im, 3 * plane)
   const { spec: z, wave } = await run(mix, mag)
-  // z: [1, 4 sources, 4 (L re, L im, R re, R im), BINS, FRAMES]; wave: [1, 4, 2, SEGMENT].
+  // z: [1, S sources, 4 (L re, L im, R re, R im), BINS, FRAMES]; wave: [1, S, 2, SEGMENT].
   const out = new Float32Array(wave)
-  for (let s = 0; s < 4; s++) {
+  for (let s = 0; s < S; s++) {
     for (let c = 0; c < 2; c++) {
       const base = (s * 4 + c * 2) * plane
       ispec(z, z, base, base + plane, out, (s * 2 + c) * SEGMENT)
@@ -231,7 +237,7 @@ export async function separate(
   for (const w of weight) wmax = Math.max(wmax, w)
   for (let i = 0; i < SEGMENT; i++) weight[i] /= wmax
 
-  const out = Array.from({ length: 8 }, () => new Float32Array(length)) // source × channel
+  const out = Array.from({ length: S * 2 }, () => new Float32Array(length)) // source × channel
   const sumWeight = new Float32Array(length)
   const stride = Math.floor((1 - OVERLAP) * SEGMENT)
   const offsets: number[] = []
@@ -255,7 +261,7 @@ export async function separate(
     const res = await segmentPass(segL, segR, run)
     // center_trim back to the chunk, weighted into place.
     const trim = Math.floor(delta / 2)
-    for (let sc = 0; sc < 8; sc++) {
+    for (let sc = 0; sc < S * 2; sc++) {
       const src = sc * SEGMENT + trim
       const dst = out[sc]
       for (let i = 0; i < chunkLength; i++) dst[offset + i] += weight[i] * res[src + i]

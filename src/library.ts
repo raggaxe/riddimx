@@ -8,6 +8,8 @@ import { mixer } from './engine/mixer'
 import { detectBpm } from './engine/analyze'
 import { detectKey } from './engine/key'
 import { groupRiddims, riddimPrint, type RiddimPrint } from './engine/riddim'
+import { fileId, stemsModel, stemsFor } from './engine/ai/stems'
+import { MODEL } from './engine/ai/demucs'
 
 export interface Entry {
   id: string
@@ -23,6 +25,7 @@ export interface Entry {
   duration?: number // seconds (links: once played on a deck)
   riddim?: RiddimPrint | null // local files: what its instrumental sounds like (null = measured, no tempo)
   riddimSolo?: boolean // the DJ said it is not part of the riddim it was grouped in
+  stems?: string // local files, desktop app: the model that separated its AI stems, or 'error'; not loadable before either
 }
 
 /** Versions of the same instrumental, found by listening (see engine/riddim.ts). */
@@ -41,6 +44,10 @@ interface LibraryState {
   played: string[] // ids loaded on a deck during this session
   riddims: Riddim[]
   riddimView: string | null // riddim shown in the library (key), null = the normal lists
+  separating: string | null // id of the file whose stems are being separated now
+  sepProgress: number // 0..1, of that file
+  stemsWaiting: string[] // ids of files not checked yet or with no stems (not loadable yet), in order
+  stemsUpgrade: string[] // ids of files playing with stems by an older model, to separate again when nothing waits
 }
 
 /** Drag type of a library row being dragged onto a deck (the data is the entry id). */
@@ -81,8 +88,27 @@ function loadLinks(): Entry[] {
 
 class Library extends Store<LibraryState> {
   constructor() {
-    super({ entries: loadLinks(), lists: loadLists(), error: null, analyzing: null, onDeck: {}, played: [], riddims: [], riddimView: null })
+    super({
+      entries: loadLinks(),
+      lists: loadLists(),
+      error: null,
+      analyzing: null,
+      onDeck: {},
+      played: [],
+      riddims: [],
+      riddimView: null,
+      separating: null,
+      sepProgress: 0,
+      stemsWaiting: [],
+      stemsUpgrade: [],
+    })
     this.regroup()
+    // Every file gets its AI stems in the background as soon as it is in the library, and can be loaded
+    // as soon as its own are done. Files with stems by an older model stay loadable while they are
+    // separated again, after the new ones; failed ones are tried again.
+    const local = this.state.entries.filter((e) => e.kind === 'local' && e.path && e.stems !== MODEL)
+    this.separate(local.filter((e) => !e.stems || e.stems === 'error').map((e) => e.id))
+    this.upgrade(local.filter((e) => e.stems && e.stems !== 'error').map((e) => e.id))
     // Find the BPM of every saved clip up front, so it is known before the clip reaches a deck.
     for (const e of this.state.entries) this.lookup(e)
     // Files saved without their measurements (added before this existed) are measured in the background.
@@ -132,6 +158,103 @@ class Library extends Store<LibraryState> {
     }
     this.set({ analyzing: null })
     this.measuring = false
+  }
+
+  // ───────────────────────── AI stems ─────────────────────────
+
+  private wanted: Record<string, Deck> = {} // asked for a deck while still being separated: loaded there when done
+
+  /** Whether the file is still waiting for its AI stems (desktop app only; links never wait). */
+  waitingStems(entry: Entry): boolean {
+    return entry.kind === 'local' && this.reachable(entry) && !!desktop?.stemsSave && !entry.stems
+  }
+
+  /** The track can be reached: links always; files when open in this session or known on disk. */
+  reachable(entry: Entry): boolean {
+    return entry.kind !== 'local' || !!entry.file || !!entry.path
+  }
+
+  private separate(ids: string[]): void {
+    if (!desktop?.stemsSave) return
+    const fresh = ids.filter((id) => !this.state.stemsWaiting.includes(id) && id !== this.state.separating)
+    if (!fresh.length) return
+    this.set({ stemsWaiting: [...this.state.stemsWaiting, ...fresh] })
+    if (!this.splitting) void this.splitAll()
+  }
+
+  private upgrade(ids: string[]): void {
+    if (!desktop?.stemsSave) return
+    const fresh = ids.filter((id) => !this.state.stemsUpgrade.includes(id) && id !== this.state.separating)
+    if (!fresh.length) return
+    this.set({ stemsUpgrade: [...this.state.stemsUpgrade, ...fresh] })
+    if (!this.splitting) void this.splitAll()
+  }
+
+  private splitting = false
+  private checked = new Set<string>() // waiting files already looked at and found without stems
+
+  /**
+   * One file at a time (each takes the whole GPU), each freed as soon as it is done. First the files
+   * that cannot be loaded yet: a file whose stored stems are by an older model is freed at once (it
+   * plays with those) and goes to the upgrade queue, separated again only when nothing else waits.
+   */
+  private async splitAll(): Promise<void> {
+    this.splitting = true
+    while (this.state.stemsWaiting.length || this.state.stemsUpgrade.length) {
+      const upgrading = !this.state.stemsWaiting.length
+      const [id, ...rest] = upgrading ? this.state.stemsUpgrade : this.state.stemsWaiting
+      this.set(upgrading ? { stemsUpgrade: rest } : { stemsWaiting: rest })
+      const entry = this.byId(id)
+      if (!entry || entry.kind !== 'local') continue
+      let result = entry.stems && entry.stems !== 'error' ? entry.stems : 'error'
+      try {
+        const bytes = entry.file
+          ? await entry.file.arrayBuffer()
+          : entry.path && desktop
+            ? (await desktop.readAudio(entry.path))?.slice().buffer
+            : null
+        if (bytes) {
+          const sha = await fileId(bytes)
+          const stored = await stemsModel(sha)
+          if (stored === MODEL) result = MODEL
+          else if (!stored && !upgrading && !this.checked.has(id) && !this.wanted[id] && rest.length) {
+            // Nothing stored: separated after every other waiting file has been looked at (that takes
+            // seconds, and frees the ones whose stems are already there).
+            this.checked.add(id)
+            this.set({ stemsWaiting: [...this.state.stemsWaiting, id] })
+            continue
+          } else if (stored && !upgrading) {
+            // Loadable now with what is there; separated again later.
+            result = stored
+            this.upgrade([id])
+          } else {
+            this.set({ separating: id, sepProgress: 0 })
+            const done = await stemsFor(
+              sha,
+              () => mixer.ctx.decodeAudioData(bytes),
+              (p) => this.set({ sepProgress: p }),
+            )
+            if (done) result = MODEL
+          }
+        }
+      } catch (e) {
+        console.warn('AI stems failed', entry.title, e)
+      }
+      this.set({ separating: null, sepProgress: 0 })
+      this.checked.delete(id)
+      if (!this.byId(id)) continue // removed meanwhile
+      this.patchEntry(id, { stems: result })
+      const deck = this.wanted[id]
+      delete this.wanted[id]
+      if (deck && !deck.get().playing) this.load(this.byId(id)!, deck)
+    }
+    this.splitting = false
+  }
+
+  /** Separate this one next (the DJ asked for it). */
+  private hurry(id: string): void {
+    const rest = this.state.stemsWaiting.filter((x) => x !== id)
+    if (rest.length !== this.state.stemsWaiting.length) this.set({ stemsWaiting: [id, ...rest] })
   }
 
   // ───────────────────────── riddims ─────────────────────────
@@ -213,6 +336,7 @@ class Library extends Store<LibraryState> {
     if (added.length) {
       this.commit([...this.state.entries, ...added])
       this.measure(added.map((e) => e.id))
+      this.separate(added.map((e) => e.id))
     }
     return added
   }
@@ -222,7 +346,7 @@ class Library extends Store<LibraryState> {
     const yt = parseYouTubeId(url)
     const sp = yt ? null : parseSpotifyTrack(url)
     if (!yt && !sp) {
-      this.set({ error: 'Link não reconhecido. Usa um link de vídeo do YouTube ou de faixa do Spotify.' })
+      this.set({ error: 'Link não reconhecido. Use um link de vídeo do YouTube ou de faixa do Spotify.' })
       return null
     }
     const kind = yt ? 'youtube' : 'spotify'
@@ -288,6 +412,11 @@ class Library extends Store<LibraryState> {
   }
 
   remove(id: string): void {
+    delete this.wanted[id]
+    this.set({
+      stemsWaiting: this.state.stemsWaiting.filter((x) => x !== id),
+      stemsUpgrade: this.state.stemsUpgrade.filter((x) => x !== id),
+    })
     queueMicrotask(() => this.regroup()) // a removed version leaves its riddim
     this.commit(this.state.entries.filter((e) => e.id !== id))
   }
@@ -302,7 +431,7 @@ class Library extends Store<LibraryState> {
     if (target) {
       this.set({ error: null })
       this.load(entry, target)
-    } else this.set({ error: 'Os dois decks estão a tocar: arrasta para um deck ou usa os botões A / B' })
+    } else this.set({ error: 'Os dois decks estão tocando: arraste para um deck ou use os botões A / B' })
   }
 
   /** Links: their length is only known once a deck has them; keep it for the library. */
@@ -322,7 +451,7 @@ class Library extends Store<LibraryState> {
   private async reopen(entry: Entry, deck: Deck): Promise<void> {
     const bytes = entry.path && desktop ? await desktop.readAudio(entry.path) : null
     if (!bytes) {
-      this.set({ error: `Não encontrei "${entry.title}". Foi movido ou apagado? Volta a adicioná-lo.` })
+      this.set({ error: `Não encontrei "${entry.title}". Foi movido ou apagado? Adicione de novo.` })
       return
     }
     const name = entry.path!.split('/').pop()!
@@ -331,9 +460,9 @@ class Library extends Store<LibraryState> {
     void deck.loadFile(file)
   }
 
-  /** Can be loaded now: links always; files when open in this session or known on disk. */
+  /** Can be loaded now: links always; files when open in this session or known on disk, with their stems done. */
   playable(entry: Entry): boolean {
-    return entry.kind !== 'local' || !!entry.file || !!entry.path
+    return this.reachable(entry) && !this.waitingStems(entry)
   }
 
   byId(id: string): Entry | undefined {
@@ -341,6 +470,13 @@ class Library extends Store<LibraryState> {
   }
 
   load(entry: Entry, deck: Deck): void {
+    if (this.waitingStems(entry)) {
+      // Not ready yet: it goes to the front of the queue and onto this deck when done (if the deck is free then).
+      this.wanted[entry.id] = deck
+      this.hurry(entry.id)
+      this.set({ error: `"${entry.title}" ainda está separando as faixas: entra no deck ${deck.name} quando acabar` })
+      return
+    }
     this.set({
       onDeck: { ...this.state.onDeck, [deck.name]: entry.id },
       played: this.state.played.includes(entry.id) ? this.state.played : [...this.state.played, entry.id],

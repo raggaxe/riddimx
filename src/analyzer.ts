@@ -169,7 +169,7 @@ async function pump(): Promise<void> {
   current = null
   running = false
   announce()
-  if (active) setStatus('Pronto. À espera de clipes.')
+  if (active) setStatus('Pronto. Esperando clipes.')
 }
 
 channel.onmessage = (e) => {
@@ -206,7 +206,7 @@ startBtn.addEventListener('click', async () => {
     const audio = stream.getAudioTracks()[0]
     if (!audio) {
       stream.getTracks().forEach((t) => t.stop())
-      setStatus('Sem áudio. Tenta de novo: escolhe este separador e ativa "partilhar áudio do separador".', true)
+      setStatus('Sem áudio. Tente de novo: escolha esta aba e ative "compartilhar áudio da aba".', true)
       return
     }
     stream.getVideoTracks().forEach((t) => (t.enabled = false))
@@ -226,16 +226,16 @@ startBtn.addEventListener('click', async () => {
       player?.pauseVideo?.()
       startBtn.hidden = false
       announce()
-      setStatus('Partilha terminada. Clica em Ativar para retomar.', true)
+      setStatus('Compartilhamento encerrado. Clique em Ativar para retomar.', true)
     })
     active = true
     startBtn.hidden = true
     $('help').hidden = true
-    setStatus('Pronto. À espera de clipes.')
+    setStatus('Pronto. Esperando clipes.')
     announce()
     void pump()
   } catch {
-    setStatus('Partilha cancelada. Clica em Ativar e aceita o pedido do browser.', true)
+    setStatus('Compartilhamento cancelado. Clique em Ativar e aceite o pedido do browser.', true)
   }
 })
 

@@ -10,42 +10,48 @@ import { camelot, harmonic } from '../engine/key'
 import { Waveform } from './Waveform'
 import { Jog } from './Jog'
 import { Scale } from './Meter'
-import { PAD_MODES, padModes, samplerBase, type PadMode } from '../padmode'
-import { sampler } from '../engine/sampler'
+import { Knob } from './Knob'
+import { DUB_BEATS, DUB_LIMITS, dubSettings } from '../engine/dub'
+import { PAD_MODES, RIDDIM_PADS, padModes, riddimOn, riddimPad, type PadMode } from '../padmode'
 
-/** Pitch fader ranges, in %. Marks top to bottom: slower at the top, faster at the bottom (like a turntable). */
-const RANGES = [8, 16, 50] as const
-const marksFor = (r: number) => {
-  const half = String(r / 2)
-  return ['−' + r, null, '−' + half, null, '0', null, '+' + half, null, '+' + r]
-}
-const savedRange = (name: string): number => {
-  try {
-    const r = Number(localStorage.getItem('vx_pitch_range_' + name))
-    return (RANGES as readonly number[]).includes(r) ? r : 8
-  } catch {
-    return 8
-  }
-}
 
-const SOURCE_LABEL = { none: 'VAZIO', local: 'FICHEIRO', youtube: 'YOUTUBE', spotify: 'SPOTIFY' }
-const STEM_LABEL: Record<Stem, string> = { vocal: 'VOC', instr: 'INS', bass: 'BASS', kick: 'KICK', hat: 'HAT' }
+const SOURCE_LABEL = { none: 'VAZIO', local: 'ARQUIVO', youtube: 'YOUTUBE', spotify: 'SPOTIFY' }
+const STEM_LABEL: Record<Stem, string> = {
+  vocal: 'VOCAL',
+  instr: 'INSTR',
+  bass: 'BASS',
+  kick: 'KICK',
+  hat: 'HAT',
+}
 const FX_LABEL: Record<FxType, string> = { echo: 'ECHO', reverb: 'REVERB', flanger: 'FLANGER', wah: 'WAH' }
 const FX_NAME: Record<FxType, string> = { echo: 'Echo', reverb: 'Reverb', flanger: 'Flanger', wah: 'Wah' }
 const FX_HINT: Record<FxType, string> = {
   echo: 'Eco ao ritmo da música',
   reverb: 'Reverb: sala grande',
-  flanger: 'Flanger: varrimento metálico',
+  flanger: 'Flanger: varredura metálico',
   wah: 'Wah: filtro que abre e fecha',
 }
 const MODES = PAD_MODES
 type Mode = PadMode
-const MODE_LABEL: Record<Mode, string> = { cue: 'CUE', loop: 'LOOP', stems: 'STEMS', sampler: 'SAMPLER' }
+const MODE_LABEL: Record<Mode, string> = { cue: 'CUE', loop: 'LOOP', stems: 'STEMS', riddim: 'RIDDIM' }
+const pct = (v: number): string => Math.round(v * 100) + '%'
+const icon = (d: string) => (
+  <svg viewBox="0 0 16 16" aria-hidden="true">
+    <path d={d} />
+  </svg>
+)
+/** Pad mode tabs under the wave: hot cue pin, loop arrows, stem faders, riddim wave. */
+const MODE_ICON: Record<Mode, React.ReactNode> = {
+  cue: icon('M8 14.5s-4.5-4.6-4.5-8a4.5 4.5 0 019 0c0 3.4-4.5 8-4.5 8zM8 8.2a1.7 1.7 0 100-3.4 1.7 1.7 0 000 3.4z'),
+  loop: icon('M3 7.5V7a3 3 0 013-3h6.5M10.5 2l2 2-2 2M13 8.5V9a3 3 0 01-3 3H3.5M5.5 14l-2-2 2-2'),
+  stems: icon('M4 2v12M8 2v12M12 2v12M2.5 10h3M6.5 5h3M10.5 8.5h3'),
+  riddim: icon('M1.5 8h2l1.5-4 2 8 2-10 2 9 1.5-3h2'),
+}
 const MODE_HINT: Record<Mode, string> = {
   cue: 'Pads de hot cue: saltar para pontos marcados',
   loop: 'Pads de loop: 4 e 8 batidas, manual, metade e dobro',
-  stems: 'Pads de stems: tirar ou isolar voz, instrumentos, baixo, bombo e pratos',
-  sampler: 'Pads do sampler: o deck A toca os sons 1 a 4, o deck B os sons 5 a 8',
+  stems: 'Pads de stems: tirar ou isolar voz, instrumentos, baixo, bumbo e pratos',
+  riddim: 'Pads de riddim: version (sem voz), acapella (só voz), drum & bass, tudo',
 }
 
 /** 75.3 → "1:15" */
@@ -53,6 +59,7 @@ const clock = (seconds: number): string => Math.floor(seconds / 60) + ':' + Stri
 
 export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
   const s = useStore(deck)
+  const dub = useStore(dubSettings)
   useStore(other) // re-render when the other deck's grid changes (sync hint)
   const bpm = useStore(bpmStore)
   const streaming = s.kind === 'youtube' || s.kind === 'spotify'
@@ -62,23 +69,9 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
   // Shared with the controller: its pads follow this mode, and its mode buttons change it.
   const mode = useStore(padModes)[deck.name as 'A' | 'B']
   const setMode = (m: Mode) => padModes.setMode(deck.name as 'A' | 'B', m)
-  // SAMPLER mode: this deck's four sampler pads (A: 1-4, B: 5-8).
-  const base = samplerBase(deck.name)
-  const mine = useStore(sampler).pads.slice(base, base + 4)
-  const [range, setRange] = useState(() => savedRange(deck.name))
-  const nextRange = () => {
-    const next = RANGES[(RANGES.indexOf(range as (typeof RANGES)[number]) + 1) % RANGES.length]
-    setRange(next)
-    try {
-      localStorage.setItem('vx_pitch_range_' + deck.name, String(next))
-    } catch {
-      /* not remembered */
-    }
-  }
   const host = useCallback((el: HTMLDivElement | null) => deck.attachHost(el), [deck])
   const empty = s.kind === 'none'
   const pitch = (s.rate - 1) * 100
-  const locked = s.kind === 'youtube' || (s.keyLock && deck.canKeyLock)
   // Key the crowd hears (the pitch fader moves it when key lock is off) and whether it fits the other deck's.
   // The track's riddim, when the library knows other versions of its instrumental.
   const lib = useStore(library)
@@ -90,46 +83,6 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
   const shift = deck.keyShift
   const fits = harmonic(heard, other.heardKey)
 
-  // Bend buttons: the longer they are held, the harder they push or hold back (2% growing to 8% in a second).
-  const [bending, setBending] = useState(0)
-  const bendRun = useRef(0)
-  const bendStart = (dir: number) => {
-    if (!deck.canPitch) return
-    cancelAnimationFrame(bendRun.current)
-    const start = performance.now()
-    const step = () => {
-      const t = (performance.now() - start) / 1000
-      deck.setBend(1 + dir * Math.min(0.08, 0.02 + 0.06 * t))
-      bendRun.current = requestAnimationFrame(step)
-    }
-    step()
-    setBending(dir)
-  }
-  const bendStop = () => {
-    cancelAnimationFrame(bendRun.current)
-    deck.setBend(1)
-    setBending(0)
-  }
-  useEffect(() => () => cancelAnimationFrame(bendRun.current), [])
-  const bend = (dir: number) => ({
-    className: 'btn small' + (bending === dir ? ' held' : ''),
-    onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
-      if (e.button !== 0) return
-      e.currentTarget.setPointerCapture(e.pointerId)
-      bendStart(dir)
-    },
-    onPointerUp: bendStop,
-    onPointerCancel: bendStop,
-    onLostPointerCapture: bendStop,
-    onKeyDown: (e: React.KeyboardEvent) => {
-      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
-        e.preventDefault()
-        bendStart(dir)
-      }
-    },
-    onKeyUp: (e: React.KeyboardEvent) => (e.key === ' ' || e.key === 'Enter') && bendStop(),
-    onBlur: () => bending === dir && bendStop(),
-  })
 
   // One line at most, most important first.
   let message: React.ReactNode = null
@@ -159,12 +112,12 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
     const missing = s.anchor === null ? s : other.get()
     message = (
       <p className="deck-msg">
-        SYNC só de tempo: falta a grelha de batidas no deck {s.anchor === null ? deck.name : other.name}.{' '}
-        {missing.processed ? 'É detetada sozinha em alguns segundos.' : 'Carrega em TAP ao ritmo (4 vezes).'}
+        SYNC só de tempo: falta a grid de batidas no deck {s.anchor === null ? deck.name : other.name}.{' '}
+        {missing.processed ? 'É detetada sozinha em alguns segundos.' : 'Aperte TAP ao ritmo (4 vezes).'}
       </p>
     )
   } else if (streaming && searching) {
-    message = <p className="deck-msg live">A procurar BPM…</p>
+    message = <p className="deck-msg live">Procurando BPM…</p>
   } else if (streaming && notFound) {
     message = (
       <p className="deck-msg">
@@ -175,7 +128,7 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
 
   return (
     <section
-      className={`deck deck-${deck.name.toLowerCase()}${over ? ' over' : ''}`}
+      className={`deck dv2 deck-${deck.name.toLowerCase()}${over ? ' over' : ''}`}
       onDragOver={(e) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = 'copy'
@@ -197,14 +150,15 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
           <div className="yt-box" hidden={s.kind !== 'youtube'}>
             <div className="yt-inner" ref={host} />
           </div>
-          {s.kind !== 'youtube' && (s.cover ? <img src={s.cover} alt="" /> : <span>{deck.name}</span>)}
+          {s.kind !== 'youtube' && (s.cover ? <img key={s.cover} src={s.cover} alt="" /> : <span>{deck.name}</span>)}
           {(s.cover || s.kind === 'youtube') && <b className="dk-letter">{deck.name}</b>}
         </div>
         <div className="deck-title">
-          <strong>{empty ? 'Sem música' : s.title}</strong>
+          {/* Keyed by the title: a new track fades in instead of swapping in place. */}
+          <strong key={empty ? '' : s.title}>{empty ? 'Sem música' : s.title}</strong>
           <span>
             {empty ? (
-              'Arrasta da biblioteca ou dá duplo clique numa faixa'
+              'Arraste da biblioteca ou dê duplo clique numa faixa'
             ) : (
               <>
                 {/* With other versions of its riddim, that matters more than where the file came from. */}
@@ -217,13 +171,13 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                       library.showRiddim(versions.key)
                     }}
                     title={
-                      '"' + versions.name + '": há mais ' + (versions.members.length - 1) + ' versões deste instrumental. Clica para as ver'
+                      '"' + versions.name + '": há mais ' + (versions.members.length - 1) + ' versões deste instrumental. Clique para ver'
                     }
                   >
                     +{versions.members.length - 1} {versions.members.length === 2 ? 'versão' : 'versões'}
                   </button>
                 )}
-                {s.loading ? <i className="dk-loading">a carregar…</i> : s.artist}
+                {s.loading ? <i className="dk-loading">carregando…</i> : s.artist}
               </>
             )}
           </span>
@@ -233,7 +187,7 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
           disabled={empty || s.playing}
           onClick={() => deck.eject()}
           aria-label={'Ejetar a música do deck ' + deck.name}
-          title={s.playing ? 'Pára a música para a poder ejetar' : 'Ejetar: tirar a música do deck'}
+          title={s.playing ? 'Pare a música para poder ejetar' : 'Ejetar: tirar a música do deck'}
         >
           <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true">
             <path d="M6 2l4 5H2z M2 9h8v1.5H2z" fill="currentColor" />
@@ -261,7 +215,14 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
               {s.bpm ? (s.bpm * s.rate).toFixed(1) : '--.-'}
             </strong>
           </div>
-          <div>
+          <small className="bpm-unit">BPM</small>
+        </div>
+      </header>
+
+      <Waveform
+        deck={deck}
+        info={
+          <div className="dk-keytap">
             <em
               className={'key' + (fits ? ' match' : '') + (shift ? ' shifted' : '')}
               title={
@@ -271,13 +232,17 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                     ' em ' +
                     (shift > 0 ? '+' : '') +
                     shift +
-                    ' meio-tom. Liga o KEY para o manter. '
+                    ' meio-tom. Ligue o KEY para manter. '
                   : 'Tom da música e código Camelot. ') + (fits ? 'Combina com o outro deck.' : '')
               }
             >
               {heard ? heard + ' · ' + camelot(heard) : '—'}
             </em>
-            <button onClick={() => deck.tap()} disabled={empty} title="Marca o tempo ao ritmo da música">
+            <button
+              onClick={(e) => (e.shiftKey ? deck.markBar() : deck.tap())}
+              disabled={empty}
+              title="Marca o tempo ao ritmo da música. Shift+clique: aqui é o 1 do compasso"
+            >
               TAP
             </button>
             <button onClick={() => deck.scaleBpm(0.5)} disabled={!s.bpm} title="Metade do BPM">
@@ -287,10 +252,8 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
               ×2
             </button>
           </div>
-        </div>
-      </header>
-
-      <Waveform deck={deck} />
+        }
+      />
       <div className="dk-msg">{message}</div>
 
       <div className="dk-body">
@@ -307,24 +270,25 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                       ? !!s.loop
                       : m === 'stems'
                         ? Object.values(s.stems).some((on) => !on)
-                        : mine.some((p) => p.playing)
+                        : RIDDIM_PADS.some((_, i) => i < 3 && riddimOn(s.stems, i))
                 return (
                   <button
                     key={m}
                     className={'pad-mode-btn' + (mode === m ? ' now' : '') + (lit ? ' lit' : '')}
-                    disabled={empty && m !== 'sampler'}
+                    disabled={empty}
                     aria-pressed={mode === m}
                     onClick={() => setMode(m)}
                     title={MODE_HINT[m]}
                   >
-                    {MODE_LABEL[m]}
+                    {MODE_ICON[m]}
+                    <span>{MODE_LABEL[m]}</span>
                   </button>
                 )
               })}
             </div>
             <div
-              className={'pad-set n' + (mode === 'stems' ? 5 : mode === 'loop' ? 6 : 4)}
-              data-ai={mode === 'stems' ? s.aiStems : undefined}
+              className={'pad-set n' + (mode === 'stems' ? 5 : mode === 'loop' ? 6 : 4) + ' grid2' + (mode === 'stems' ? ' g5' : mode === 'loop' ? ' g6' : '')}
+              data-ai={mode === 'stems' || mode === 'riddim' ? s.aiStems : undefined}
               style={{ '--ai': s.aiProgress } as React.CSSProperties}
             >
               {mode === 'cue' &&
@@ -340,7 +304,7 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                     }}
                     title={
                       at !== null
-                        ? 'Hot cue ' + (i + 1) + ' em ' + clock(at) + '. Clique: saltar. Botão direito ou Shift+clique: apagar'
+                        ? 'Hot cue ' + (i + 1) + ' em ' + clock(at) + '. Clique: pular. Botão direito ou Shift+clique: apagar'
                         : 'Hot cue ' + (i + 1) + ' livre. Clique: marcar aqui'
                     }
                   >
@@ -385,17 +349,25 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                   </button>
                 </>
               )}
-              {mode === 'sampler' &&
-                mine.map((p, i) => (
+              {mode === 'riddim' &&
+                RIDDIM_PADS.map((r, i) => (
                   <button
-                    key={i}
-                    className={'pad samp' + (p.name ? ' loaded' : '') + (p.playing ? ' set' : '')}
-                    onClick={(e) => (e.shiftKey ? sampler.stop(base + i) : p.name ? sampler.trigger(base + i) : undefined)}
-                    disabled={!p.name}
-                    title={p.name ? p.name + ': tocar / parar. Shift+clique: parar' : 'Pad ' + (base + i + 1) + ' do sampler vazio'}
+                    key={r.label}
+                    className={'pad riddim r' + i + (i < 3 && riddimOn(s.stems, i) ? ' set' : '')}
+                    disabled={!deck.canStems}
+                    aria-pressed={i < 3 ? riddimOn(s.stems, i) : undefined}
+                    onClick={() => riddimPad(deck, i)}
+                    title={
+                      r.hint +
+                      (i < 3 ? '. Clique outra vez: a música inteira volta' : '') +
+                      (s.aiStems === 'ready' ? ' (stems IA)' : s.aiStems === 'working' ? ' (separando com IA; até lá, filtros)' : '')
+                    }
+                    aria-label={r.label}
                   >
-                    <b>{base + i + 1}</b>
-                    <span>{p.name ?? '—'}</span>
+                    <span className="rl">{r.label}</span>
+                    <span className="rs" aria-hidden>
+                      {r.short}
+                    </span>
                   </button>
                 ))}
               {mode === 'stems' &&
@@ -414,10 +386,10 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                       (s.aiStems === 'ready'
                         ? 'Stems IA. '
                         : s.aiStems === 'working'
-                          ? `A separar com IA: ${Math.round(s.aiProgress * 100)}% (até lá, filtros). `
+                          ? `Separando com IA: ${Math.round(s.aiProgress * 100)}% (até lá, filtros). `
                           : s.aiStems === 'error'
-                            ? 'Separação IA falhou; a usar filtros. '
-                            : '') + 'Clique: tirar / repor. Botão direito ou Shift+clique: ouvir só esta parte'
+                            ? 'Separação IA falhou; usando filtros. '
+                            : '') + 'Clique: tirar / pôr de volta. Botão direito ou Shift+clique: ouvir só esta parte'
                     }
                   >
                     {STEM_LABEL[st]}
@@ -425,7 +397,7 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                 ))}
             </div>
           </div>
-          <div className={'dk-fx' + (deck.canFx ? '' : ' off')} title={deck.canFx ? '' : 'Efeitos só em ficheiros ou clipes YouTube'}>
+          <div className={'dk-fx' + (deck.canFx ? '' : ' off')} title={deck.canFx ? '' : 'Efeitos só em arquivos ou clipes YouTube'}>
             {/* The effect's name switches it on and off; the arrow beside it picks another one. */}
             <div className={'fx-pick' + (s.fxOn ? ' on' : '')}>
               <button
@@ -433,7 +405,7 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                 disabled={!deck.canFx}
                 aria-pressed={s.fxOn}
                 onClick={() => deck.toggleFx()}
-                title={FX_HINT[s.fx] + (s.fxOn ? '. Clica para desligar' : '. Clica para ligar')}
+                title={FX_HINT[s.fx] + (s.fxOn ? '. Clique para desligar' : '. Clique para ligar')}
               >
                 {FX_LABEL[s.fx]}
               </button>
@@ -462,32 +434,48 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                 </select>
               </label>
             </div>
-            <label className={'fx-amount' + (s.fxOn ? ' on' : '')} title="Quantidade de efeito (duplo clique: 50%)">
-              <input
-                type="range"
+            <div className={'fx-knob' + (s.fxOn ? ' on' : '')} title="Quantidade de efeito (duplo clique: 50%)">
+              <Knob label="FX" value={s.fxAmount} min={0} max={1} reset={0.5} format={pct} onChange={(v) => deck.setFxAmount(v)} />
+            </div>
+            {/* The DUB button's echo, played live: it changes an echo already ringing too (both decks share it). */}
+            <div className="dk-dubk" title="DUB ao vivo: mexe no eco do botão DUB, mesmo depois de jogar o som (vale para os dois decks). Mais ajustes em Ajustes › Decks">
+              <Knob
+                label="TEMPO"
+                value={Math.max(0, DUB_BEATS.findIndex((b) => b.value === dub.beats))}
+                min={0}
+                max={DUB_BEATS.length - 1}
+                reset={2}
+                format={(v) => DUB_BEATS[Math.round(v)].label.replace(' batidas', '').replace(' batida', '')}
+                onChange={(v) => dubSettings.update({ beats: DUB_BEATS[Math.round(v)].value })}
+              />
+              <Knob
+                label="REP"
+                value={dub.feedback}
+                min={DUB_LIMITS.feedback[0]}
+                max={DUB_LIMITS.feedback[1]}
+                reset={0.72}
+                format={pct}
+                onChange={(v) => dubSettings.update({ feedback: v })}
+              />
+              <Knob
+                label="BRILHO"
+                value={dub.tone}
+                min={DUB_LIMITS.tone[0]}
+                max={DUB_LIMITS.tone[1]}
+                reset={3000}
+                format={(v) => (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : Math.round(v) + '')}
+                onChange={(v) => dubSettings.update({ tone: v })}
+              />
+              <Knob
+                label="MOLA"
+                value={dub.space}
                 min={0}
                 max={1}
-                step={0.01}
-                value={s.fxAmount}
-                disabled={!deck.canFx}
-                aria-label="Quantidade de efeito"
-                style={{ '--v': s.fxAmount } as React.CSSProperties}
-                onChange={(e) => deck.setFxAmount(Number(e.target.value))}
-                onDoubleClick={() => deck.setFxAmount(0.5)}
+                reset={0}
+                format={pct}
+                onChange={(v) => dubSettings.update({ space: v })}
               />
-              <output>{Math.round(s.fxAmount * 100)}</output>
-            </label>
-            <button
-              className={'pad dub' + (s.dubbing ? ' set' : '')}
-              disabled={!deck.canFx}
-              aria-pressed={s.dubbing}
-              onPointerDown={() => deck.dubPress(true)}
-              onPointerUp={() => deck.dubPress(false)}
-              onPointerLeave={() => s.dubbing && deck.dubPress(false)}
-              title="Dub: atira o som para um eco longo. Ajustes no separador Sampler"
-            >
-              DUB
-            </button>
+            </div>
           </div>
           <div className="dk-transport">
             <button
@@ -503,7 +491,7 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
               onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && !e.repeat && (e.preventDefault(), deck.cueDown())}
               onKeyUp={(e) => (e.key === ' ' || e.key === 'Enter') && deck.cueUp()}
               title={
-                s.playing ? 'CUE: voltar ao ponto de cue e parar' : 'CUE: marcar o cue aqui. Manter premido: ouvir a partir dele até largar'
+                s.playing ? 'CUE: voltar ao ponto de cue e parar' : 'CUE: marcar o cue aqui. Segure: ouvir a partir dele até soltar'
               }
             >
               CUE
@@ -532,7 +520,7 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
                 !s.bpm || !other.get().bpm
                   ? 'SYNC precisa do BPM dos dois decks'
                   : s.syncOn
-                    ? 'A seguir o deck ' + other.name + '. Clica para soltar'
+                    ? 'Seguindo o deck ' + other.name + '. Clique para soltar'
                     : 'Segue o tempo e as batidas do deck ' + other.name
               }
             >
@@ -543,127 +531,29 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
               disabled={empty}
               onClick={() => deck.rewind()}
               aria-label="Rewind"
-              title="Rewind (pull up). Ajustes no separador Sampler"
+              title="Rewind (pull up). Ajustes em Ajustes › Decks"
             >
               <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                 <path d="M8 3.5v9L1.5 8zM14.5 3.5v9L8 8z" fill="currentColor" />
               </svg>
             </button>
+            <button
+              className={'btn dub' + (s.dubbing ? ' on' : '')}
+              disabled={!deck.canFx}
+              aria-pressed={s.dubbing}
+              onPointerDown={() => deck.dubPress(true)}
+              onPointerUp={() => deck.dubPress(false)}
+              onPointerLeave={() => s.dubbing && deck.dubPress(false)}
+              title="DUB: joga o som num eco longo. Os knobs TEMPO, REP, BRILHO e MOLA mexem no eco ao vivo"
+            >
+              DUB
+            </button>
           </div>
         </div>
 
         <Jog deck={deck} />
-
-        <div className="dk-pitch">
-          <div className="pitch-top">
-            <button
-              className={'pitch-read' + (Math.abs(pitch) < 0.05 ? ' zero' : '') + (s.syncOn ? ' synced' : '')}
-              disabled={!deck.canPitch || Math.abs(pitch) < 0.05}
-              onClick={() => deck.setRate(1)}
-              title={s.syncOn ? 'Tempo seguido pelo SYNC' : 'Pitch em %. Clica para voltar a 0'}
-              aria-label={'Pitch ' + pitch.toFixed(1) + '%. Repor a zero'}
-            >
-              <output>
-                {pitch >= 0 ? '+' : ''}
-                {pitch.toFixed(1)}
-                <small>%</small>
-              </output>
-              {s.syncOn && <em>SYNC</em>}
-            </button>
-            <button
-              className="pitch-range"
-              onClick={nextRange}
-              disabled={!deck.canPitch}
-              title="Alcance do pitch: clica para mudar (8, 16 ou 50%)"
-            >
-              ±{range}
-            </button>
-          </div>
-          <div className="pitch-row">
-            <Scale marks={marksFor(range)} className={deck.name === 'B' ? 'right' : ''} />
-            <input
-              type="range"
-              min={-range}
-              max={range}
-              step={range > 16 ? 0.1 : 0.05}
-              value={pitch}
-              disabled={!deck.canPitch}
-              aria-label="Pitch"
-              onChange={(e) => deck.setRate(1 + Number(e.target.value) / 100)}
-              onDoubleClick={() => deck.setRate(1)}
-              title={'Pitch ±' + range + '%: para baixo acelera (duplo clique: repor)'}
-            />
-            <Scale marks={marksFor(range)} className={deck.name === 'B' ? '' : 'right'} bare />
-          </div>
-          <div className="pitch-foot">
-            <button
-              className={'pad keylock' + (locked ? ' set' : '') + (shift ? ' warn' : '')}
-              disabled={!deck.canKeyLock}
-              aria-pressed={locked}
-              onClick={() => deck.toggleKeyLock()}
-              title={
-                s.kind === 'youtube'
-                  ? 'YouTube mantém sempre o tom ao mudar o tempo'
-                  : s.kind === 'spotify'
-                    ? 'Spotify não muda o tempo'
-                    : locked
-                      ? 'Key lock ligado: o tempo muda sem mudar o tom. Clica para desligar'
-                      : 'Key lock desligado: o pitch muda também o tom' +
-                        (shift ? ' (agora ' + (shift > 0 ? '+' : '') + shift + ' meio-tom)' : '') +
-                        '. Clica para ligar'
-              }
-            >
-              <svg viewBox="0 0 12 12" width="9" height="9" aria-hidden="true">
-                <rect x="2.5" y="5.5" width="7" height="5" rx="1" fill="currentColor" />
-                <path
-                  d={locked ? 'M4 5.5V4a2 2 0 014 0v1.5' : 'M4 5.5V4a2 2 0 013.9-.6'}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.3"
-                  strokeLinecap="round"
-                />
-              </svg>
-              KEY
-            </button>
-            <div className="dk-bend">
-              <button
-                disabled={!deck.canPitch}
-                {...bend(-1)}
-                title="Travar: atrasa enquanto premido, cada vez mais (até 8%)"
-                aria-label="Travar"
-              >
-                <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
-                  <path
-                    d="M7.5 2.5L4 6l3.5 3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              <button
-                disabled={!deck.canPitch}
-                {...bend(1)}
-                title="Empurrar: adianta enquanto premido, cada vez mais (até 8%)"
-                aria-label="Empurrar"
-              >
-                <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
-                  <path
-                    d="M4.5 2.5L8 6 4.5 9.5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
+
     </section>
   )
 }

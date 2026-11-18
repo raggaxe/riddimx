@@ -63,7 +63,7 @@ export function DubSoundMenu() {
               : undefined
           }
         >
-          <h5>Predefinições</h5>
+          <h5>Presets</h5>
           <div className="dbx-pop-grid">
             {FACTORY.map((x) => (
               <button
@@ -77,7 +77,7 @@ export function DubSoundMenu() {
               </button>
             ))}
           </div>
-          {d.user.length > 0 && <h5>As tuas</h5>}
+          {d.user.length > 0 && <h5>Seus</h5>}
           <div className="dbx-pop-grid">
             {d.user.map((x) => (
               <button
@@ -110,7 +110,7 @@ export function DubSoundMenu() {
           </div>
           <div className="dbx-pop-foot">
             <button role="menuitem" onClick={() => picker.current?.click()}>
-              Ficheiro teu…
+              Arquivo seu…
             </button>
             <button role="menuitem" onClick={() => choose(() => dubBox.surprise())}>
               Surpresa

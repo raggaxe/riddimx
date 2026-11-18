@@ -32,10 +32,10 @@ export function EchoUnit() {
     <div className="echo-desk">
       <MixSection title="Atirar" className="echo-throw">
         <div className="echo-throws">
-          <button className={'ru-throw a' + (o.throwing.A ? ' on' : '')} {...hold('A')} title="Manter premido: atira o deck A para o eco">
+          <button className={'ru-throw a' + (o.throwing.A ? ' on' : '')} {...hold('A')} title="Segurar: atira o deck A para o eco">
             THROW A
           </button>
-          <button className={'ru-throw b' + (o.throwing.B ? ' on' : '')} {...hold('B')} title="Manter premido: atira o deck B para o eco">
+          <button className={'ru-throw b' + (o.throwing.B ? ' on' : '')} {...hold('B')} title="Segurar: atira o deck B para o eco">
             THROW B
           </button>
         </div>
@@ -63,7 +63,7 @@ export function EchoUnit() {
           className={'ru-tap' + (manual ? ' on' : '')}
           onClick={() => outboard.tap()}
           onDoubleClick={() => outboard.syncTime()}
-          title="Bate 2 ou mais vezes no tempo que queres. Duplo clique: volta a seguir a música"
+          title="Bata 2 ou mais vezes no tempo que você quer. Duplo clique: volta a seguir a música"
         >
           TAP · {Math.round(outboard.echoTime * 1000)} ms
         </button>
@@ -147,8 +147,8 @@ function AutoDubControls() {
           ad.on
             ? 'Parar: a música volta a como estava'
             : ready
-              ? 'Liga: a app faz a versão dub do deck ' + live!.name + ' ao vivo'
-              : 'Põe uma música (ficheiro) a tocar primeiro'
+              ? 'Ligar: a app faz a versão dub do deck ' + live!.name + ' ao vivo'
+              : 'Coloque uma música (arquivo) tocando primeiro'
         }
       >
         <b>{ad.on ? 'PARAR' : 'AUTO'}</b>
@@ -168,12 +168,12 @@ function AutoDubControls() {
         ))}
       </div>
       <div className={'ru-adub-screen' + (ad.on ? ' on' : '')} aria-live="polite">
-        <b>{ad.on ? ad.scene : ready ? 'Pronto' : 'À espera'}</b>
+        <b>{ad.on ? ad.scene : ready ? 'Pronto' : '�Esperando'}</b>
         <span>
           {ad.on
-            ? (ad.doing ?? (ad.grid ? 'muda no início de cada frase' : 'sem grelha de batida: segue o andamento'))
+            ? (ad.doing ?? (ad.grid ? 'muda no início de cada frase' : 'sem grid de batida: segue o andamento'))
             : ready
-              ? 'carrega em AUTO para começar'
+              ? 'aperte AUTO para começar'
               : 'toca uma música'}
         </span>
       </div>
@@ -209,7 +209,7 @@ export function Rack() {
   return (
     <div className="rack dub-rack" ref={box}>
       <section className="dub-area" aria-label="Dub">
-        <button className="dub-badge" onClick={() => ui.open('dubbox')} title="Dub: todos os ajustes no separador Dub Box, em baixo">
+        <button className="dub-badge" onClick={() => ui.open('dubbox')} title="Dub: todos os ajustes na aba Dub Box, embaixo">
           <DubMark />
           <span>DUB</span>
         </button>

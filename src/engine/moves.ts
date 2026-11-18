@@ -69,7 +69,7 @@ export const MOVES: Record<Move, { label: string; hint: string; long: boolean }>
     hint: 'As duas tocam juntas; a meio o grave passa de uma para a outra, depois a que sai desaparece',
     long: true,
   },
-  sweep: { label: 'VARRIMENTO', hint: 'Filtro abre na que sai enquanto o crossfader passa para a outra', long: true },
+  sweep: { label: 'VARREDURA', hint: 'Filtro abre na que sai enquanto o crossfader passa para a outra', long: true },
   tapeStop: { label: 'PARAGEM', hint: 'A que sai abranda até parar como fita; a outra entra quando pára', long: false },
   drop: {
     label: 'DROP E ENTRA',

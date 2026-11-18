@@ -174,11 +174,11 @@ npm run package:intel    # gera release/RiddimX-darwin-x64 (Intel)
 
 ### Modelo de stems (não vai para o git)
 
-O modelo Demucs em ONNX tem 166 MB, mais do que o limite do GitHub. Para criá-lo:
+O modelo Demucs `htdemucs` em ONNX (4 faixas: voz, bateria, baixo e o resto) tem 166 MB, mais do que o limite do GitHub. Para criá-lo:
 
 ```bash
 python3 -m venv .venv-stems
-.venv-stems/bin/pip install demucs onnx onnxruntime
+.venv-stems/bin/pip install torch demucs onnx onnxruntime
 .venv-stems/bin/python tools/export_demucs_onnx.py public/models/htdemucs.onnx
 .venv-stems/bin/python tools/check_demucs_onnx.py <música.wav> public/models/htdemucs.onnx   # compara com o Demucs original
 ```
@@ -187,7 +187,7 @@ python3 -m venv .venv-stems
 
 | Função | Motor | Onde está |
 | --- | --- | --- |
-| Stems | Demucs `htdemucs` em ONNX, na GPU (WebGPU) ou na CPU (WebAssembly) | `src/engine/ai/` |
+| Stems | Demucs `htdemucs` em ONNX (cada música da biblioteca é separada ao entrar; só fica disponível depois), na GPU (WebGPU) ou na CPU (WebAssembly) | `src/engine/ai/` |
 | Letras | `whisper.cpp` 1.9.5 compilado para arm64 e x86_64, com Metal | `electron/bin/` |
 
 O modelo de letras (`ggml-large-v3-turbo-q5_0`, 547 MB) é baixado pela própria app, e ela confere o arquivo pelo SHA-256 antes de usar.
@@ -213,3 +213,15 @@ brand/           logos e ícones
 - Letras online: [LRCLIB](https://lrclib.net).
 
 Os sons de efeito em `public/sfx` são para uso pessoal.
+
+## Publicar uma versão nova (atualização automática)
+
+A app instalada procura versões novas nos releases do GitHub (`raggaxe/riddimx`) ao abrir e a cada 6 horas,
+baixa em segundo plano, confere o SHA-256 e instala ao reiniciar (botão no topo ou em Ajustes › Geral).
+
+1. Suba `"version"` no `package.json` (ex.: `0.1.0` → `0.2.0`).
+2. Escreva as novidades em `release-notes.md` (aparecem para quem atualiza).
+3. `npm run release`: gera os apps (Apple Silicon e Intel), os `.zip` e os `.sha256` e publica o release
+   com o GitHub CLI (`gh`). Sem o `gh`, os arquivos ficam em `release/` com os passos para enviar à mão.
+
+O repositório precisa ser público para a app conseguir ver os releases.

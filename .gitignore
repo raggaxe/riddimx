@@ -6,7 +6,8 @@ release
 # Python environment for the model tools (recreated with pip)
 .venv-stems
 
-# Stem model (166 MB, over GitHub's file limit): recreate it with
+# Stem model htdemucs (166 MB, over GitHub's file limit): recreate it with
+#   python3 -m venv .venv-stems && .venv-stems/bin/pip install torch demucs onnx onnxruntime
 #   .venv-stems/bin/python tools/export_demucs_onnx.py public/models/htdemucs.onnx
 public/models/*.onnx
 

@@ -102,7 +102,7 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
   if (!source) {
     return (
       <p className="dr-note">
-        Carrega uma música (ficheiro) no deck {deckName} para recortar uma frase dela.
+        Carrega uma música (arquivo) no deck {deckName} para recortar uma frase dela.
         {(a.kind === 'local' || b.kind === 'local') && (
           <button className="link" onClick={() => setDeckName(deckName === 'A' ? 'B' : 'A')}>
             Usar o deck {deckName === 'A' ? 'B' : 'A'}
@@ -146,7 +146,7 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
       <canvas
         ref={canvas}
         className="dr-clip-wave"
-        title="Arrasta por cima da frase que queres"
+        title="Arraste por cima da frase que você quer"
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId)
           held.current = view
@@ -168,7 +168,7 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
         <span>
           {sel
             ? clock(sel[0]) + ' – ' + clock(sel[1]) + ' · ' + (sel[1] - sel[0]).toFixed(1) + ' s'
-            : 'Arrasta na onda para escolher a frase'}
+            : 'Arraste na onda para escolher a frase'}
         </span>
         {sel && (
           <>
@@ -191,7 +191,7 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
           className={'dr-clip-zoom' + (zoom ? ' on' : '')}
           disabled={!sel}
           onClick={() => setZoom(!zoom)}
-          title={zoom ? 'Ver a música toda' : 'Aproximar à volta da frase, para acertar o início e o fim'}
+          title={zoom ? 'Ver a música toda' : 'Aproximar em volta da frase, para acertar o início e o fim'}
         >
           {zoom ? 'Toda' : 'Zoom'}
         </button>

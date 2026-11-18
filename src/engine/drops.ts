@@ -101,7 +101,7 @@ export class MicTake {
 
   async start(): Promise<void> {
     this.stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true },
+      audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true, ...mixer.inputConstraint() },
     })
     this.parts = []
     this.recorder = new MediaRecorder(this.stream)
@@ -111,7 +111,7 @@ export class MicTake {
 
   stop(): Promise<AudioBuffer> {
     const recorder = this.recorder
-    if (!recorder) return Promise.reject(new Error('Nada a gravar.'))
+    if (!recorder) return Promise.reject(new Error('Nada para gravar.'))
     return new Promise((resolve, reject) => {
       recorder.onstop = async () => {
         this.stream?.getTracks().forEach((t) => t.stop())

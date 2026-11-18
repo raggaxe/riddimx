@@ -245,9 +245,8 @@ class Outboard extends Store<OutboardState> {
     this.weightOut.connect(isolator.input)
     isolator.output.connect(mic.duck)
     mixer.insertPreDynamics(this.weightIn, mic.join)
-    // The MC's voice can go into the tape echo and the spring too.
-    mic.echoSend.connect(this.echoIn)
-    mic.springSend.connect(this.springIn)
+    // The MC's voice has its echo and spring in the mic channel; the spring tank sounds the same.
+    mic.useSpring(spring.buffer!)
 
     this.apply()
     // The echo follows the tempo of what is playing.
@@ -292,6 +291,7 @@ class Outboard extends Store<OutboardState> {
   private pushTempo(): void {
     const now = mixer.ctx.currentTime
     this.delay.delayTime.setTargetAtTime(this.echoTime, now, 0.15) // glides, like changing tape speed
+    mic.setTempo(60 / liveBpm(), this.echoTime)
   }
 
   private apply(): void {

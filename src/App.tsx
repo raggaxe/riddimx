@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { mixer } from './engine/mixer'
 import { deckA, deckB } from './engine/deck'
 import { spotify } from './engine/spotify'
-import { midi } from './midi'
+import './midi' // MIDI, gamepad and keyboard shortcuts start with the app
 import { library } from './library'
 import { useStore } from './store'
 import { DeckView } from './components/DeckView'
@@ -10,21 +10,21 @@ import { MixerView } from './components/MixerView'
 import { LibraryPanel } from './components/LibraryPanel'
 import { MasterPanel } from './components/MasterPanel'
 import { EchoUnit, Rack } from './components/Rack'
-import { AudioPanel } from './components/AudioPanel'
-import { MidiPanel } from './components/MidiPanel'
+import { SettingsModal } from './components/SettingsModal'
+import { PitchColumn } from './components/PitchColumn'
 import { SpotifyPanel } from './components/SpotifyPanel'
 import { Splitter } from './components/Splitter'
 import { DubBoxPanel } from './components/DubBoxPanel'
 import { SamplerPanel } from './components/SamplerPanel'
 import { TrackView } from './components/TrackView'
 import { TopBar } from './components/TopBar'
+import { VoicePanel } from './components/VoicePanel'
 
 import { ui, type Tab } from './ui'
 
 export function App() {
   const { tab, layout } = useStore(ui)
   const setTab = (t: Tab) => ui.open(t)
-  const midiState = useStore(midi)
   const sp = useStore(spotify)
 
   // A smaller window shrinks the browser first, so the decks and mixer always fit.
@@ -69,7 +69,9 @@ export function App() {
       <Rack />
       <main className="stage">
         <DeckView deck={deckA} other={deckB} />
+        <PitchColumn deck={deckA} />
         <MixerView />
+        <PitchColumn deck={deckB} />
         <DeckView deck={deckB} other={deckA} />
       </main>
       <Splitter part="bottom" sign={-1} label="Altura da biblioteca" />
@@ -79,9 +81,8 @@ export function App() {
           {tabButton('sampler', 'Sampler')}
           {tabButton('dubbox', 'Dub Box')}
           {tabButton('echo', 'Eco fita')}
+          {tabButton('voice', 'Voz')}
           {tabButton('master', 'Master')}
-          {tabButton('audio', 'Áudio')}
-          {tabButton('midi', 'Controladora MIDI', midiState.inputs.length > 0)}
           {tabButton('spotify', 'Spotify', sp.loggedIn)}
           {/* The open tab's own tools (search, add files…) sit here, on the tab row, not on a row of their own. */}
           <div className="tab-tools" id="tab-tools" />
@@ -95,12 +96,16 @@ export function App() {
               <EchoUnit />
             </div>
           )}
+          {tab === 'voice' && (
+            <div className="echo-panel">
+              <VoicePanel />
+            </div>
+          )}
           {tab === 'master' && <MasterPanel />}
-          {tab === 'audio' && <AudioPanel />}
-          {tab === 'midi' && <MidiPanel />}
           {tab === 'spotify' && <SpotifyPanel />}
         </div>
       </section>
+      <SettingsModal />
     </div>
   )
 }

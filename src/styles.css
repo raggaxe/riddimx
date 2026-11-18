@@ -26,7 +26,12 @@ body,
 body {
   background: var(--bg);
   color: var(--text);
-  font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font:
+    13px/1.4 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -56,7 +61,7 @@ input {
 .deck {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 2px;
   padding: 12px;
 }
 .deck {
@@ -93,7 +98,7 @@ input {
   display: inline-block;
   margin-right: 6px;
   padding: 0 6px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: var(--panel-2);
   border: 1px solid var(--line);
   color: var(--dim);
@@ -127,7 +132,7 @@ input {
 .bpm button {
   margin-left: 3px;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel-2);
   font-size: 10px;
@@ -147,7 +152,7 @@ input {
   height: 104px;
   background: #0a0907;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 2px;
   cursor: pointer;
   touch-action: none;
 }
@@ -172,7 +177,7 @@ input {
 }
 .pad {
   height: 34px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel-2);
   font-weight: 700;
@@ -210,7 +215,7 @@ input {
 .btn {
   height: 38px;
   padding: 0 14px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel-2);
   font-weight: 700;
@@ -230,12 +235,12 @@ input {
 }
 /* Hover only where there is a real pointer; on touch it would stick after a tap. */
 @media (hover: hover) and (pointer: fine) {
-.btn:hover:not(:disabled),
+  .btn:hover:not(:disabled),
   .pad:hover:not(:disabled),
   .bpm button:hover:not(:disabled) {
     border-color: var(--dim);
   }
-tbody tr:hover {
+  tbody tr:hover {
     background: var(--panel-2);
   }
 }
@@ -331,7 +336,7 @@ input:focus-visible {
   min-width: 0;
   height: 38px;
   padding: 0 12px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: #0a0907;
 }
@@ -408,7 +413,11 @@ td.num {
   border-top: 1px solid var(--line);
 }
 code {
-  font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+  font:
+    12px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
   color: var(--dim);
   overflow-wrap: anywhere;
 }
@@ -424,7 +433,7 @@ code {
   color: var(--text);
   background: #0a0907;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 2px;
   user-select: all;
 }
 .top-actions {
@@ -447,7 +456,7 @@ code {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-.bpm strong.analyzing {
+  .bpm strong.analyzing {
     animation: none;
     text-decoration: underline dotted;
   }
@@ -456,68 +465,68 @@ code {
 
 /* Deck adapts to its own width, wherever the page puts it. */
 @container (max-width: 470px) {
-.wave canvas {
+  .wave canvas {
     height: 84px;
   }
-.deck-title strong {
+  .deck-title strong {
     font-size: 14px;
   }
-.bpm strong {
+  .bpm strong {
     font-size: 20px;
   }
 }
 /* Phone: one column, deck A · mixer · deck B, page scrolls. */
 @media (max-width: 720px) {
-.lib-bar .url {
+  .lib-bar .url {
     flex-basis: 100%;
   }
-.lib-bar .btn {
+  .lib-bar .btn {
     flex: 1;
   }
-/* Artist column gives its room to the title. */
+  /* Artist column gives its room to the title. */
   td:nth-child(2),
   th:nth-child(2) {
     display: none;
   }
-.topbar {
+  .topbar {
     padding: 8px 10px;
   }
-.top-actions .status {
+  .top-actions .status {
     display: none;
   }
 }
 /* Fingers need bigger targets than a mouse pointer. */
 @media (pointer: coarse) {
-.btn,
+  .btn,
   .pad {
     min-height: 44px;
   }
-.btn.small {
+  .btn.small {
     height: 40px;
     min-width: 40px;
     padding: 0 12px;
   }
-.bpm button {
+  .bpm button {
     padding: 8px 10px;
     font-size: 12px;
   }
-.knob-dial {
+  .knob-dial {
     width: 48px;
     height: 48px;
   }
-/* 16px keeps iOS from zooming the page when a field gets focus. */
+  /* 16px keeps iOS from zooming the page when a field gets focus. */
   .url {
     height: 44px;
     font-size: 16px;
   }
-td {
+  td {
     padding: 8px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-.btn,
-.pad,
-.bpm button {
+  .btn,
+  .pad,
+  .bpm button {
     transition: none;
   }
 }
@@ -537,7 +546,7 @@ a.link {
   place-items: center;
   width: 36px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel-2);
   color: var(--dim);
@@ -572,14 +581,14 @@ a.link {
 .audio-panel select {
   height: 36px;
   padding: 0 8px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel-2);
   color: var(--text);
   font: inherit;
 }
 @media (pointer: coarse) {
-.pfl {
+  .pfl {
     width: 44px;
     height: 44px;
   }
@@ -612,7 +621,7 @@ a.link {
   gap: 6px;
   height: 26px;
   padding: 0 10px;
-  border-radius: 999px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel-2);
   color: var(--dim);
@@ -620,7 +629,10 @@ a.link {
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 120ms var(--ease-out), color 160ms ease, border-color 160ms ease;
+  transition:
+    transform 120ms var(--ease-out),
+    color 160ms ease,
+    border-color 160ms ease;
 }
 .chip:hover {
   color: var(--text);
@@ -653,7 +665,7 @@ a.link {
   min-width: 0;
   background: linear-gradient(180deg, #1a1711 0%, #13110d 100%);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 2px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 .strip-wrap.a {
@@ -747,29 +759,29 @@ a.link {
 /* ───────── responsive ───────── */
 
 @media (max-width: 900px) {
-.stage {
+  .stage {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
       'a b'
       'm m';
   }
-.mixer {
+  .mixer {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
     max-width: 760px;
     width: 100%;
     justify-self: center;
   }
-/* Wide-but-short mixer: EQ knobs in one row, fader shorter. */
+  /* Wide-but-short mixer: EQ knobs in one row, fader shorter. */
   .eq-grid {
     grid-template-columns: repeat(4, auto);
     justify-content: center;
   }
-.vfader {
+  .vfader {
     height: clamp(96px, 16vh, 150px);
   }
 }
 @media (max-width: 720px) {
-.stage {
+  .stage {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       'a'
@@ -778,13 +790,13 @@ a.link {
     padding: 8px;
     gap: 8px;
   }
-.mixer {
+  .mixer {
     max-width: none;
   }
-.vfader {
+  .vfader {
     height: 150px;
   }
-.topbar .status {
+  .topbar .status {
     display: none;
   }
 }
@@ -797,7 +809,7 @@ a.link {
   margin: 0 10px 10px;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 2px;
   overflow: hidden;
 }
 .tabs {
@@ -844,13 +856,13 @@ a.link {
   user-select: text;
 }
 @media (max-width: 720px) {
-.bottom {
+  .bottom {
     margin: 0 8px 8px;
   }
-.app {
+  .app {
     grid-template-rows: auto auto auto minmax(340px, 1fr);
   }
-.tab {
+  .tab {
     flex: 1;
     justify-content: center;
     padding: 12px 6px;
@@ -869,13 +881,70 @@ a.link {
   height: 124px;
   background: #0a0907;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 2px;
   cursor: grab;
   touch-action: none;
 }
 
 .trackview canvas:active {
   cursor: grabbing;
+}
+
+.trackview {
+  position: relative;
+}
+
+/* Timing of a deck's lyrics, on its own lane, left of the time-left label. */
+.lyr-timing {
+  position: absolute;
+  right: 74px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font:
+    700 8.5px/1 -apple-system,
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.06em;
+  color: #c9d1e0;
+}
+
+.lyr-timing.top {
+  top: 9px;
+}
+
+.lyr-timing.bottom {
+  bottom: 3px;
+}
+
+.lyr-timing span {
+  padding: 3px 5px;
+  border-radius: 2px;
+  background: rgba(8, 10, 14, 0.72);
+  font-variant-numeric: tabular-nums;
+}
+
+.lyr-timing button {
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  background: rgba(8, 10, 14, 0.8);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 120ms ease-out;
+}
+
+.lyr-timing button:active {
+  transform: scale(0.95);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lyr-timing button:hover {
+    border-color: rgba(143, 209, 143, 0.6);
+  }
 }
 
 /* ───────── compact deck ───────── */
@@ -896,7 +965,7 @@ a.link {
   position: relative;
   width: 96px;
   height: 54px;
-  border-radius: 6px;
+  border-radius: 2px;
   overflow: hidden;
   background: var(--accent);
   color: #0a0907;
@@ -970,7 +1039,7 @@ a.link {
 
 .deck .pad {
   height: 26px;
-  border-radius: 5px;
+  border-radius: 2px;
   font-size: 11px;
   padding: 0;
 }
@@ -1042,7 +1111,9 @@ a.link {
   border-radius: 50%;
   background: radial-gradient(circle at 50% 50%, #221f18 0 38%, #0d0c09 39% 100%);
   border: 2px solid #2f2a20;
-  box-shadow: inset 0 0 0 6px #15130e, 0 6px 18px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 0 0 0 6px #15130e,
+    0 6px 18px rgba(0, 0, 0, 0.4);
   cursor: grab;
   touch-action: none;
   outline: none;
@@ -1151,7 +1222,7 @@ a.link {
   align-content: center;
   gap: 2px;
   padding: 0 8px;
-  border-radius: 8px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel-2);
   color: var(--dim);
@@ -1276,7 +1347,7 @@ a.link {
 
 .trackview canvas {
   height: 92px;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 
 .stage {
@@ -1288,7 +1359,7 @@ a.link {
 .deck {
   gap: 6px;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 2px;
 }
 
 .dk-head {
@@ -1298,7 +1369,7 @@ a.link {
 .dk-cover {
   width: 64px;
   height: 36px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
   color: var(--accent);
@@ -1333,7 +1404,7 @@ a.link {
 
 .deck .wave canvas {
   height: 26px;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .deck .wave {
@@ -1372,7 +1443,7 @@ a.link {
 
 .deck .pad {
   height: 21px;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 10px;
   font-weight: 600;
   background: transparent;
@@ -1419,7 +1490,7 @@ a.link {
 .deck .btn {
   height: 25px;
   padding: 0 6px;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 10px;
   background: transparent;
 }
@@ -1486,7 +1557,7 @@ a.link {
 .mixer {
   gap: 6px;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 2px;
 }
 
 .strip,
@@ -1520,7 +1591,7 @@ a.link {
 .pfl {
   width: 26px;
   height: 20px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: transparent;
 }
 
@@ -1542,7 +1613,7 @@ a.link {
 
 .bottom {
   margin: 0 8px 8px;
-  border-radius: 8px;
+  border-radius: 2px;
 }
 
 .tab {
@@ -1624,9 +1695,10 @@ tr.fresh {
     display: none;
   }
 
+  /* Reduced motion: still a short fade, never a slide. */
   .dk-msg .deck-msg,
   tr.fresh {
-    transition: none;
+    transition: opacity 150ms var(--ease-out);
   }
 }
 
@@ -1730,7 +1802,7 @@ tr.fresh {
   height: 21px;
   min-width: 0;
   padding: 0 2px;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--dim);
@@ -1814,7 +1886,7 @@ tr.fresh {
   gap: 6px;
   height: 22px;
   padding: 0 9px;
-  border-radius: 999px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--dim);
@@ -1907,7 +1979,7 @@ tr.fresh {
 .lib-list {
   display: flex;
   align-items: center;
-  border-radius: 6px;
+  border-radius: 2px;
   color: var(--dim);
 }
 
@@ -1920,7 +1992,7 @@ button.lib-list,
   gap: 6px;
   padding: 5px 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 2px;
   background: none;
   color: inherit;
   font: inherit;
@@ -1961,7 +2033,7 @@ button.lib-list,
   min-width: 0;
   width: 100%;
   padding: 0 6px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text);
@@ -2006,7 +2078,7 @@ button.lib-list,
 .sfx {
   height: 24px;
   padding: 0 9px;
-  border-radius: 999px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text);
@@ -2101,7 +2173,7 @@ button.lib-list,
   height: 26px;
   min-width: 0;
   padding: 0 6px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text);
@@ -2136,7 +2208,7 @@ button.lib-list,
   top: -7px;
   right: -3px;
   padding: 0 3px;
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--a);
   color: #111;
   font-size: 8px;
@@ -2157,6 +2229,31 @@ button.lib-list,
 
 .library tbody tr.stale {
   opacity: 0.45;
+}
+
+/* Waiting for its AI stems: loadable once they are done. */
+.library tbody tr.waiting {
+  opacity: 0.6;
+}
+
+.library .stem-wait {
+  display: inline-block;
+  min-width: 30px;
+  margin-right: 6px;
+  padding: 0 4px;
+  border-radius: 2px;
+  font-size: 9px;
+  line-height: 14px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: #9aa;
+  background: rgba(255, 255, 255, 0.06);
+  vertical-align: 1px;
+}
+
+.library .stem-wait.on {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(240, 190, 60, 0.55) calc(var(--p) * 100%), rgba(255, 255, 255, 0.06) 0);
 }
 
 /* ───────── Dub Box channel (under the crossfader) ───────── */
@@ -2195,7 +2292,7 @@ button.lib-list,
   min-width: 0;
   height: 22px;
   padding: 0 4px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text);
@@ -2215,7 +2312,7 @@ button.lib-list,
   flex: none;
   width: 40px;
   height: 34px;
-  border-radius: 7px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel-2);
   color: var(--dim);
@@ -2226,7 +2323,11 @@ button.lib-list,
   cursor: pointer;
   touch-action: none;
   user-select: none;
-  transition: transform 100ms var(--ease-out), background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  transition:
+    transform 100ms var(--ease-out),
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
 }
 
 .dbx-fire {
@@ -2292,7 +2393,7 @@ button.lib-list,
   width: 150px;
   height: 26px;
   padding: 0 8px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text);
@@ -2334,7 +2435,7 @@ button.lib-list,
 .seg {
   display: inline-flex;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -2348,7 +2449,9 @@ button.lib-list,
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 120ms ease, color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 .seg button + button {
@@ -2395,12 +2498,14 @@ button.lib-list,
   place-items: center;
   width: 26px;
   height: 22px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--dim);
   cursor: pointer;
-  transition: color 120ms ease, transform 100ms var(--ease-out);
+  transition:
+    color 120ms ease,
+    transform 100ms var(--ease-out);
 }
 
 .dbx-more:hover {
@@ -2424,7 +2529,7 @@ button.lib-list,
   min-width: 0;
   height: 24px;
   padding: 0 5px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: var(--panel-2);
   color: var(--text);
@@ -2437,7 +2542,11 @@ button.lib-list,
   cursor: pointer;
   touch-action: none;
   user-select: none;
-  transition: transform 100ms var(--ease-out), background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  transition:
+    transform 100ms var(--ease-out),
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
 }
 
 .dbx-slot i {
@@ -2471,7 +2580,7 @@ button.lib-list,
 .dbx-strip.over {
   outline: 1px dashed #e5484d;
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 
 /* Rehearsing: the crowd does not hear the Dub Box; the tag says so. */
@@ -2498,7 +2607,7 @@ button.lib-list,
   gap: 8px;
   padding: 8px 10px;
   border: 1px dashed var(--line);
-  border-radius: 8px;
+  border-radius: 2px;
   font-size: 12px;
 }
 
@@ -2508,7 +2617,7 @@ button.lib-list,
 
 .dbx-sample select {
   height: 26px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text);
@@ -2651,8 +2760,7 @@ button.lib-list,
   position: relative;
   width: 5px;
   overflow: hidden;
-  background:
-    linear-gradient(to top, rgba(217, 211, 199, 0.62) 0 84%, rgba(229, 72, 77, 0.75) 84% 100%);
+  background: linear-gradient(to top, rgba(217, 211, 199, 0.62) 0 84%, rgba(229, 72, 77, 0.75) 84% 100%);
   -webkit-mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
   mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
 }
@@ -2755,7 +2863,7 @@ button.lib-list,
   width: 28px;
   height: var(--cap, 14px);
   margin-left: -12px;
-  border-radius: 3px;
+  border-radius: 2px;
   border: 1px solid #4d4840;
   background: linear-gradient(to bottom, #3b3833 0 44%, #e6e0d4 44% 56%, #2a2824 56% 100%);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
@@ -2796,7 +2904,7 @@ button.lib-list,
   width: 14px;
   height: 26px;
   margin-top: -11px;
-  border-radius: 3px;
+  border-radius: 2px;
   border: 1px solid #4d4840;
   background: linear-gradient(to right, #3b3833 0 42%, #e6e0d4 42% 58%, #2a2824 58% 100%);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
@@ -2861,7 +2969,7 @@ button.lib-list,
   width: 100%;
   height: 34px;
   padding: 0 6px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: #0f0e0c;
   color: var(--text);
@@ -2869,7 +2977,9 @@ button.lib-list,
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
-  transition: border-color 120ms ease, transform 100ms var(--ease-out);
+  transition:
+    border-color 120ms ease,
+    transform 100ms var(--ease-out);
 }
 
 .dbx-pick span {
@@ -2905,12 +3015,14 @@ button.lib-list,
   max-height: 280px;
   overflow-y: auto;
   padding: 6px;
-  border-radius: 8px;
+  border-radius: 2px;
   border: 1px solid #3a362f;
   background: #171512;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
   transform-origin: bottom left;
-  transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
 
   @starting-style {
     opacity: 0;
@@ -2931,7 +3043,7 @@ button.lib-list,
   height: 26px;
   padding: 0 8px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 2px;
   background: transparent;
   color: var(--text);
   font: inherit;
@@ -2981,8 +3093,14 @@ button.lib-list,
 .pad-mode {
   border: 1px solid #312d27;
   background: linear-gradient(180deg, #1f1d19, #171512);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.03);
-  transition: transform 100ms var(--ease-out), background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition:
+    transform 100ms var(--ease-out),
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
 }
 
 .deck .btn:active:not(:disabled),
@@ -3047,7 +3165,7 @@ button.lib-list,
 .dk-pitch output {
   min-width: 46px;
   padding: 2px 4px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #0b0a09;
   border: 1px solid #262320;
   color: var(--text);
@@ -3092,7 +3210,9 @@ button.lib-list,
 /* Jog: matte platter with a fine outer ring. */
 .jog {
   border-color: #312d27;
-  box-shadow: inset 0 0 0 4px #15130e, 0 0 0 1px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 0 0 0 4px #15130e,
+    0 0 0 1px rgba(0, 0, 0, 0.4);
 }
 
 /* Narrow decks: smaller platter, effect name and amount keep a usable width. */
@@ -3188,7 +3308,9 @@ body,
   margin: -1.5px 0 0 -18px;
   border-radius: 2px;
   background: #2c2924;
-  transition: background-color 120ms ease, width 120ms var(--ease-out);
+  transition:
+    background-color 120ms ease,
+    width 120ms var(--ease-out);
 }
 
 .splitter:hover i,
@@ -3221,7 +3343,7 @@ body,
   overflow: hidden;
   align-items: stretch;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #1a1711 0%, #13110d 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -3311,12 +3433,14 @@ body,
   flex: none;
   width: 22px;
   height: 22px;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid #312d27;
   background: transparent;
   color: var(--dim);
   cursor: pointer;
-  transition: color 120ms ease, transform 100ms var(--ease-out);
+  transition:
+    color 120ms ease,
+    transform 100ms var(--ease-out);
 }
 
 .eject:hover:not(:disabled) {
@@ -3491,7 +3615,7 @@ body,
   gap: 8px;
   height: 28px;
   padding: 0 10px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: #0a0907;
   color: var(--dim);
@@ -3544,7 +3668,7 @@ body,
   min-height: 0;
   overflow: auto;
   outline: none;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 
 .lib-tracks table {
@@ -3675,7 +3799,7 @@ body,
   width: 14px;
   height: 14px;
   margin-right: 2px;
-  border-radius: 3px;
+  border-radius: 2px;
   font-style: normal;
   font-size: 9px;
   font-weight: 700;
@@ -3719,7 +3843,7 @@ body,
   width: 22px;
   height: 20px;
   margin-left: 3px;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid #312d27;
   background: #1b1914;
   color: var(--dim);
@@ -3728,7 +3852,10 @@ body,
   font-weight: 700;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 100ms ease, color 100ms ease, transform 100ms var(--ease-out);
+  transition:
+    opacity 100ms ease,
+    color 100ms ease,
+    transform 100ms var(--ease-out);
 }
 .lib-tracks tr:hover .row-btn,
 .lib-tracks tr.sel .row-btn,
@@ -3838,7 +3965,7 @@ body,
   min-width: 0;
   padding: 4px 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 2px;
   background: none;
   color: var(--dim);
   font: inherit;
@@ -3848,7 +3975,9 @@ body,
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
-  transition: background-color 100ms ease, color 100ms ease;
+  transition:
+    background-color 100ms ease,
+    color 100ms ease;
 }
 
 .side-item:hover {
@@ -3999,7 +4128,7 @@ body,
 
 .sp .sample-hit {
   max-height: 84px;
-  border-radius: 6px;
+  border-radius: 2px;
   border-color: #312d27;
   background: linear-gradient(180deg, #24211c, #1a1814);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -4075,7 +4204,7 @@ body,
 .sp .sfx,
 .dbp .sfx {
   height: 22px;
-  border-radius: 4px;
+  border-radius: 2px;
   border-color: #312d27;
   background: #1b1914;
   color: var(--text);
@@ -4119,7 +4248,7 @@ body,
 
 .dbp .seg {
   flex: none;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 
 .dbp .seg button {
@@ -4141,7 +4270,7 @@ body,
 .dbp .dbx-sample {
   flex: none;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: 2px;
   font-size: 11px;
 }
 
@@ -4210,7 +4339,7 @@ body,
 .dbp .dbx-slot-row .num {
   width: 22px;
   height: 20px;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid #312d27;
   background: #1b1914;
   color: var(--text);
@@ -4322,7 +4451,7 @@ body,
   gap: 8px;
   padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 2px;
   background: #13110d;
   transition: opacity 120ms ease;
 }
@@ -4356,7 +4485,7 @@ body,
   height: 26px;
   min-width: 0;
   padding: 0 6px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: #0a0907;
   color: var(--text);
@@ -4381,7 +4510,7 @@ body,
 .ap-tag {
   padding: 1px 6px;
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: 2px;
   color: var(--dim);
   font-size: 9px;
   letter-spacing: 0.06em;
@@ -4544,7 +4673,7 @@ body,
 
 .mp-signal {
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #0a0907;
   border: 1px solid var(--line);
   color: var(--dim);
@@ -4650,7 +4779,7 @@ body,
 .mp-learn {
   height: 20px;
   padding: 0 8px;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid #312d27;
   background: #1b1914;
   color: var(--dim);
@@ -4658,7 +4787,9 @@ body,
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
-  transition: color 100ms ease, border-color 100ms ease;
+  transition:
+    color 100ms ease,
+    border-color 100ms ease;
 }
 
 .mp-learn:hover:not(:disabled) {
@@ -4807,7 +4938,7 @@ body,
 
 .spot-steps code {
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #0a0907;
   border: 1px solid var(--line);
   font-size: 11px;
@@ -4830,7 +4961,7 @@ body,
   min-width: 0;
   height: 28px;
   padding: 0 10px;
-  border-radius: 6px;
+  border-radius: 2px;
   border: 1px solid var(--line);
   background: #0a0907;
   color: var(--text);
@@ -4937,7 +5068,7 @@ body,
   display: block;
   width: 22px;
   height: 22px;
-  border-radius: 3px;
+  border-radius: 2px;
   object-fit: cover;
 }
 
@@ -5137,7 +5268,7 @@ body,
   height: 16px;
   padding: 0 4px;
   border: 0;
-  border-radius: 3px;
+  border-radius: 2px;
   background: none;
   color: var(--dim);
   font: inherit;
@@ -5228,12 +5359,15 @@ body,
   width: 28px;
   height: 20px;
   padding: 0;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid #312d27;
   background: #1b1914;
   color: var(--dim);
   cursor: pointer;
-  transition: color 100ms ease, border-color 100ms ease, transform 100ms var(--ease-out);
+  transition:
+    color 100ms ease,
+    border-color 100ms ease,
+    transform 100ms var(--ease-out);
 }
 
 .xf-curve:hover {
@@ -5323,12 +5457,12 @@ body,
 
 .dbx-step:first-child {
   border-right: 0;
-  border-radius: 6px 0 0 6px;
+  border-radius: 2px 0 0 2px;
 }
 
 .dbx-step:last-child {
   border-left: 0;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 2px 2px 0;
 }
 
 .dbx-step:hover {
@@ -5415,7 +5549,9 @@ body,
 
 /* Touching the platter: the hub lights, like a touch-sensitive jog. */
 .jog-hub {
-  transition: background-color 100ms ease, color 100ms ease;
+  transition:
+    background-color 100ms ease,
+    color 100ms ease;
 }
 
 .jog.touched .jog-hub {
@@ -5442,7 +5578,9 @@ body,
 .pitch-read output {
   display: block;
   font-variant-numeric: tabular-nums;
-  transition: border-color 120ms ease, color 120ms ease;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease;
 }
 
 .pitch-read output small {
@@ -5491,7 +5629,7 @@ body,
   min-height: 0;
   padding: 0 0 0 7px;
   border: 0;
-  border-radius: 3px;
+  border-radius: 2px;
   background: none;
   color: var(--dim);
   font: inherit;
@@ -5500,7 +5638,9 @@ body,
   letter-spacing: 0.08em;
   text-align: left;
   cursor: pointer;
-  transition: color 120ms ease, background-color 120ms ease;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
 }
 
 /* The bar on the left: bright for the mode on screen, faint for one that holds something. */
@@ -5589,7 +5729,10 @@ body,
   justify-content: center;
   gap: 2px;
   padding: 0 8px;
-  transition: transform 100ms var(--ease-out), background-color 120ms ease, border-color 120ms ease;
+  transition:
+    transform 100ms var(--ease-out),
+    background-color 120ms ease,
+    border-color 120ms ease;
 }
 
 .sp .sample-hit:active {
@@ -5718,10 +5861,12 @@ body,
   height: 26px;
   min-width: 0;
   border: 1px solid #312d27;
-  border-radius: 4px;
+  border-radius: 2px;
   overflow: hidden;
   background: linear-gradient(180deg, #1f1d19, #171512);
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .fx-pick.on {
@@ -5911,7 +6056,11 @@ body,
 .dk-bend .btn.small {
   width: 22px;
   touch-action: none;
-  transition: transform 100ms var(--ease-out), background-color 100ms ease, border-color 100ms ease, color 100ms ease;
+  transition:
+    transform 100ms var(--ease-out),
+    background-color 100ms ease,
+    border-color 100ms ease,
+    color 100ms ease;
 }
 
 /* Held: lit in the deck colour, pressed in. */
@@ -6003,7 +6152,7 @@ body,
 
 .bpm-gap {
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: 2px;
   font-size: 9px;
   font-weight: 700;
   color: var(--dim);
@@ -6160,7 +6309,7 @@ body,
   height: 22px;
   padding: 2px 0 0;
   border: 1px solid #312d27;
-  border-radius: 4px;
+  border-radius: 2px;
   background: none;
   color: var(--text);
   font: inherit;
@@ -6195,7 +6344,7 @@ body,
   height: 22px;
   padding: 0 6px;
   border: 1px solid #312d27;
-  border-radius: 4px;
+  border-radius: 2px;
   background: none;
   color: var(--dim);
   font: inherit;
@@ -6278,7 +6427,7 @@ body,
   height: 18px;
   padding: 0 6px;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   background: none;
   color: var(--dim);
   font: inherit;
@@ -6286,7 +6435,10 @@ body,
   font-weight: 700;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .mx-dyn-btn i {
@@ -6338,7 +6490,7 @@ body,
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #1a1814, #12110e);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -6358,7 +6510,7 @@ body,
   height: 24px;
   padding: 0 10px 0 8px;
   border: 1px solid #312d27;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #171512;
   color: var(--dim);
   font: inherit;
@@ -6400,7 +6552,7 @@ body,
   height: 22px;
   padding: 0 8px;
   border: 1px solid #312d27;
-  border-radius: 4px;
+  border-radius: 2px;
   background: none;
   color: var(--dim);
   font: inherit;
@@ -6558,7 +6710,7 @@ body,
 .dr-styles {
   display: grid;
   border: 1px solid #312d27;
-  border-radius: 4px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -6613,7 +6765,7 @@ body,
   height: 28px;
   padding: 0 9px;
   border: 1px solid #3a352e;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #0d0c0a;
   color: var(--text);
   font: inherit;
@@ -6638,7 +6790,7 @@ body,
   height: 20px;
   padding: 0 7px;
   border: 1px solid #2c2924;
-  border-radius: 10px;
+  border-radius: 2px;
   background: none;
   color: var(--dim);
   font: inherit;
@@ -6710,7 +6862,7 @@ body,
   height: 24px;
   padding: 0 4px;
   border: 1px solid #312d27;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #171512;
   color: var(--text);
   font: inherit;
@@ -6738,7 +6890,7 @@ body,
   gap: 8px;
   height: 32px;
   border: 1px solid #3a352e;
-  border-radius: 5px;
+  border-radius: 2px;
   background: #171512;
   color: var(--text);
   font: inherit;
@@ -6772,7 +6924,7 @@ body,
 .dr-make {
   height: 32px;
   border: 1px solid #6a6253;
-  border-radius: 5px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #2a2620, #1d1a16);
   color: var(--text);
   font: inherit;
@@ -6799,7 +6951,7 @@ body,
   height: 34px;
   padding: 0 6px;
   border: 1px solid #262320;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #0d0c0a;
 }
 
@@ -6874,7 +7026,7 @@ body,
   height: 18px;
   padding: 0 2px;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #171512;
   color: var(--text);
   font: inherit;
@@ -6884,7 +7036,7 @@ body,
 .lib-sung {
   margin-left: 6px;
   padding: 0 4px;
-  border-radius: 3px;
+  border-radius: 2px;
   background: color-mix(in srgb, var(--ok) 14%, transparent);
   color: var(--ok);
   font-style: normal;
@@ -7015,7 +7167,7 @@ body,
   height: 22px;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--c) calc(var(--lit) * 60%), #312d27);
-  border-radius: 4px;
+  border-radius: 2px;
   background: color-mix(in srgb, var(--c) calc(var(--lit) * 14%), #141210);
   color: color-mix(in srgb, var(--c) calc(var(--lit) * 100%), #5a544a);
   font: inherit;
@@ -7118,10 +7270,8 @@ body,
   margin: 0 8px;
   padding: 4px;
   border: 1px solid #1d1b17;
-  border-radius: 6px;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 3px, rgba(255, 255, 255, 0.012) 3px 4px),
-    #0b0a08;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, transparent 0 3px, rgba(255, 255, 255, 0.012) 3px 4px), #0b0a08;
   min-width: 0;
 }
 
@@ -7130,9 +7280,11 @@ body,
   display: flex;
   min-width: 0;
   border: 1px solid #2c2924;
-  border-radius: 4px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #1c1a16, #141210);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
@@ -7189,7 +7341,7 @@ body,
   min-width: 0;
   padding: 0 6px;
   border: 1px solid #1f1d19;
-  border-radius: 4px;
+  border-radius: 2px;
   background:
     repeating-linear-gradient(90deg, transparent 0 6px, rgba(0, 0, 0, 0.35) 6px 10px) center / calc(100% - 40px) 18px no-repeat,
     linear-gradient(180deg, #161411, #11100d);
@@ -7315,7 +7467,7 @@ body,
   height: 20px;
   padding: 0 2px;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #171512;
   color: var(--text);
   font: inherit;
@@ -7351,7 +7503,7 @@ body,
   width: 26px;
   height: 26px;
   border: 1px solid #312d27;
-  border-radius: 4px;
+  border-radius: 2px;
   background: none;
   color: var(--dim);
   cursor: pointer;
@@ -7449,7 +7601,7 @@ button.ru-ear:focus-visible {
   height: 18px;
   padding: 0 2px;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #171512;
   color: var(--text);
   font: inherit;
@@ -7746,7 +7898,7 @@ button.ru-ear:disabled {
   width: 300px;
   padding: 6px;
   border: 1px solid #3a362f;
-  border-radius: 8px;
+  border-radius: 2px;
   background: #171512;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
   transform-origin: top right;
@@ -7758,7 +7910,7 @@ button.ru-ear:disabled {
   gap: 1px;
   padding: 6px 8px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 2px;
   background: none;
   color: var(--text);
   font: inherit;
@@ -7825,7 +7977,7 @@ button.ru-ear:disabled {
 .ru-seg {
   display: flex;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -7864,7 +8016,7 @@ button.ru-ear:disabled {
   width: 64px;
   height: 20px;
   border: 1px solid #3a352e;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #171512;
   color: var(--dim);
   font: inherit;
@@ -7889,7 +8041,7 @@ button.ru-ear:disabled {
   height: 30px;
   padding: 0 8px;
   border: 1px solid #3a352e;
-  border-radius: 4px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #24211c, #1a1814);
   color: var(--text);
   font: inherit;
@@ -7941,7 +8093,7 @@ button.ru-ear:disabled {
   height: 36px;
   padding: 0 9px;
   border: 1px solid #3a352e;
-  border-radius: 4px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #24211c, #1a1814);
   color: var(--text);
   font: inherit;
@@ -7975,7 +8127,7 @@ button.ru-ear:disabled {
   width: 46px;
   height: 20px;
   border: 1px solid #3a352e;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #171512;
   color: var(--dim);
   font: inherit;
@@ -8095,7 +8247,7 @@ button.ru-ear:disabled {
   height: 20px;
   padding: 0 2px;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #171512;
   color: var(--text);
   font: inherit;
@@ -8166,7 +8318,7 @@ button.ru-ear:disabled {
   height: 40px;
   padding: 2px 7px;
   border: 1px solid #312d27;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #13110e;
   color: var(--dim);
   font: inherit;
@@ -8207,7 +8359,7 @@ button.ru-ear:disabled {
   height: 18px;
   padding: 0;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   background: none;
   color: var(--dim);
   font: inherit;
@@ -8520,40 +8672,87 @@ button.ru-ear:disabled {
   grid-template-rows: repeat(4, minmax(0, 1fr));
 }
 
-.deck .pad.samp {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
+.deck .pad.riddim {
   min-width: 0;
-  padding: 0 3px;
-}
-
-.deck .pad.samp b {
-  font-size: 9px;
-  opacity: 0.7;
-}
-
-.deck .pad.samp span {
-  max-width: 100%;
+  padding: 0 2px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  font-size: 9px;
-  font-weight: 600;
+  text-overflow: ellipsis;
 }
 
-.deck .pad.samp.loaded {
-  color: var(--text);
+/* RIDDIM: two over two, so the words fit on a narrow deck. */
+.dk-pads > .dk-row:has(.pad-set.grid2) {
+  min-height: 38px;
 }
 
-.deck .pad.samp.set {
+.deck .pad-set.grid2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(17px, 1fr));
+  gap: 2px;
+  container-type: inline-size;
+}
+
+.deck .pad-set.grid2 .pad {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  min-height: 17px;
+  padding: 0 3px;
+  font-size: clamp(8px, 5.5cqi, 11px);
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-overflow: clip;
+}
+
+/* LOOP: three over three (4 · 8 · IN, OUT · ½ · ×2). */
+.deck .pad-set.grid2.g6 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* STEMS: three over two (voice, instruments, bass · kick, hats). */
+.deck .pad-set.grid2.g5 {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.deck .pad-set.g5 .pad:nth-child(-n + 3) {
+  grid-column: span 2;
+}
+
+.deck .pad-set.g5 .pad:nth-child(n + 4) {
+  grid-column: span 3;
+}
+
+/* Full word when it fits; a narrow deck shows the short one. */
+.deck .pad.riddim .rs {
+  display: none;
+}
+
+@container (max-width: 130px) {
+  .deck .pad.riddim .rl {
+    display: none;
+  }
+  .deck .pad.riddim .rs {
+    display: inline;
+  }
+}
+
+/* RIDDIM: version (riddim), acapella (voice), drum & bass, all. */
+.deck .pad.riddim.r0.set {
+  --tint: var(--accent);
+}
+
+.deck .pad.riddim.r1.set {
+  --tint: #ff6fa8;
+}
+
+.deck .pad.riddim.r2.set {
   --tint: var(--ok);
 }
 
-/* Four modes now: tighter letters so SAMPLER fits the mode column. */
+/* Four modes now: tighter letters so RIDDIM fits the mode column. */
 .pad-mode-btn {
   font-size: 7.5px;
   letter-spacing: 0.04em;
@@ -8630,7 +8829,7 @@ button.ru-ear:disabled {
   display: flex;
   flex: none;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -8670,7 +8869,7 @@ button.ru-ear:disabled {
   width: 100%;
   height: 40px;
   border: 1px solid #262320;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #0d0c0a;
   cursor: crosshair;
   touch-action: none;
@@ -8698,7 +8897,7 @@ button.ru-ear:disabled {
   height: 20px;
   padding: 0 6px;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   background: none;
   color: var(--text);
   font: inherit;
@@ -8768,7 +8967,7 @@ button.ru-ear:disabled {
   height: 16px;
   padding: 0 6px;
   border: 1px solid color-mix(in srgb, #f5a524 45%, transparent);
-  border-radius: 8px;
+  border-radius: 2px;
   background: color-mix(in srgb, #f5a524 10%, transparent);
   color: #f5a524;
   font: inherit;
@@ -8815,7 +9014,7 @@ button.ru-ear:disabled {
   height: 22px;
   padding: 0 6px;
   border: 1px solid #f5a524;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #0d0c0a;
   color: var(--text);
   font: inherit;
@@ -8841,7 +9040,7 @@ button.ru-ear:disabled {
   height: 16px;
   padding: 0 6px;
   border: 1px solid color-mix(in srgb, #f5a524 50%, transparent);
-  border-radius: 8px;
+  border-radius: 2px;
   background: color-mix(in srgb, #f5a524 12%, transparent);
   color: #f5a524;
   font: inherit;
@@ -8861,7 +9060,7 @@ button.ru-ear:disabled {
   height: 36px;
   padding: 0;
   border: 1px solid #5a2a24;
-  border-radius: 5px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #2a1714, #1c100e);
   color: #e5484d;
   font: inherit;
@@ -8914,7 +9113,7 @@ button.ru-ear:disabled {
   width: 168px;
   padding: 4px 8px;
   border: 1px solid #2a2622;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #0b0d0a;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -8981,7 +9180,7 @@ button.ru-ear:disabled {
 .tb-hot {
   display: none;
   padding: 2px 7px;
-  border-radius: 3px;
+  border-radius: 2px;
   background: color-mix(in srgb, var(--hot) 22%, transparent);
   color: var(--hot);
   font-size: 10px;
@@ -9029,7 +9228,7 @@ button.ru-ear:disabled {
   height: 18px;
   padding: 0 6px;
   border: 1px solid #312d27;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #171512;
   color: var(--dim);
   font: inherit;
@@ -9055,7 +9254,7 @@ button.ru-ear:disabled {
   width: 56px;
   height: 36px;
   border: 1px solid #3a352e;
-  border-radius: 5px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #24211c, #1a1814);
   color: var(--text);
   font: inherit;
@@ -9144,7 +9343,7 @@ button.ru-ear:disabled {
   z-index: 3;
   width: 22px;
   border: 0;
-  border-radius: 4px;
+  border-radius: 2px;
   background: linear-gradient(90deg, #0b0a08 40%, transparent);
   color: var(--text);
   font: inherit;
@@ -9194,7 +9393,9 @@ button.ru-ear:disabled {
   border-radius: 50%;
   background: #2a2723;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
-  transition: background-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .ru-led.on {
@@ -9338,7 +9539,7 @@ button.ru-ear:disabled {
   width: 360px;
   padding: 10px 12px;
   border: 1px solid #3a362f;
-  border-radius: 8px;
+  border-radius: 2px;
   background: #171512;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
   font-size: 11.5px;
@@ -9387,7 +9588,7 @@ button.ru-ear:disabled {
   width: 80px;
   height: 100%;
   border: 1px dashed #6a6253;
-  border-radius: 5px;
+  border-radius: 2px;
   background: rgba(245, 165, 36, 0.06);
   color: var(--text);
   font: inherit;
@@ -9425,7 +9626,9 @@ button.ru-ear:disabled {
 @keyframes ru-added {
   0%,
   40% {
-    box-shadow: 0 0 0 2px #f5a524, 0 0 18px color-mix(in srgb, #f5a524 60%, transparent);
+    box-shadow:
+      0 0 0 2px #f5a524,
+      0 0 18px color-mix(in srgb, #f5a524 60%, transparent);
   }
 
   100% {
@@ -9464,7 +9667,7 @@ button.ru-ear:disabled {
   display: flex;
   height: 40px;
   min-width: 0;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .rack-row.drop {
@@ -9519,7 +9722,7 @@ button.ru-ear:disabled {
   min-height: 0;
   padding: 0 5px;
   border: 1px solid #2a2722;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #15130f;
   color: var(--dim);
   font: inherit;
@@ -9825,7 +10028,7 @@ button.ru-ear:disabled {
   position: relative;
   padding: 5px 6px 4px;
   border: 1px solid #29251d;
-  border-radius: 7px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #1b1813 0%, #14120e 100%);
   box-shadow:
     inset 0 2px 0 color-mix(in srgb, var(--deck) 70%, transparent),
@@ -9842,7 +10045,7 @@ button.ru-ear:disabled {
   place-items: center;
   width: 18px;
   height: 18px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: color-mix(in srgb, var(--deck) 16%, #14120e);
   border: 1px solid color-mix(in srgb, var(--deck) 45%, transparent);
   color: var(--deck);
@@ -9881,7 +10084,7 @@ button.ru-ear:disabled {
   min-height: 0;
   padding: 3px 5px 4px;
   border: 1px solid #29251d;
-  border-radius: 6px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #15130f 0%, #100e0b 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -10085,7 +10288,7 @@ button.ru-ear:disabled {
 .mx-dyn-btn {
   padding: 0;
   border: 1px solid #3a352d;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #1a1712;
   color: var(--dim);
   font: inherit;
@@ -10182,7 +10385,7 @@ button.ru-ear:disabled {
   gap: 6px;
   padding: 8px 10px;
   border: 1px solid #3a352d;
-  border-radius: 6px;
+  border-radius: 2px;
   background: #1b1813;
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.5),
@@ -10221,7 +10424,7 @@ button.ru-ear:disabled {
   height: 22px;
   padding: 0 8px;
   border: 1px solid #3a352d;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #15130f;
   color: var(--text);
   font: inherit;
@@ -10240,7 +10443,7 @@ button.ru-ear:disabled {
 .mx-pop-select select {
   height: 22px;
   border: 1px solid #3a352d;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #15130f;
   color: var(--text);
   font: inherit;
@@ -10311,7 +10514,7 @@ button.ru-ear:disabled {
 /* Crossfader: a module of its own, like the three above it. */
 .mixer .xfader {
   border: 0;
-  border-radius: 7px;
+  border-radius: 2px;
   padding-inline: 6px;
   background: linear-gradient(180deg, #1b1813 0%, #14120e 100%);
   box-shadow: inset 0 0 0 1px #29251d;
@@ -10339,7 +10542,7 @@ button.ru-ear:disabled {
   z-index: 5;
   transform: translate(-50%, -50%);
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #0c0b08;
   box-shadow: 0 0 0 1px #3a352d;
   color: var(--text);
@@ -10521,7 +10724,7 @@ button.ru-ear:disabled {
   height: 22px;
   padding: 0 7px;
   border: 1px solid #3a352d;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #1a1712;
   color: var(--dim);
   font: inherit;
@@ -10654,7 +10857,7 @@ button.ru-ear:disabled {
   gap: 4px;
   min-width: 0;
   padding: 4px 6px 5px;
-  border-radius: 7px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #1b1813 0%, #14120e 100%);
   box-shadow: inset 0 0 0 1px #29251d;
 }
@@ -10750,7 +10953,7 @@ button.ru-ear:disabled {
 .mx-tr-moves button {
   height: 18px;
   border: 1px solid #3a352d;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #1a1712;
   color: var(--dim);
   font: inherit;
@@ -10905,7 +11108,7 @@ button.ru-ear:disabled {
   min-width: 0;
   padding: 3px 7px 4px;
   border: 1px solid #29251d;
-  border-radius: 7px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #1b1813 0%, #14120e 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -11185,7 +11388,7 @@ button.ru-ear:disabled {
   height: 40px;
   padding: 0 8px 0 4px;
   border: 1px solid #29251d;
-  border-radius: 7px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #1b1813 0%, #14120e 100%);
   box-shadow:
     inset 0 2px 0 color-mix(in srgb, var(--hot) 55%, transparent),
@@ -11403,7 +11606,7 @@ button.ru-ear:disabled {
   place-items: center;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--hot) 60%, transparent);
-  border-radius: 3px;
+  border-radius: 2px;
   background: rgba(20, 18, 14, 0.85);
   color: #ff8a8d;
   font: inherit;
@@ -11681,7 +11884,7 @@ button.ru-ear:disabled {
   height: 18px;
   padding: 0 7px;
   border: 1px solid #3a352d;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #1a1712;
   color: var(--dim);
   font: inherit;
@@ -11822,7 +12025,7 @@ button.ru-ear:disabled {
   height: 22px;
   padding: 0 6px;
   border: 1px solid #3a352d;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #15130f;
   color: var(--text);
   font: inherit;
@@ -11833,7 +12036,7 @@ button.ru-ear:disabled {
   height: 22px;
   padding: 0 9px;
   border: 1px solid #3a352d;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #1a1712;
   color: var(--dim);
   font: inherit;
@@ -11945,7 +12148,7 @@ button.ru-ear:disabled {
 .mp .mp-group {
   height: 19px;
   padding: 0 8px;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 10.5px;
 }
 
@@ -11977,7 +12180,7 @@ button.ru-ear:disabled {
   height: 18px;
   padding: 0 6px;
   border: 1px solid #2c281f;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #0e0c09;
   font-size: 9px;
   line-height: 16px;
@@ -11998,7 +12201,7 @@ button.ru-ear:disabled {
 /* Table: dense rows, the control in mono, the actions small. */
 .mp .mp-table {
   border: 1px solid #29251d;
-  border-radius: 6px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #15130f 0%, #100e0b 100%);
 }
 
@@ -12404,7 +12607,7 @@ button.ru-ear:disabled {
 .dbp .dbp-presets .side-item {
   height: 18px;
   padding: 0 8px;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 10.5px;
 }
 
@@ -12469,7 +12672,7 @@ button.ru-ear:disabled {
   gap: 8px 18px;
   padding: 8px 12px;
   border: 1px solid #29251d;
-  border-radius: 6px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #15130f 0%, #100e0b 100%);
 }
 
@@ -12557,7 +12760,7 @@ button.ru-ear:disabled {
 .sp > .side-nav .side-item {
   height: 19px;
   padding: 0 8px;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 10.5px;
 }
 
@@ -12577,7 +12780,7 @@ button.ru-ear:disabled {
 .sp .dr-col {
   padding: 6px 8px;
   border: 1px solid #29251d;
-  border-radius: 6px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #15130f 0%, #100e0b 100%);
 }
 
@@ -12661,7 +12864,7 @@ button.ru-ear:disabled {
 .spot .spot-main {
   padding: 6px 10px 8px;
   border: 1px solid #29251d;
-  border-radius: 6px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #15130f 0%, #100e0b 100%);
 }
 
@@ -12778,7 +12981,7 @@ button.ru-ear:disabled {
 /* The list of tracks sits in a dark well, like the mixer's areas. */
 .library .lib-tracks {
   border: 1px solid #29251d;
-  border-radius: 6px;
+  border-radius: 2px;
   background: linear-gradient(180deg, #15130f 0%, #100e0b 100%);
 }
 
@@ -12821,7 +13024,7 @@ button.ru-ear:disabled {
   place-items: center;
   width: 14px;
   height: 14px;
-  border-radius: 3px;
+  border-radius: 2px;
   font-size: 8px;
   font-style: normal;
   font-weight: 800;
@@ -13060,7 +13263,7 @@ button.ru-ear:disabled {
   height: 20px;
   padding: 0 7px 0 3px;
   border: 1px solid #29251d;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #15130f;
   font-size: 10px;
   white-space: nowrap;
@@ -13071,7 +13274,7 @@ button.ru-ear:disabled {
   place-items: center;
   width: 14px;
   height: 14px;
-  border-radius: 3px;
+  border-radius: 2px;
   font-size: 8.5px;
   font-weight: 800;
 }
@@ -13211,4 +13414,1655 @@ button.ru-ear:disabled {
 
 .tab-tools .lib-ai.err {
   color: #ff8a8d;
+}
+
+/* ═════════ Voz tab: the MC's voice in full (colour, its own echo, spring, ready-made voices) ═════════ */
+
+.voice-desk .mx-talk {
+  height: 26px;
+  min-width: 64px;
+}
+
+.voice-desk .voice-throw {
+  --c: #e2b93b;
+  width: 72px;
+  height: 26px;
+}
+
+.voice-desk .ru-select {
+  width: 92px;
+}
+
+.voice-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 3px;
+}
+
+.voice-preset {
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid #3a352e;
+  border-radius: 2px;
+  background: #171512;
+  color: var(--dim);
+  font: inherit;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease,
+    transform 120ms ease-out;
+}
+
+.voice-preset:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .voice-preset:hover:not(.on) {
+    border-color: #5a5246;
+    color: var(--text);
+  }
+}
+
+.voice-preset.on {
+  border-color: #e2b93b;
+  background: color-mix(in srgb, #e2b93b 18%, #171512);
+  color: #e2b93b;
+}
+
+/* ═════════ Beat counter: centred on the top bar, deck A over deck B ═════════ */
+
+.beat-count {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  gap: 3px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.bc-row {
+  display: grid;
+  grid-template-columns: repeat(4, 18px);
+  gap: 3px;
+}
+
+.bc-row i {
+  height: 8px;
+  border-radius: 1px;
+  background: #2b2924;
+}
+
+.bc-row.a i.on {
+  background: var(--a);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--a) 60%, transparent);
+}
+
+.bc-row.b i.on {
+  background: var(--b);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--b) 60%, transparent);
+}
+
+.bc-row.nogrid i {
+  opacity: 0.45;
+}
+
+/* ═════════ Ajustes tab, and its gear on the top bar ═════════ */
+
+.tb-gear {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #3a352d;
+  border-radius: 2px;
+  background: #1a1712;
+  color: var(--dim);
+  cursor: pointer;
+  transition:
+    transform 120ms var(--ease-out),
+    color 100ms ease,
+    border-color 100ms ease;
+}
+
+.tb-gear svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.tb-gear:active {
+  transform: scale(0.94);
+}
+
+.tb-gear.on {
+  color: var(--accent);
+  border-color: #5a5345;
+}
+
+@media (hover: hover) {
+  .tb-gear:hover {
+    color: var(--text);
+  }
+}
+
+.st-range {
+  width: 150px;
+  accent-color: var(--accent);
+}
+
+.st-num {
+  min-width: 34px;
+  text-align: right;
+}
+
+.st-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.st-color input {
+  width: 26px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid #3a352d;
+  border-radius: 2px;
+  background: none;
+  cursor: pointer;
+}
+
+.st-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.st-pair i {
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+}
+
+.st-pair.on {
+  color: var(--text);
+  border-color: #5a5345;
+}
+
+.st-list {
+  display: grid;
+  gap: 3px;
+}
+
+.st-check {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.st-check input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.st-check small {
+  font-size: 8.5px;
+  color: #6e675a;
+}
+
+/* ═════════ Deck: same layout empty or loaded ═════════ */
+
+/* The time row keeps its height when there is no track (its numbers are blank then). */
+.deck .times {
+  min-height: 20px;
+}
+
+/* Tempo / key block: one width, so the title never shifts when a key or a tempo gap shows up. */
+.deck .dk-head .bpm {
+  flex: 0 0 120px;
+  width: 120px;
+  min-width: 0;
+}
+
+.deck .dk-head .bpm .key {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ═════════ Ajustes: a window in front of the app, pages on the left ═════════ */
+
+.sm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(5, 4, 3, 0.62);
+  transition: opacity 180ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.sm {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  width: min(980px, 100%);
+  height: min(620px, 100%);
+  overflow: hidden;
+  border: 1px solid #3a352d;
+  border-radius: 2px;
+  background: var(--bg, #12100d);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  outline: none;
+  transition:
+    transform 200ms var(--ease-out),
+    opacity 200ms var(--ease-out);
+  @starting-style {
+    transform: scale(0.97);
+    opacity: 0;
+  }
+}
+
+.sm-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 8px;
+  border-right: 1px solid #2a2620;
+  background: #0f0d0a;
+}
+
+.sm-side h2 {
+  margin: 0 8px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9a917f;
+}
+
+.sm-tab {
+  display: grid;
+  gap: 2px;
+  padding: 7px 8px;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 2px;
+  background: none;
+  color: var(--dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.sm-tab b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sm-tab small {
+  font-size: 9px;
+  color: #6e675a;
+}
+
+.sm-tab.now {
+  border-left-color: var(--accent);
+  background: #1c1914;
+  color: var(--text);
+}
+
+@media (hover: hover) {
+  .sm-tab:hover:not(.now) {
+    background: #17140f;
+    color: var(--text);
+  }
+}
+
+.sm-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+}
+
+.sm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 8px 16px;
+  border-bottom: 1px solid #2a2620;
+}
+
+.sm-head h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sm-close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #3a352d;
+  border-radius: 2px;
+  background: #1a1712;
+  color: var(--dim);
+  cursor: pointer;
+  transition:
+    transform 120ms var(--ease-out),
+    color 100ms ease;
+}
+
+.sm-close svg {
+  width: 10px;
+  height: 10px;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.sm-close:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) {
+  .sm-close:hover {
+    color: var(--text);
+  }
+}
+
+.sm-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 16px 16px;
+}
+
+/* The pages were made for the bottom panel: inside the window they may use its full height. */
+.sm-body > * {
+  height: auto;
+  max-height: none;
+}
+
+@media (max-width: 640px) {
+  .sm {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .sm-side {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid #2a2620;
+  }
+  .sm-side h2,
+  .sm-tab small {
+    display: none;
+  }
+}
+
+.st-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--dim);
+}
+
+.st-field select {
+  width: 140px;
+}
+
+.st-ok {
+  color: var(--ok);
+}
+
+.ap2-btn.st-err {
+  border-color: var(--hot);
+  color: var(--hot);
+}
+
+.spot-acc .spot-setup {
+  max-width: 560px;
+}
+
+.sm-decks {
+  display: grid;
+  gap: 14px;
+}
+
+/* ═════════ Decks v6: icon tabs under the wave, turntable in the middle, transport across the bottom ═════════ */
+
+.deck.dv2 {
+  --tab-h: 24px;
+  --tr-h: 30px;
+  --gap: 5px;
+  --pitch-w: 84px;
+}
+
+.deck.dv2 .dk-body {
+  display: grid;
+  container-type: size;
+  gap: var(--gap);
+  min-height: 0;
+  /* The turntable takes the whole height under the tabs, as long as the pads keep 140 px of width. */
+  --jog: max(48px, min(calc(100cqh - var(--tab-h) - var(--gap)), calc(100cqw - var(--pitch-w) - 185px - 2 * var(--gap))));
+  grid-template-columns: minmax(0, 1fr) auto var(--pitch-w);
+  grid-template-rows: var(--tab-h) minmax(0, 1fr) auto var(--tr-h);
+  grid-template-areas:
+    'tabs tabs tabs'
+    'pads jog  pitch'
+    'fx   jog  pitch'
+    'tr   jog  pitch';
+}
+
+.deck.dv2.deck-b .dk-body {
+  grid-template-columns: var(--pitch-w) auto minmax(0, 1fr);
+  grid-template-areas:
+    'tabs  tabs tabs'
+    'pitch jog  pads'
+    'pitch jog  fx'
+    'pitch jog  tr';
+}
+
+.deck.dv2 .dk-pads,
+.deck.dv2 .dk-pads > .dk-row {
+  display: contents;
+}
+
+.deck.dv2 .pad-modes {
+  grid-area: tabs;
+}
+
+.deck.dv2 .dk-body .pad-set {
+  grid-area: pads;
+  min-height: 0;
+  height: auto;
+}
+
+.deck.dv2 .dk-fx {
+  grid-area: fx;
+}
+
+.deck.dv2 .dk-transport {
+  grid-area: tr;
+}
+
+.deck.dv2 .dk-pitch {
+  grid-area: pitch;
+  width: auto;
+  min-width: 0;
+}
+
+.deck.dv2 .dk-body .jog {
+  grid-area: jog;
+  width: var(--jog);
+  height: var(--jog);
+  align-self: center;
+  justify-self: center;
+}
+
+/* The pads keep two rows; the old row-height floor is not needed now that they have their own row. */
+.deck.dv2 .dk-pads > .dk-row:has(.pad-set.grid2) {
+  min-height: 0;
+}
+
+/* ── Buttons in the look of a hardware controller: raised, rounded, soft top light ── */
+
+.deck.dv2 .pad-mode-btn,
+.deck.dv2 .dk-transport .btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+  padding: 0 6px;
+  border: 1px solid #0b0a08;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #34312b 0%, #27241f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #cfc8b8;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    transform 120ms var(--ease-out),
+    color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.deck.dv2 .pad-mode-btn:active:not(:disabled),
+.deck.dv2 .dk-transport .btn:active:not(:disabled) {
+  transform: scale(0.97);
+  background: linear-gradient(180deg, #24211c 0%, #2b2823 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.deck.dv2 .pad-mode-btn:disabled,
+.deck.dv2 .dk-transport .btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .deck.dv2 .pad-mode-btn:hover:not(:disabled),
+  .deck.dv2 .dk-transport .btn:hover:not(:disabled) {
+    color: #fff;
+    background: linear-gradient(180deg, #3b3832 0%, #2c2924 100%);
+  }
+}
+
+/* Pad mode tabs: one row, icon and name; the open one is pressed in and lit in the deck's colour. */
+.deck.dv2 .pad-modes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: 1fr;
+  gap: 4px;
+  width: auto;
+}
+
+.deck.dv2 .pad-mode-btn {
+  font-size: 8.5px;
+}
+
+.deck.dv2 .pad-mode-btn svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.deck.dv2 .pad-mode-btn.now {
+  color: var(--accent);
+  background: linear-gradient(180deg, #1e1c18 0%, #25221d 100%);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.6),
+    inset 0 -2px 0 var(--accent);
+}
+
+/* Something set in that mode (cues, a loop, a stem cut): a small light on the tab. */
+.deck.dv2 .pad-mode-btn.lit::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 4px var(--accent);
+}
+
+/* Transport across the bottom: ◀◀ · CUE · ▶ ‖ · SYNC. */
+.deck.dv2 .dk-transport {
+  display: grid;
+  grid-template-columns: 0.75fr 1fr 1.25fr 1fr;
+  gap: 4px;
+  height: auto;
+  min-height: 0;
+}
+
+.deck.dv2.deck-b .dk-transport {
+  grid-template-columns: 1fr 1.25fr 1fr 0.75fr;
+}
+
+.deck.dv2.deck-b .dk-transport .btn.rew {
+  order: 4;
+}
+
+.deck.dv2 .dk-transport .btn {
+  font-size: 10px;
+}
+
+.deck.dv2 .dk-transport .btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.deck.dv2 .dk-transport .btn.play.on,
+.deck.dv2 .dk-transport .btn.sync.on {
+  color: var(--accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 0 8px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.deck.dv2 .dk-transport .btn.cue.at {
+  color: var(--accent);
+}
+
+/* ── Turntable ── */
+
+.deck.dv2 .jog.tt {
+  position: relative;
+  display: block;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  box-shadow: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.deck.dv2 .jog.tt.touched {
+  cursor: grabbing;
+}
+
+/* Platter: metal rim with four rows of strobe dots, like a direct-drive deck. */
+.tt-platter {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 86%, rgba(0, 0, 0, 0.55) 86.5%, transparent 88%),
+    repeating-conic-gradient(from 0deg, #c9c4b8 0deg 2.2deg, #4a4740 2.2deg 4.5deg);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Record: black vinyl with grooves and a soft sheen; it turns with the music. */
+.tt-vinyl.jog-disc {
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.1), transparent 45%),
+    repeating-radial-gradient(circle, #121110 0 1.2px, #1c1b19 1.2px 2.4px);
+  box-shadow:
+    inset 0 0 0 1px #000,
+    inset 0 0 8px rgba(0, 0, 0, 0.8);
+  will-change: transform;
+}
+
+.tt-vinyl::after {
+  /* A light sweep that stays put while the record turns under it. */
+  content: none;
+}
+
+/* Label in the centre: the track's cover when it has one, else a label in the deck's colour. */
+.tt-label {
+  position: absolute;
+  inset: 31%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 85%, #fff) 0%, var(--accent) 70%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.tt-label img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.tt-label b {
+  font-size: clamp(6px, 9cqw, 11px);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: rgba(10, 9, 7, 0.82);
+}
+
+/* A mark on the label, so the turning can be seen even on a plain one. */
+.tt-mark {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  width: 3px;
+  height: 22%;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+  transform: translateX(-50%);
+}
+
+.tt-label.art .tt-mark {
+  background: #fff;
+}
+
+.tt-spindle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6%;
+  height: 6%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f4f1ea, #8d887e);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Tone arm at the top right: swings onto the record when a track is loaded. */
+.tt-arm {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22%;
+  height: 58%;
+  overflow: visible;
+  transform-origin: 75% 12%;
+  transform: rotate(-3deg);
+  transition: transform 400ms var(--ease-out);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+}
+
+.tt-arm.on {
+  transform: rotate(16deg);
+}
+
+.tt-pivot {
+  fill: #2c2a26;
+  stroke: #0b0a08;
+}
+
+.tt-pivot-in {
+  fill: #b7b1a5;
+}
+
+.tt-tube {
+  fill: none;
+  stroke: #d9d4c9;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tt-head {
+  fill: #1b1a17;
+  stroke: #d9d4c9;
+  stroke-width: 1;
+}
+
+/* Hand on the record: the platter's rim lights in the deck's colour. */
+.deck.dv2 .jog.tt.touched .tt-platter {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.deck.dv2 .jog.tt.empty .tt-platter {
+  opacity: 0.7;
+}
+
+/* The progress ring sits just outside the platter. */
+.deck.dv2 .jog.tt .jog-ring {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ═════════ App update: a quiet chip on the top bar, details in Ajustes › Geral ═════════ */
+
+.tb-update {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid #3a352d;
+  border-radius: 2px;
+  background: #1a1712;
+  color: var(--dim);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 120ms var(--ease-out),
+    color 100ms ease,
+    border-color 100ms ease;
+}
+
+.tb-update i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.tb-update.ready {
+  border-color: var(--ok);
+  color: var(--text);
+}
+
+.tb-update:active {
+  transform: scale(0.97);
+}
+
+.st-update {
+  white-space: normal;
+}
+
+.ap2-btn.st-go {
+  border-color: var(--ok);
+  color: var(--text);
+}
+
+.st-notes {
+  max-width: 520px;
+  max-height: 120px;
+  margin: 6px 0 0;
+  overflow: auto;
+  font: inherit;
+  font-size: 9.5px;
+  white-space: pre-wrap;
+  color: var(--dim);
+}
+
+/* ═════════ Deck: DUB on the transport, its echo as live knobs beside the FX ═════════ */
+
+/* Transport: ◀◀ · DUB · CUE · ▶ ‖ · SYNC (mirrored on deck B). */
+.deck.dv2 .dk-transport {
+  grid-template-columns: 0.7fr 0.85fr 1fr 1.2fr 1fr;
+}
+
+.deck.dv2 .dk-transport .btn.rew {
+  order: 1;
+}
+
+.deck.dv2 .dk-transport .btn.dub {
+  order: 2;
+}
+
+.deck.dv2 .dk-transport .btn.cue {
+  order: 3;
+}
+
+.deck.dv2 .dk-transport .btn.play {
+  order: 4;
+}
+
+.deck.dv2 .dk-transport .btn.sync {
+  order: 5;
+}
+
+.deck.dv2.deck-b .dk-transport {
+  grid-template-columns: 1fr 1.2fr 1fr 0.85fr 0.7fr;
+}
+
+.deck.dv2.deck-b .dk-transport .btn.cue {
+  order: 1;
+}
+
+.deck.dv2.deck-b .dk-transport .btn.play {
+  order: 2;
+}
+
+.deck.dv2.deck-b .dk-transport .btn.sync {
+  order: 3;
+}
+
+.deck.dv2.deck-b .dk-transport .btn.dub {
+  order: 4;
+}
+
+.deck.dv2.deck-b .dk-transport .btn.rew {
+  order: 5;
+}
+
+.deck.dv2 .dk-transport .btn.dub {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+}
+
+.deck.dv2 .dk-transport .btn.dub.on {
+  color: #0a0907;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--hot) 90%, #fff) 0%, var(--hot) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 0 10px color-mix(in srgb, var(--hot) 45%, transparent);
+}
+
+/* FX row: effect pick · FX amount knob · the DUB echo knobs. */
+.deck.dv2 .dk-fx {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: auto;
+  min-height: 0;
+  container-type: inline-size;
+}
+
+.deck.dv2 .dk-fx .fx-pick {
+  flex: none;
+  height: 22px;
+}
+
+.deck.dv2 .fx-knob,
+.deck.dv2 .dk-dubk {
+  display: flex;
+  gap: 3px;
+}
+
+.deck.dv2 .dk-dubk {
+  flex: 1;
+  justify-content: space-between;
+  min-width: 0;
+  padding-left: 4px;
+  border-left: 1px solid #2c2924;
+}
+
+.deck.dv2 .dk-fx .knob {
+  gap: 1px;
+}
+
+.deck.dv2 .dk-fx .knob-dial {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  aspect-ratio: 1;
+}
+
+.deck.dv2 .dk-fx .knob span {
+  font-size: 6.5px;
+  letter-spacing: 0.04em;
+  line-height: 8px;
+  white-space: nowrap;
+}
+
+.deck.dv2 .fx-knob:not(.on) .knob {
+  opacity: 0.55;
+}
+
+/* Narrow deck: the spring knob gives way first, then brightness. */
+@container (max-width: 176px) {
+  .deck.dv2 .dk-dubk .knob:nth-child(4) {
+    display: none;
+  }
+}
+
+@container (max-width: 150px) {
+  .deck.dv2 .dk-dubk .knob:nth-child(3) {
+    display: none;
+  }
+}
+
+/* ═════════ Deck header, controller style: round cover · artist over title · big BPM; info line over the wave ═════════ */
+
+.deck.dv2 .dk-head {
+  align-items: center;
+  gap: 8px;
+}
+
+/* Cover as a small record: the picture on a round label, a dark rim around it. */
+.deck.dv2 .dk-cover {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #141311 0 1px, #1d1b18 1px 2px);
+  box-shadow:
+    0 0 0 1px #0a0908,
+    0 1px 3px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.deck.dv2 .dk-cover > img,
+.deck.dv2 .dk-cover > span {
+  position: absolute;
+  top: 8%;
+  left: 8%;
+  width: 84%;
+  height: 84%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.deck.dv2 .dk-cover > span {
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: #0a0907;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.deck.dv2 .dk-cover .dk-letter {
+  display: none;
+}
+
+.deck.dv2 .dk-cover .yt-box {
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* Artist on top (small, grey), title under it (bigger, white). */
+.deck.dv2 .deck-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.deck.dv2 .deck-title > span {
+  order: -1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 10px;
+  color: #8e8676;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.deck.dv2 .deck-title > strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Tempo: a big number in the deck's colour, "BPM" under it, the gap to the other deck above. */
+.deck.dv2 .dk-head .bpm {
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: 0;
+}
+
+.deck.dv2 .bpm-top {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.deck.dv2 .bpm-top strong {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.deck.dv2 .bpm-unit {
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #6e675a;
+}
+
+/* Info line, over the wave: DECORRIDO · RESTANTE · TOTAL, then key and tempo tools on the right. */
+.deck.dv2 .wave {
+  display: flex;
+  flex-direction: column;
+}
+
+.deck.dv2 .wave .times {
+  order: -1;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 20px;
+  padding: 2px 0 3px;
+  border-bottom: 1px solid #24211c;
+}
+
+.deck.dv2 .times .t-cell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.deck.dv2 .times .t-cell small {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #6e675a;
+}
+
+.deck.dv2 .times .t-cell > span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.deck.dv2 .times .t-left.ending {
+  color: var(--hot);
+}
+
+.deck.dv2 .times .t-left.blink {
+  color: #ff9a9d;
+}
+
+.deck.dv2 .times .t-bar {
+  display: none;
+}
+
+/* Key (in the deck's colour) and TAP · ½ · ×2, at the right end of the line. */
+.deck.dv2 .dk-keytap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.deck.dv2 .dk-keytap .key {
+  padding: 1px 5px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 2px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.deck.dv2 .dk-keytap .key.match {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.deck.dv2 .dk-keytap button {
+  height: 17px;
+  padding: 0 5px;
+  border: 1px solid #0b0a08;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #34312b 0%, #27241f 100%);
+  color: #cfc8b8;
+  font: inherit;
+  font-size: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.deck.dv2 .dk-keytap button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Narrow deck: TOTAL gives way first. */
+@container (max-width: 300px) {
+  .deck.dv2 .times .t-total {
+    display: none;
+  }
+}
+
+/* ═════════ Deck, compact: smaller type and tighter rows, so the wave, pads and turntable get the room ═════════ */
+
+.deck.dv2 {
+  --tab-h: 19px;
+  --tr-h: 24px;
+  --gap: 4px;
+}
+
+/* Header: small round cover, artist / title in two short lines, BPM in the deck's colour. */
+.deck.dv2 .dk-head {
+  gap: 6px;
+  min-height: 0;
+}
+
+.deck.dv2 .dk-cover {
+  width: 30px;
+  height: 30px;
+}
+
+.deck.dv2 .dk-cover > span {
+  font-size: 9px;
+}
+
+.deck.dv2 .deck-title > span {
+  font-size: 8.5px;
+  line-height: 11px;
+}
+
+.deck.dv2 .deck-title > strong {
+  font-size: 11.5px;
+  line-height: 14px;
+}
+
+.deck.dv2 .deck-title .badge {
+  padding: 0 3px;
+  font-size: 6.5px;
+  line-height: 10px;
+}
+
+.deck.dv2 .bpm-top strong {
+  font-size: 17px;
+}
+
+.deck.dv2 .bpm-top .bpm-gap {
+  font-size: 8px;
+}
+
+.deck.dv2 .bpm-unit {
+  font-size: 6px;
+  letter-spacing: 0.18em;
+}
+
+.deck.dv2 .dk-head .eject {
+  width: 18px;
+  height: 18px;
+}
+
+/* Info line: one small row. */
+.deck.dv2 .wave .times {
+  gap: 8px;
+  min-height: 15px;
+  padding: 1px 0 2px;
+}
+
+.deck.dv2 .times .t-cell {
+  gap: 3px;
+}
+
+.deck.dv2 .times .t-cell small {
+  font-size: 6px;
+  letter-spacing: 0.1em;
+}
+
+.deck.dv2 .times .t-cell > span {
+  font-size: 9.5px;
+}
+
+.deck.dv2 .dk-keytap {
+  gap: 2px;
+}
+
+.deck.dv2 .dk-keytap .key {
+  padding: 0 4px;
+  font-size: 8.5px;
+  line-height: 13px;
+}
+
+.deck.dv2 .dk-keytap button {
+  height: 14px;
+  padding: 0 4px;
+  font-size: 7px;
+}
+
+/* Pad mode tabs and transport: lower, smaller type and icons. */
+.deck.dv2 .pad-modes {
+  gap: 3px;
+}
+
+.deck.dv2 .pad-mode-btn {
+  gap: 4px;
+  font-size: 7px;
+}
+
+.deck.dv2 .pad-mode-btn svg {
+  width: 10px;
+  height: 10px;
+}
+
+.deck.dv2 .dk-transport {
+  gap: 3px;
+}
+
+.deck.dv2 .dk-transport .btn {
+  font-size: 8px;
+}
+
+.deck.dv2 .dk-transport .btn.dub {
+  font-size: 7.5px;
+}
+
+.deck.dv2 .dk-transport .btn svg {
+  width: 11px;
+  height: 11px;
+}
+
+.deck.dv2 .deck .pad,
+.deck.dv2 .pad-set .pad {
+  font-size: 8px;
+}
+
+/* Pressed controls shrink a touch, never when disabled. */
+.deck.dv2 .pad-mode-btn:active:not(:disabled),
+.deck.dv2 .dk-transport .btn:active:not(:disabled),
+.deck.dv2 .dk-keytap button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.deck.dv2 .dk-keytap button {
+  transition: transform 150ms var(--ease-out);
+}
+
+/* The overview wave gets part of the room the header gave back. */
+.deck.dv2 .wave-box {
+  height: 30px;
+  min-height: 30px;
+}
+
+/* ═════════ A track loaded: cover and title fade in (keyed elements, so each new track enters) ═════════ */
+
+.tt-label img,
+.deck.dv2 .dk-cover > img,
+.deck.dv2 .deck-title > strong {
+  transition: opacity 200ms var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+/* The deck's notice slides down 4 px as it fades in; with reduced motion it only fades. */
+@media (prefers-reduced-motion: no-preference) {
+  .dk-msg .deck-msg {
+    transition:
+      opacity 150ms var(--ease-out),
+      transform 150ms var(--ease-out);
+
+    @starting-style {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+}
+
+/* The body no longer holds the pitch: pads and turntable share its width. */
+.deck.dv2 .dk-body {
+  --jog: max(48px, min(calc(100cqh - var(--tab-h) - var(--gap)), calc(100cqw - var(--pads-min, 185px) - var(--gap))));
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'tabs tabs'
+    'pads jog'
+    'fx   jog'
+    'tr   jog';
+}
+
+.deck.dv2.deck-b .dk-body {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'tabs tabs'
+    'jog  pads'
+    'jog  fx'
+    'jog  tr';
+}
+
+/* The column: a recessed strip, readout on top, the long fader, then the actions. */
+.pitch-col > .dk-pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 4px 3px;
+  border: 1px solid #0b0a08;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #15130f 0%, #1a1814 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.pitch-col > .dk-pitch .pitch-top,
+.pitch-col > .dk-pitch .pitch-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+}
+
+.pitch-col > .dk-pitch .pitch-read {
+  height: 22px;
+  min-width: 0;
+  padding: 0;
+}
+
+.pitch-col > .dk-pitch output {
+  min-width: 0;
+  padding: 2px 0;
+  font-size: 10px;
+}
+
+.pitch-col > .dk-pitch .pitch-range {
+  display: block;
+  height: 16px;
+  font-size: 8px;
+}
+
+.pitch-col > .dk-pitch .pitch-row {
+  flex: 1;
+  justify-content: center;
+  min-height: 60px;
+}
+
+.pitch-col > .dk-pitch input {
+  height: auto;
+}
+
+.pitch-col > .dk-pitch .pitch-row .scale {
+  width: 13px;
+}
+
+/* Actions under the fader: − / + (nudge) side by side, KEY under them. */
+.pitch-col > .dk-pitch .dk-bend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+}
+
+.pitch-col > .dk-pitch .dk-bend button,
+.pitch-col > .dk-pitch .pad.keylock,
+.pitch-col > .dk-pitch .pitch-range {
+  width: auto;
+  height: 20px;
+  border: 1px solid #0b0a08;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #34312b 0%, #27241f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #cfc8b8;
+}
+
+.pitch-col > .dk-pitch .pitch-range {
+  height: 16px;
+}
+
+.pitch-col > .dk-pitch .pad.keylock {
+  order: 2;
+  font-size: 8px;
+}
+
+.pitch-col > .dk-pitch .pad.keylock.set {
+  color: var(--accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.pitch-col > .dk-pitch .dk-bend button:active:not(:disabled),
+.pitch-col > .dk-pitch .pad.keylock:active:not(:disabled),
+.pitch-col > .dk-pitch .pitch-range:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* Narrow decks (small windows): the pads give the turntable room, TOTAL leaves the info line. */
+@container (max-width: 360px) {
+  .deck.dv2 .dk-body {
+    --pads-min: 128px;
+  }
+  .deck.dv2 .times .t-total {
+    display: none;
+  }
+  .deck.dv2 .wave .times {
+    gap: 6px;
+  }
+}
+
+/* Knob rings reach 3 px past their dial: keep them inside the deck. */
+.deck.dv2 .dk-fx {
+  padding: 0 3px;
+}
+
+@container (max-width: 360px) {
+  /* Info line: keep TAP, drop ½ and ×2 on narrow decks (wider windows show them). */
+  .deck.dv2 .dk-keytap button:not(:first-of-type) {
+    display: none;
+  }
+}
+
+.deck.dv2 .wave .times {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ═════════ Picture disc: the cover fills the whole record, grooves over it ═════════ */
+
+.tt-vinyl .tt-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+/* Grooves and a soft sheen over the picture, so it still reads as a record. */
+.tt-vinyl.art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.16), transparent 45%),
+    repeating-radial-gradient(circle, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+/* With a picture disc the centre is just a small dark hub with the turning mark. */
+.tt-vinyl.art .tt-label {
+  inset: 42%;
+  z-index: 1;
+  background: #141311;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.tt-vinyl.art .tt-mark {
+  top: -120%;
+  height: 90%;
+  width: 2px;
+}
+
+.tt-vinyl.art .tt-label {
+  overflow: visible;
+}
+
+/* ═════════ Pitch strips: their own columns between each deck and the mixer ═════════ */
+
+@media (min-width: 901px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr) 56px clamp(490px, 39vw, 560px) 56px minmax(0, 1fr);
+    grid-template-areas: 'a pa m pb b';
+    column-gap: 6px;
+  }
+}
+
+.pitch-col {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pitch-col.pitch-a {
+  grid-area: pa;
+}
+
+.pitch-col.pitch-b {
+  grid-area: pb;
+  --accent: var(--b);
+}
+
+/* Same frame as the decks and the mixer, so it reads as a unit of its own. */
+.pitch-col > .dk-pitch {
+  flex: 1;
+  padding: 6px 4px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #1a1711 0%, #13110d 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.pitch-b .pitch-row {
+  flex-direction: row-reverse;
+}
+
+.pitch-col .pitch-row .scale span:nth-child(5)::after {
+  width: 8px;
+  background: #b9b2a5;
+}
+
+.pitch-col .pitch-top .pitch-read output small {
+  font-size: 7px;
+}
+
+/* Narrow windows: the decks stack, each strip stays beside its deck. */
+@media (max-width: 900px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr) 56px 56px minmax(0, 1fr);
+    grid-template-areas:
+      'a pa pb b'
+      'm m  m  m';
+  }
+}
+
+@media (max-width: 720px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr) 56px;
+    grid-template-areas:
+      'a pa'
+      'm m'
+      'b pb';
+  }
 }

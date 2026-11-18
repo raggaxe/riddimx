@@ -1,17 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { sampler } from '../engine/sampler'
 import { SFX } from '../engine/soundsystem'
-import { DubPanel } from './DubPanel'
-import { RewindPanel } from './RewindPanel'
 import { DropsPanel } from './DropsPanel'
 import { useStore } from '../store'
+import { ui } from '../ui'
 
-type View = 'pads' | 'drops' | 'rewind' | 'dub'
+type View = 'pads' | 'drops'
 const VIEWS: { id: View; label: string; hint: string }[] = [
   { id: 'pads', label: 'Pads', hint: 'Oito pads de jingles e efeitos' },
   { id: 'drops', label: 'Drops', hint: 'Criar drops e jingles com voz, para os pads' },
-  { id: 'rewind', label: 'Rewind ◀◀', hint: 'Ajustes do botão ◀◀ dos decks' },
-  { id: 'dub', label: 'Dub', hint: 'Ajustes do botão DUB dos decks' },
 ]
 const LS_VIEW = 'vx_sampler_view'
 
@@ -25,7 +22,7 @@ const typing = (el: EventTarget | null) =>
 
 /**
  * Eight pads for jingles and effects: click an empty pad (or drop a file on it) to load, click to play.
- * The settings of the deck's ◀◀ and DUB buttons live here too, one page at a time so nothing scrolls.
+ * Drops (jingles made with a voice) are made on the page beside it.
  */
 export function SamplerPanel() {
   const s = useStore(sampler)
@@ -58,7 +55,7 @@ export function SamplerPanel() {
   useEffect(() => {
     if (view !== 'pads') return
     const onKey = (e: KeyboardEvent) => {
-      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return
+      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || typing(e.target) || ui.get().settings) return
       const n = Number(e.key)
       if (n >= 1 && n <= s.pads.length) {
         e.preventDefault()
@@ -94,8 +91,6 @@ export function SamplerPanel() {
         ))}
       </nav>
       {view === 'drops' && <DropsPanel />}
-      {view === 'rewind' && <RewindPanel />}
-      {view === 'dub' && <DubPanel />}
       {view === 'pads' && (
         <div className="sp-pads">
           <div className="sampler-pads">
@@ -123,11 +118,11 @@ export function SamplerPanel() {
                     if (pad.name) sampler.trigger(i)
                     else choose(i)
                   }}
-                  aria-label={pad.name ? 'Pad ' + (i + 1) + ': ' + pad.name : 'Pad ' + (i + 1) + ' vazio: escolher ficheiro'}
+                  aria-label={pad.name ? 'Pad ' + (i + 1) + ': ' + pad.name : 'Pad ' + (i + 1) + ' vazio: escolher arquivo'}
                   title={
                     pad.name
-                      ? (pad.playing ? 'Parar' : 'Tocar') + ' (tecla ' + (i + 1) + '). Larga outro som aqui para trocar'
-                      : 'Escolher um ficheiro de áudio, ou largar aqui um efeito ou ficheiro'
+                      ? (pad.playing ? 'Parar' : 'Tocar') + ' (tecla ' + (i + 1) + '). Solte outro som aqui para trocar'
+                      : 'Escolher um arquivo de áudio, ou soltar aqui um efeito ou arquivo'
                   }
                 >
                   {/* How much of the sample is left: drains over exactly its length. */}
@@ -146,7 +141,7 @@ export function SamplerPanel() {
           </div>
           <div className="sp-bank">
             <div className="sp-bank-head">
-              <h5 title="Clique: ouvir. Arrasta para um pad, ou larga lá um ficheiro teu. Os pads ficam guardados e são mapeáveis na controladora.">
+              <h5 title="Clique: ouvir. Arraste para um pad, ou solte lá um arquivo seu. Os pads ficam salvos e são mapeáveis na controladora.">
                 Efeitos
               </h5>
               <label className="sampler-vol">
@@ -185,7 +180,7 @@ export function SamplerPanel() {
                     onClick={() => void sampler.preview(fx.id)}
                     title={
                       (used >= 0 ? 'No pad ' + (used + 1) + '. ' : '') +
-                      'Clique: ouvir (nos auscultadores, se estiverem ligados). Arrastar para um pad: pôr lá'
+                      'Clique: ouvir (no headphone, se estiver ligado). Arrastar para um pad: pôr lá'
                     }
                   >
                     {fx.label}

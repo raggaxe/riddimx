@@ -8,9 +8,9 @@ import { bpmStore } from '../engine/bpm'
 import { camelot, harmonic, keyStore } from '../engine/key'
 import { parseYouTubeId } from '../engine/youtube'
 import { parseSpotifyTrack } from '../engine/spotify'
-import { LYRICS_LANGS, lyrics, type LyricsLang } from '../engine/lyrics'
+import { lyrics } from '../engine/lyrics'
 
-const KIND_LABEL = { local: 'Ficheiro', youtube: 'YouTube', spotify: 'Spotify' }
+const KIND_LABEL = { local: 'Arquivo', youtube: 'YouTube', spotify: 'Spotify' }
 const KIND_MARK = { local: 'F', youtube: 'YT', spotify: 'SP' }
 
 type Smart = 'match' | 'tempo' | 'key' | 'fresh' | 'played'
@@ -18,10 +18,10 @@ const SMART: { id: Smart; label: string; hint: string }[] = [
   {
     id: 'match',
     label: 'Combina',
-    hint: 'Tempo e tom compatíveis com o deck que está a tocar, ainda não tocadas: as melhores para a seguir',
+    hint: 'Tempo e tom compatíveis com o deck que está tocando, ainda não tocadas: as melhores para tocar depois',
   },
-  { id: 'tempo', label: 'Mesmo tempo', hint: 'Tempo a menos de 6 % do deck que está a tocar (ou metade / dobro)' },
-  { id: 'key', label: 'Tom compatível', hint: 'Tom que mistura com o do deck que está a tocar (roda de Camelot)' },
+  { id: 'tempo', label: 'Mesmo tempo', hint: 'Tempo a menos de 6 % do deck que está tocando (ou metade / dobro)' },
+  { id: 'key', label: 'Tom compatível', hint: 'Tom que mistura com o do deck que está tocando (roda de Camelot)' },
   { id: 'fresh', label: 'Por tocar', hint: 'Ainda não tocadas nesta sessão' },
   { id: 'played', label: 'Tocadas', hint: 'Já carregadas num deck nesta sessão, pela ordem em que tocaram' },
 ]
@@ -54,7 +54,9 @@ export function LibraryPanel() {
   // The search bar lives on the tab row (App's #tab-tools), so the list gets that row's height.
   const [slot, setSlot] = useState<HTMLElement | null>(null)
   useEffect(() => setSlot(document.getElementById('tab-tools')), [])
-  const { entries, lists, error, analyzing, onDeck, played, riddims, riddimView } = useStore(library)
+  const { entries, lists, error, analyzing, onDeck, played, riddims, riddimView, separating, sepProgress } = useStore(library)
+  // Files that cannot be loaded yet (those separated again with the new model play meanwhile, not counted).
+  const blocked = entries.filter((e) => library.waitingStems(e)).length
   const riddim = riddims.find((r) => r.key === riddimView) ?? null
   const [renaming, setRenaming] = useState<string | null>(null)
   const bpm = useStore(bpmStore)
@@ -216,7 +218,7 @@ export function LibraryPanel() {
         at = at < 0 ? (r.step > 0 ? 0 : shown.length - 1) : Math.max(0, Math.min(shown.length - 1, at + r.step))
       }
       const entry = shown[at]
-      if (r.load && entry && library.playable(entry)) {
+      if (r.load && entry && library.reachable(entry)) {
         if (r.load === 'free') library.loadFree(entry, deckA, deckB)
         else library.load(entry, r.load === 'A' ? deckA : deckB)
       }
@@ -227,7 +229,7 @@ export function LibraryPanel() {
 
   const onKeys = (e: React.KeyboardEvent) => {
     const entry = shown.find((x) => x.id === selected)
-    const ready = entry && library.playable(entry)
+    const ready = entry && library.reachable(entry) // still separating: it goes on the deck when done
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
       move(e.key === 'ArrowDown' ? 1 : -1)
@@ -299,12 +301,12 @@ export function LibraryPanel() {
             → B
           </button>
           <button className="btn" onClick={() => loadLink(null)} title="Só guardar na biblioteca">
-            Guardar
+            Salvar
           </button>
         </>
       )}
       <button className="btn" onClick={() => picker.current?.click()}>
-        + Ficheiros
+        + Arquivos
       </button>
       <input
         ref={picker}
@@ -329,49 +331,20 @@ export function LibraryPanel() {
         }}
         title={
           live
-            ? 'Carrega no deck livre a melhor música para a seguir: tempo e tom compatíveis com o deck ' +
+            ? 'Carrega no deck livre a melhor música para tocar depois: tempo e tom compatíveis com o deck ' +
               (live === a ? 'A' : 'B') +
               ', ainda não tocada'
-            : 'Põe uma música a tocar primeiro'
+            : 'Coloque uma música tocando primeiro'
         }
       >
         ✦ Sugerir
       </button>
-      <span className="lib-count" title={analyzing ? 'A medir BPM e tom…' : undefined}>
+      <span className="lib-count" title={analyzing ? 'Medindo BPM e tom…' : undefined}>
         {shown.length} {shown.length === 1 ? 'música' : 'músicas'}
         {total > 0 && ' · ' + hours(total)}
-        {analyzing && ' · a medir…'}
+        {analyzing && ' · medindo…'}
+        {blocked > 0 && ` · ${blocked} separando`}
       </span>
-      {(lyr.model === 'missing' || lyr.model === 'installing') && (
-        <button
-          className={'btn lib-ai' + (lyr.modelError ? ' err' : '')}
-          disabled={lyr.model === 'installing'}
-          onClick={() => void lyrics.installModel()}
-          title={
-            lyr.modelError
-              ? 'A instalação falhou (' + lyr.modelError + '). Clica para tentar outra vez'
-              : 'Descarrega uma vez o modelo de letras (' +
-                lyr.modelSizeMb +
-                ' MB, da Hugging Face). Depois a app transcreve sozinha, no teu Mac, as letras das músicas que o catálogo não conhece'
-          }
-        >
-          {lyr.model === 'installing'
-            ? 'A instalar letras ' + Math.round(lyr.modelProgress * 100) + '%'
-            : lyr.modelError
-              ? 'Letras: tentar outra vez'
-              : 'Instalar letras · ' + lyr.modelSizeMb + ' MB'}
-        </button>
-      )}
-      <label className="lib-lang" title="Língua em que as músicas são cantadas: ajuda a transcrever as letras no Mac">
-        Letras
-        <select value={lyr.lang} onChange={(e) => lyrics.setLang(e.target.value as LyricsLang)} aria-label="Língua das letras">
-          {LYRICS_LANGS.map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.label}
-            </option>
-          ))}
-        </select>
-      </label>
     </div>
   )
 
@@ -391,7 +364,7 @@ export function LibraryPanel() {
           >
             Todas <i>{entries.length}</i>
           </button>
-          <h6 className="lib-smart-head" title={live ? 'Comparado com o deck ' + (live === a ? 'A' : 'B') : 'Põe uma música a tocar'}>
+          <h6 className="lib-smart-head" title={live ? 'Comparado com o deck ' + (live === a ? 'A' : 'B') : 'Coloque uma música tocando'}>
             Inteligentes{live ? ' · deck ' + (live === a ? 'A' : 'B') : ''}
           </h6>
           {SMART.map((m) => (
@@ -417,7 +390,7 @@ export function LibraryPanel() {
                 const id = e.dataTransfer.getData(ENTRY_DRAG)
                 if (id) library.setList(id, name)
               }}
-              title="Arrasta músicas para aqui para as guardar nesta lista"
+              title="Arraste músicas para cá para salvar nesta lista"
             >
               <button
                 onClick={() => {
@@ -466,12 +439,12 @@ export function LibraryPanel() {
           {/* Riddims: found by listening, nothing to set up. (Set aside for now.) */}
           {RIDDIMS_ON && (
             <>
-              <h6 className="lib-riddims-head" title="Versões do mesmo instrumental, encontradas pela app ao ouvir as tuas músicas">
+              <h6 className="lib-riddims-head" title="Versões do mesmo instrumental, encontradas pela app ao ouvir as suas músicas">
                 Riddims
               </h6>
               {riddims.length === 0 ? (
                 <p className="lib-riddims-hint">
-                  {analyzing ? 'A ouvir as músicas…' : 'Aparecem aqui sozinhos quando tiveres várias versões do mesmo instrumental.'}
+                  {analyzing ? 'Ouvindo as músicas…' : 'Aparecem aqui sozinhos quando você tiver várias versões do mesmo instrumental.'}
                 </p>
               ) : (
                 riddims.map((r) => (
@@ -517,7 +490,7 @@ export function LibraryPanel() {
                   }}
                 />
               )}
-              <span title="Toca-as uma a seguir à outra. Se alguma não for deste riddim, tira-a com ×.">
+              <span title="Toca uma depois da outra. Se alguma não for deste riddim, tire com ×.">
                 {riddim.members.length} versões do mesmo instrumental: toca-as uma a seguir à outra. Se alguma não for deste riddim, tira-a
                 com ×.
               </span>
@@ -532,10 +505,10 @@ export function LibraryPanel() {
           {shown.length === 0 ? (
             <p className="empty">
               {entries.length === 0
-                ? 'Biblioteca vazia. Arrasta ficheiros de áudio para a janela, ou cola um link na caixa de procura, ao lado das abas.'
+                ? 'Biblioteca vazia. Arraste arquivos de áudio para a janela, ou cole um link na caixa de busca, ao lado das abas.'
                 : words.length
                   ? 'Nada encontrado para "' + query.trim() + '".'
-                  : 'Lista vazia. Arrasta músicas para o nome da lista, à esquerda.'}
+                  : 'Lista vazia. Arraste músicas para o nome da lista, à esquerda.'}
             </p>
           ) : (
             <table>
@@ -554,7 +527,9 @@ export function LibraryPanel() {
               </thead>
               <tbody ref={body}>
                 {shown.map((entry) => {
-                  const stale = !library.playable(entry)
+                  const stale = !library.reachable(entry)
+                  const waiting = library.waitingStems(entry)
+                  const splitting = separating === entry.id
                   const ref = entry.kind === 'local' ? null : entry.kind + ':' + entry.ref
                   const measuring = analyzing === entry.id
                   const t = tempoOf(entry)
@@ -570,6 +545,7 @@ export function LibraryPanel() {
                       className={[
                         initial.current.has(entry.id) ? '' : 'fresh',
                         stale ? 'stale' : '',
+                        waiting ? 'waiting' : '',
                         selected === entry.id ? 'sel' : '',
                         played.includes(entry.id) && !deckOn.length ? 'played' : '',
                       ].join(' ')}
@@ -580,7 +556,15 @@ export function LibraryPanel() {
                       }}
                       onClick={() => setSelected(entry.id)}
                       onDoubleClick={() => !stale && library.loadFree(entry, deckA, deckB)}
-                      title={stale ? 'Ficheiro sem caminho conhecido: volta a adicioná-lo' : undefined}
+                      title={
+                        stale
+                          ? 'Arquivo sem caminho conhecido: adicione de novo'
+                          : waiting
+                            ? 'Separando as faixas com IA (voz, bateria, baixo, instrumentos). Fica disponível quando acabar; se carregar agora, entra no deck nessa hora.'
+                            : splitting
+                              ? 'Separando de novo com o modelo novo; até lá toca com as faixas que já tinha'
+                              : undefined
+                      }
                     >
                       <td className="c-mark">
                         {deckOn.map((n) => (
@@ -593,6 +577,11 @@ export function LibraryPanel() {
                         className={'c-title' + (!riddim && library.riddimOf(entry.id) ? ' has-riddim' : '')}
                         title={entry.title + (entry.artist ? ' · ' + entry.artist : '')}
                       >
+                        {(waiting || splitting) && (
+                          <span className={'stem-wait' + (splitting ? ' on' : '')} style={{ '--p': sepProgress } as React.CSSProperties}>
+                            {splitting ? Math.round(sepProgress * 100) + '%' : 'fila'}
+                          </span>
+                        )}
                         {entry.title}
                         {/* Shown here only when the table is too narrow for its own Artist column. */}
                         {entry.artist && <span className="t-artist"> · {entry.artist}</span>}
@@ -629,13 +618,13 @@ export function LibraryPanel() {
                       <td className="c-artist">{entry.artist || <span className="none">—</span>}</td>
                       <td
                         className={'c-num' + (bpmFit ? ' fit' : '')}
-                        title={bpmFit ? 'Tempo próximo do deck que está a tocar' : undefined}
+                        title={bpmFit ? 'Tempo próximo do deck que está tocando' : undefined}
                       >
                         {tempo}
                       </td>
                       <td
                         className={'c-key' + (keyFit ? ' fit' : '')}
-                        title={keyFit ? 'Tom compatível com o deck que está a tocar' : (key ?? undefined)}
+                        title={keyFit ? 'Tom compatível com o deck que está tocando' : (key ?? undefined)}
                       >
                         {key ? camelot(key) : measuring ? '…' : '—'}
                         {key && <small>{key}</small>}

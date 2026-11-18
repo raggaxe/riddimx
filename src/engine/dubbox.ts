@@ -900,7 +900,9 @@ class DubBox extends Store<DubBoxState> {
   /** Next / previous preset (factory first, then the DJ's own), for the controller. */
   stepPreset(dir: 1 | -1): void {
     const all = [...FACTORY, ...this.state.user]
-    const at = all.findIndex((p) => p.name === this.state.preset)
+    // After a tweak (or a surprise) the patch has no preset name: step from the one it came from,
+    // not from the start of the list.
+    const at = all.findIndex((p) => p.name === (this.state.preset ?? this.state.basePreset))
     this.usePreset(all[(at + dir + all.length) % all.length].name)
   }
 

@@ -76,7 +76,7 @@ export function MasterIsolator() {
             className={'mx-kill' + (b.kill ? ' on' : '')}
             aria-pressed={b.kill}
             onClick={() => isolator.kill(b.key, !b.kill)}
-            title={'KILL: corta os ' + b.label.toLowerCase() + ' de toda a pista (carrega outra vez para voltar)'}
+            title={'KILL: corta os ' + b.label.toLowerCase() + ' de toda a pista (aperte de novo para voltar)'}
           >
             KILL
           </button>
@@ -175,8 +175,8 @@ export function VuPair() {
               <stop offset="100%" stopColor="#f5a524" stopOpacity="0" />
             </radialGradient>
           </defs>
-          <rect x="0" y="0" width="80" height="50" rx="4" className="vu-bg" />
-          <rect x="1" y="1" width="78" height="48" rx="3.5" fill={'url(#vu-glow-' + side + ')'} />
+          <rect x="0" y="0" width="80" height="50" rx="1.5" className="vu-bg" />
+          <rect x="1" y="1" width="78" height="48" rx="1" fill={'url(#vu-glow-' + side + ')'} />
           {marks.map((m) => {
             const a = (vuAngle(m) * Math.PI) / 180
             const r2 = m === 0 || m === -20 || m === 3 ? 28 : 31
@@ -240,7 +240,7 @@ export function SoundSystem() {
       title="Sound system"
       className="mx-ss"
       more={() => ui.open('master')}
-      moreLabel="Compressor e limiter em detalhe (separador Master, em baixo)"
+      moreLabel="Compressor e limiter em detalhe (aba Master, embaixo)"
     >
       <Knob
         label="PESO"
@@ -300,19 +300,23 @@ const pct = (v: number) => Math.round(v * 100) + '%'
 export function MicSection() {
   const m = useStore(mic)
   return (
-    <MixSection title="Mic" className="mx-mic">
+    <MixSection title="Mic" className="mx-mic" more={() => ui.open('voice')} moreLabel="Todos os efeitos da voz (aba Voz)">
       <button
         className={'mx-talk' + (m.talk ? ' on' : '') + (m.speaking ? ' speaking' : '') + (m.error ? ' err' : '')}
         aria-pressed={m.talk}
-        onClick={() => mic.setTalk(!m.talk)}
-        title={m.error ?? (m.talk ? 'Fechar o microfone' : 'Abrir o microfone para a pista (a 1.ª vez o Mac pede autorização)')}
+        onClick={() => {
+          // After a "no" from the Mac, the button leads to where it is fixed; then it tries again.
+          if (m.error && /Privacidade/.test(m.error)) mic.openSettings()
+          mic.setTalk(!m.talk)
+        }}
+        title={m.error ?? (m.talk ? 'Fechar o microfone' : 'Abrir o microfone para a pista (na 1ª vez o Mac pede autorização)')}
       >
         <i aria-hidden="true" />
-        {m.talk ? 'NO AR' : 'FALAR'}
+        {m.talk ? 'NO AR' : m.error ? 'SEM MIC' : 'FALAR'}
       </button>
       <Knob label="NÍVEL" value={m.level} min={0} max={1.5} reset={1} format={pct} onChange={(v) => mic.update({ level: v })} />
-      <Knob label="ECO" value={m.echo} min={0} max={1} reset={0.25} format={pct} onChange={(v) => mic.update({ echo: v })} />
-      <Knob label="MOLA" value={m.spring} min={0} max={1} reset={0.15} format={pct} onChange={(v) => mic.update({ spring: v })} />
+      <Knob label="ECO" value={m.echo} min={0} max={1} reset={0.4} format={pct} onChange={(v) => mic.update({ echo: v })} />
+      <Knob label="MOLA" value={m.spring} min={0} max={1} reset={0.25} format={pct} onChange={(v) => mic.update({ spring: v })} />
       <Knob
         label="BAIXAR"
         value={m.duck}

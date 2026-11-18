@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
+import { settings } from '../settings'
 import type { Deck } from '../engine/deck'
 
-const COLORS = ['#f2c230', '#35c46a']
 const HOTCUE_COLORS = ['#e5484d', '#4aa8ff', '#c77dff', '#ff8a3d']
 /** Seconds of play left at which the remaining time turns red. */
 const END_WARNING = 30
@@ -13,10 +13,11 @@ function fmt(seconds: number): string {
 }
 
 /** Overview waveform (or plain progress bar for streaming sources) drawn every frame; click/drag to seek. */
-export function Waveform({ deck, children }: { deck: Deck; children?: React.ReactNode }) {
+export function Waveform({ deck, children, info }: { deck: Deck; children?: React.ReactNode; info?: React.ReactNode }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const elapsed = useRef<HTMLSpanElement>(null)
   const remaining = useRef<HTMLSpanElement>(null)
+  const total = useRef<HTMLSpanElement>(null)
   const counter = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export function Waveform({ deck, children }: { deck: Deck; children?: React.Reac
       const dur = s.duration
       const x = (t: number) => (dur > 0 ? (t / dur) * w : 0)
       const px = x(pos)
-      const color = COLORS[deck.side]
+      const color = deck.side === 0 ? settings.get().colorA : settings.get().colorB
       g.clearRect(0, 0, w, h)
 
       // The last 30 s of the track are tinted, so the end never comes by surprise.
@@ -92,10 +93,11 @@ export function Waveform({ deck, children }: { deck: Deck; children?: React.Reac
         g.globalAlpha = 1
       }
 
-      if (elapsed.current) elapsed.current.textContent = dur > 0 ? fmt(pos) : ''
+      if (elapsed.current) elapsed.current.textContent = dur > 0 ? fmt(pos) : '0:00.0'
+      if (total.current) total.current.textContent = dur > 0 ? fmt(dur / (s.rate || 1)) : '0:00.0'
       const left = (dur - pos) / (s.rate || 1)
       if (remaining.current) {
-        remaining.current.textContent = dur > 0 ? '−' + fmt(left) : ''
+        remaining.current.textContent = dur > 0 ? fmt(left) : '0:00.0'
         const ending = s.playing && dur > 0 && left < END_WARNING
         remaining.current.classList.toggle('ending', ending)
         remaining.current.classList.toggle('blink', ending && Math.floor(performance.now() / 500) % 2 === 0)
@@ -136,14 +138,26 @@ export function Waveform({ deck, children }: { deck: Deck; children?: React.Reac
         />
         {children}
       </div>
+      {/* Info line: time played · left · whole track (at the current pitch), then the deck's key and tempo tools. */}
       <div className="times">
-        <span className="t-elapsed" ref={elapsed}>
-          0:00.0
+        <span className="t-cell">
+          <small>DECORRIDO</small>
+          <span className="t-elapsed" ref={elapsed}>
+            0:00.0
+          </span>
+        </span>
+        <span className="t-cell">
+          <small>RESTANTE</small>
+          <span className="t-left" ref={remaining}>
+            0:00.0
+          </span>
+        </span>
+        <span className="t-cell t-total">
+          <small>TOTAL</small>
+          <span ref={total}>0:00.0</span>
         </span>
         <span className="t-bar" ref={counter} title="Compasso.batida (o compasso 1, 5, 9… começa uma frase)" />
-        <span className="t-left" ref={remaining}>
-          −0:00.0
-        </span>
+        {info}
       </div>
     </div>
   )

@@ -15,11 +15,30 @@ contextBridge.exposeInMainWorld('vxDesktop', {
   readAudio: (filePath) => ipcRenderer.invoke('vx:read-audio', filePath),
   // AI stems of a local file: id = SHA-1 of the file, pcm = interleaved stereo float32.
   stemsAvailable: () => ipcRenderer.invoke('vx:stems-available'),
+  stemsHas: (id) => ipcRenderer.invoke('vx:stems-has', id),
+  // Size of the interface, and the ⌘+ / ⌘− / ⌘0 keys (the page decides, so its setting stays in step).
+  setZoom: (factor) => ipcRenderer.invoke('vx:set-zoom', factor),
+  // App updates (GitHub releases): state, look now, and restart into the downloaded version.
+  updateState: () => ipcRenderer.invoke('vx:update-state'),
+  updateCheck: () => ipcRenderer.invoke('vx:update-check'),
+  updateInstall: () => ipcRenderer.invoke('vx:update-install'),
+  onUpdate: (callback) => {
+    const listener = (_event, state) => callback(state)
+    ipcRenderer.on('vx:update', listener)
+    return () => ipcRenderer.removeListener('vx:update', listener)
+  },
+  onZoomKey: (callback) => {
+    const listener = (_event, step) => callback(step)
+    ipcRenderer.on('vx:zoom-key', listener)
+    return () => ipcRenderer.removeListener('vx:zoom-key', listener)
+  },
   stemsCached: (id) => ipcRenderer.invoke('vx:stems-cached', id),
   stemsSave: (id, stems, rate) => ipcRenderer.invoke('vx:stems-save', id, stems, rate),
   // Lyrics transcribed on this Mac (whisper.cpp, when installed): pcm = mono float32 at 16 kHz.
   lyricsAvailable: () => ipcRenderer.invoke('vx:lyrics-available'),
   // The lyrics model: whether it is installed, and downloading it (about 550 MB) when the DJ asks.
+  micAccess: () => ipcRenderer.invoke('vx:mic-access'),
+  micSettings: () => ipcRenderer.invoke('vx:mic-settings'),
   lyricsModel: () => ipcRenderer.invoke('vx:lyrics-model'),
   lyricsInstall: () => ipcRenderer.invoke('vx:lyrics-install'),
   onLyricsInstallProgress: (callback) => {

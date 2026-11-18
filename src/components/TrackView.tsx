@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
+import { settings } from '../settings'
 import { decks, type Deck } from '../engine/deck'
 import { lyrics } from '../engine/lyrics'
+import { useStore } from '../store'
 
-const COLORS = ['#f2c230', '#35c46a'] // deck A gold, deck B green
 const HOTCUE_COLORS = ['#e5484d', '#4aa8ff', '#c77dff', '#ff8a3d']
 /** Screen pixels per second of real time. Both lanes share it, so synced decks show their beats lined up. */
 const ZOOM_DEFAULT = 90
@@ -81,7 +82,7 @@ export function TrackView() {
         const xOf = (t: number): number => cx + (t - pos) / secPerPx
         const tStart = pos - cx * secPerPx
         const tEnd = pos + (w - cx) * secPerPx
-        const color = COLORS[lane]
+        const color = lane === 0 ? settings.get().colorA : settings.get().colorB
 
         // Before the start and after the end of the track: darker, so its edges are seen coming.
         g.fillStyle = 'rgba(0, 0, 0, 0.35)'
@@ -122,36 +123,45 @@ export function TrackView() {
           g.globalAlpha = 1
         }
 
-        // Beat grid. The head of every bar (beat 1) is a line across the lane with its bar number, so two
-        // decks can be lined up by eye; every 4 bars (a phrase) the line is stronger. Other beats: small ticks.
+        // Beat grid, VirtualDJ style: the head of every bar is a small square in the deck's colour on the
+        // lane's inner edge (where the two lanes meet), with a faint line through the wave so two decks
+        // can be lined up by eye; every 4 bars (a phrase) the square is bigger and numbered. Other beats:
+        // a tiny tick on that edge. Bars are counted from the start of the track.
         if (s.bpm && s.anchor !== null) {
           const beat = 60 / s.bpm
-          const barPx = (4 * beat) / secPerPx // screen distance between two bar heads
-          const deckColour = lane === 0 ? '#f2c230' : '#35c46a'
-          g.font = `700 ${8 * dpr}px -apple-system, system-ui, sans-serif`
-          g.textBaseline = 'top'
-          for (let k = Math.ceil((Math.max(0, tStart) - s.anchor) / beat); ; k++) {
-            const t = s.anchor + k * beat
+          const barLen = 4 * beat
+          const barPx = barLen / secPerPx // screen distance between two bar heads
+          const one = s.barAt ?? s.anchor // the one: found or marked (Shift+TAP), else the grid's own beat
+          const firstBar = one - Math.floor(one / barLen + 1e-6) * barLen
+          const inner = lane === 0 ? top + laneH : top // the edge facing the other lane
+          const sq = Math.max(4 * dpr, Math.min(7 * dpr, laneH * 0.16))
+          const labelSize = Math.max(7, Math.min(9, laneH / dpr / 2.8))
+          g.font = `700 ${labelSize * dpr}px -apple-system, system-ui, sans-serif`
+          g.textBaseline = lane === 0 ? 'bottom' : 'top'
+          for (let k = Math.ceil((Math.max(0, tStart) - firstBar) / beat - 1e-6); ; k++) {
+            const t = firstBar + k * beat
             if (t > tEnd || t > s.duration) break
+            if (t < 0) continue
             const x = Math.round(xOf(t))
-            const inBar = ((k % 4) + 4) % 4
-            if (inBar === 0) {
-              const bar = Math.floor(k / 4) + 1 // bar 1 = the first beat found
-              const phrase = ((bar - 1) % 4 + 4) % 4 === 0
-              g.fillStyle = phrase ? deckColour : '#ffffff'
-              g.globalAlpha = phrase ? 0.7 : 0.4
-              g.fillRect(x, top, (phrase ? 2 : 1) * dpr, laneH)
-              // Bar number when there is room for it (every bar zoomed in, every 4 bars zoomed out).
-              if (bar >= 1 && (barPx > 26 * dpr || phrase)) {
-                g.globalAlpha = phrase ? 0.9 : 0.55
-                g.fillText(String(bar), x + 3 * dpr, top + 2 * dpr)
+            if (((k % 4) + 4) % 4 === 0) {
+              const bar = Math.round(k / 4) + 1
+              const phrase = (bar - 1) % 4 === 0
+              const size = phrase ? sq * 1.35 : sq
+              g.fillStyle = color
+              g.globalAlpha = phrase ? 0.35 : 0.18
+              g.fillRect(x, top, dpr, laneH)
+              g.globalAlpha = 1
+              g.fillRect(x - size / 2, lane === 0 ? inner - size - dpr : inner + dpr, size, size)
+              // Bar number beside the square: every phrase, or every bar when zoomed in enough.
+              if ((phrase && barPx * 4 > 26 * dpr) || barPx > 34 * dpr) {
+                g.globalAlpha = phrase ? 0.95 : 0.6
+                g.fillText(String(bar), x + size / 2 + 2 * dpr, lane === 0 ? inner - dpr : inner + dpr)
               }
             } else if (barPx > 14 * dpr) {
               g.fillStyle = '#ffffff'
-              g.globalAlpha = 0.3
-              const len = 4 * dpr
-              g.fillRect(x, top, dpr, len)
-              g.fillRect(x, top + laneH - len, dpr, len)
+              g.globalAlpha = 0.35
+              const len = Math.max(2 * dpr, sq * 0.45)
+              g.fillRect(x, lane === 0 ? inner - len - dpr : inner + dpr, dpr, len)
             }
           }
           g.globalAlpha = 1
@@ -202,8 +212,8 @@ export function TrackView() {
             const x = xOf(line.time)
             if (x < free) continue
             const width = g.measureText(line.text).width
-            // Leave the right end to the time-left label.
-            if (x + width > w - 56 * dpr) continue
+            // Leave the right end to the time-left label and the lyrics' timing buttons.
+            if (x + width > w - 150 * dpr) continue
             const y = lane === 0 ? top + 9 * dpr : top + laneH - 9 * dpr
             g.fillStyle = 'rgba(8, 10, 14, 0.72)'
             g.fillRect(x - 3 * dpr, y - 7 * dpr, width + 6 * dpr, 14 * dpr)
@@ -303,7 +313,9 @@ export function TrackView() {
           d.sent = now
           const s = d.deck.get()
           const t = d.pos - ((e.clientX - d.x) / zoom.current) * (s.rate || 1)
-          d.deck.seek(Math.max(0, Math.min(s.duration, t)))
+          const to = Math.max(0, Math.min(s.duration, t))
+          // Stopped: the head of a bar pulls a little, so cueing on the one is easy.
+          d.deck.seek(s.playing ? to : d.deck.magnet(to))
         }}
         onWheel={(e) => {
           // Wheel or trackpad pinch: zoom in and out around the needle.
@@ -326,10 +338,51 @@ export function TrackView() {
             /* not remembered */
           }
         }}
-        title="Arrasta para andar na música · roda do rato para zoom · duplo clique repõe o zoom"
+        title="Arraste para andar na música · roda do mouse para zoom · duplo clique volta o zoom"
         onPointerUp={() => (drag.current = null)}
         onPointerCancel={() => (drag.current = null)}
       />
+      {decks.map((deck, i) => (
+        <LyricsTiming key={deck.name} deck={deck} lane={i} />
+      ))}
+    </div>
+  )
+}
+
+/** Shown when a deck has lyrics: moves them earlier / later, 0.1 s a click (Shift: 1 s), and back to automatic. */
+function LyricsTiming({ deck, lane }: { deck: Deck; lane: number }) {
+  const s = useStore(deck)
+  const l = useStore(lyrics)
+  const key = s.ref ?? 'file:' + s.title
+  if (s.kind === 'none' || !l.lines[key]?.length) return null
+  const offset = lyrics.offsetOf(key)
+  const hand = l.fit[key] === 'hand'
+  const step = (e: React.MouseEvent, dir: 1 | -1) => lyrics.nudge(key, dir * (e.shiftKey ? 1 : 0.1))
+  return (
+    <div className={'lyr-timing ' + (lane === 0 ? 'top' : 'bottom')}>
+      <span title={hand ? 'Acertada à mão' : offset ? 'Alinhada sozinha com a voz da música' : 'Tempo original da letra'}>
+        LETRA {offset > 0 ? '+' : offset < 0 ? '−' : ''}
+        {Math.abs(offset).toFixed(1)}s
+      </span>
+      <button
+        onClick={(e) => step(e, -1)}
+        title="Letra mais cedo (0,1 s · Shift: 1 s)"
+        aria-label={'Letra do deck ' + deck.name + ' mais cedo'}
+      >
+        ◀
+      </button>
+      <button
+        onClick={(e) => step(e, 1)}
+        title="Letra mais tarde (0,1 s · Shift: 1 s)"
+        aria-label={'Letra do deck ' + deck.name + ' mais tarde'}
+      >
+        ▶
+      </button>
+      {hand && (
+        <button onClick={() => lyrics.resetTiming(key)} title="Voltar ao tempo automático" aria-label="Tempo automático">
+          AUTO
+        </button>
+      )}
     </div>
   )
 }

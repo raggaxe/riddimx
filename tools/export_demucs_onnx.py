@@ -4,9 +4,12 @@ Exports the core of Demucs htdemucs to ONNX for RiddimX's built-in stem engine.
 The STFT / iSTFT stay outside the model (the app does them in JavaScript): ONNX has no complex numbers.
 Inputs:  mix  float32 [1, 2, L]        one segment of the normalised stereo mix (L = 343980, 7.8 s @ 44.1 kHz)
          mag  float32 [1, 4, 2048, T]  its spectrogram, real and imaginary parts as channels (T = 336)
-Outputs: spec float32 [1, 4, 4, 2048, T]  per source: L re, L im, R re, R im (to be turned back by iSTFT)
-         wave float32 [1, 4, 2, L]        per source: time-branch waveform (added to the iSTFT result)
-Usage: python tools/export_demucs_onnx.py electron/models/htdemucs.onnx
+Outputs: spec float32 [1, S, 4, 2048, T]  per source (S = 4 for htdemucs): L re, L im, R re, R im (to be turned back by iSTFT)
+         wave float32 [1, S, 2, L]        per source: time-branch waveform (added to the iSTFT result)
+Usage: python tools/export_demucs_onnx.py public/models/htdemucs.onnx [model]
+       model: htdemucs (default, 4 sources), htdemucs_ft (4 fine-tuned models, one per source, cleaner but
+       4x slower: all four go into one ONNX file, each giving only its own source) or htdemucs_6s (6: adds
+       guitar and piano; weaker, not used)
 """
 import sys
 
@@ -83,21 +86,51 @@ class Core(torch.nn.Module):
         return x, xt
 
 
+class Bag(torch.nn.Module):
+    """Several models, each weighted per source (htdemucs_ft: model k gives source k only)."""
+
+    def __init__(self, models, weights):
+        super().__init__()
+        self.cores = torch.nn.ModuleList(Core(m) for m in models)
+        self.weights = weights
+
+    def forward(self, mix, mag):
+        S = len(self.weights[0])
+        specs, waves = [], []
+        for s in range(S):
+            used = [(k, w[s]) for k, w in enumerate(self.weights) if w[s]]
+            total = sum(w for _, w in used)
+            spec = wave = None
+            for k, w in used:
+                x, xt = self.cores[k](mix, mag)
+                spec = x[:, s] * (w / total) if spec is None else spec + x[:, s] * (w / total)
+                wave = xt[:, s] * (w / total) if wave is None else wave + xt[:, s] * (w / total)
+            specs.append(spec)
+            waves.append(wave)
+        return torch.stack(specs, 1), torch.stack(waves, 1)
+
+
 def main():
     out = sys.argv[1]
+    name = sys.argv[2] if len(sys.argv) > 2 else "htdemucs"
     # The fused attention kernel has no ONNX form: use the plain one.
     torch.backends.mha.set_fastpath_enabled(False)
-    bag = get_model("htdemucs")
+    bag = get_model(name)
     model = bag.models[0] if hasattr(bag, "models") else bag
     model.eval()
     L = int(model.segment * model.samplerate)
     T = -(-L // model.hop_length)
-    core = Core(model).eval()
+    models = list(bag.models) if hasattr(bag, "models") else [bag]
+    weights = [list(map(float, w)) for w in bag.weights] if hasattr(bag, "weights") else [[1.0] * len(model.sources)]
+    for m in models:
+        m.eval()
+        assert m.segment == model.segment and m.sources == model.sources
+    core = (Core(model) if len(models) == 1 else Bag(models, weights)).eval()
     mix = torch.randn(1, 2, L)
     mag = torch.randn(1, 4, model.nfft // 2, T)
     with torch.no_grad():
         torch.onnx.export(core, (mix, mag), out, input_names=["mix", "mag"], output_names=["spec", "wave"], opset_version=17, dynamo=False)
-    print("exported", out, "L", L, "T", T)
+    print("exported", name, list(model.sources), out, "L", L, "T", T)
 
 
 if __name__ == "__main__":

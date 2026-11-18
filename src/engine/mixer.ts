@@ -16,6 +16,8 @@ export interface MixerState {
   /** Where the headphones are: '' = off, 'split' = channels 3-4 of the master device, else a device id. */
   hpDevice: string
   devices: OutputDevice[]
+  inputs: OutputDevice[] // sound inputs (microphones, the interface's inputs)
+  inputDevice: string // input used by the microphone, '' = system default
   splitAvailable: boolean // the master device has at least 4 output channels
   audioError: string | null
   recording: boolean
@@ -29,7 +31,7 @@ interface MixerChannel {
 }
 
 const LS = 'vx_audio'
-type Saved = Pick<MixerState, 'cueMix' | 'hpVolume' | 'masterDevice' | 'hpDevice' | 'xfCurve' | 'dynamics'>
+type Saved = Pick<MixerState, 'cueMix' | 'hpVolume' | 'masterDevice' | 'hpDevice' | 'inputDevice' | 'xfCurve' | 'dynamics'>
 
 function saved(): Partial<Saved> {
   try {
@@ -77,6 +79,8 @@ class Mixer extends Store<MixerState> {
       masterDevice: s.masterDevice ?? '',
       hpDevice: s.hpDevice ?? '',
       devices: [],
+      inputs: [],
+      inputDevice: s.inputDevice ?? '',
       splitAvailable: false,
       audioError: null,
       recording: false,
@@ -115,9 +119,12 @@ class Mixer extends Store<MixerState> {
   }
 
   private persist(): void {
-    const { cueMix, hpVolume, masterDevice, hpDevice, xfCurve, dynamics } = this.state
+    const { cueMix, hpVolume, masterDevice, hpDevice, inputDevice, xfCurve, dynamics } = this.state
     try {
-      localStorage.setItem(LS, JSON.stringify({ cueMix, hpVolume, masterDevice, hpDevice, xfCurve, dynamics } satisfies Saved))
+      localStorage.setItem(
+        LS,
+        JSON.stringify({ cueMix, hpVolume, masterDevice, hpDevice, inputDevice, xfCurve, dynamics } satisfies Saved),
+      )
     } catch {
       /* not remembered */
     }
@@ -288,17 +295,30 @@ class Mixer extends Store<MixerState> {
     window.setTimeout(() => out.disconnect(), 1200)
   }
 
-  /** Lists the sound outputs of this computer. */
+  /** Lists the sound outputs and inputs of this computer. */
   async refreshDevices(): Promise<void> {
     try {
       const all = await navigator.mediaDevices.enumerateDevices()
-      const devices = all
-        .filter((d) => d.kind === 'audiooutput' && d.deviceId !== 'default' && d.deviceId !== 'communications')
-        .map((d, i) => ({ id: d.deviceId, label: d.label || 'Saída ' + (i + 1) }))
-      this.set({ devices })
+      const list = (kind: MediaDeviceKind, name: string): OutputDevice[] =>
+        all
+          .filter((d) => d.kind === kind && d.deviceId !== 'default' && d.deviceId !== 'communications')
+          .map((d, i) => ({ id: d.deviceId, label: d.label || name + ' ' + (i + 1) }))
+      this.set({ devices: list('audiooutput', 'Output'), inputs: list('audioinput', 'Input') })
     } catch {
-      this.set({ devices: [] })
+      this.set({ devices: [], inputs: [] })
     }
+  }
+
+  /** Microphone input: '' = system default. Whoever has the microphone open reopens it. */
+  setInputDevice(id: string): void {
+    this.set({ inputDevice: id })
+    this.persist()
+  }
+
+  /** What getUserMedia should ask for to use the chosen input (falls back to the default if it is gone). */
+  inputConstraint(): { deviceId?: { exact: string } } {
+    const id = this.state.inputDevice
+    return id && this.state.inputs.some((d) => d.id === id) ? { deviceId: { exact: id } } : {}
   }
 
   /** Speakers: '' = whatever the system uses by default. */
@@ -307,7 +327,7 @@ class Mixer extends Store<MixerState> {
       await (this.ctx as any).setSinkId(id)
       this.set({ masterDevice: id, audioError: null })
     } catch {
-      this.set({ audioError: 'Não foi possível usar essa saída para as colunas.' })
+      this.set({ audioError: 'Não deu para usar esse output no master.' })
     }
     const splitAvailable = this.ctx.destination.maxChannelCount >= 4
     this.set({ splitAvailable })
@@ -360,7 +380,7 @@ class Mixer extends Store<MixerState> {
       this.masterOut.connect(dest)
       if (id === 'split') {
         id = ''
-        error = 'A saída das colunas não tem canais 3-4.'
+        error = 'O output do master não tem canais 3-4.'
       } else if (id) {
         try {
           this.hpOut.connect(this.stream)
@@ -371,7 +391,7 @@ class Mixer extends Store<MixerState> {
           this.hpOut.disconnect()
           this.player.srcObject = null
           id = ''
-          error = 'Não foi possível usar essa saída para os auscultadores.'
+          error = 'Não deu para usar esse output no headphone.'
         }
       }
     }

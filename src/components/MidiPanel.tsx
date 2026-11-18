@@ -75,7 +75,7 @@ export function MidiPanel() {
         <div className="mp-bar">
           <span className={'mp-status' + (s.connected && s.inputs.length ? ' on' : '')}>
             <i aria-hidden="true" />
-            {!s.connected ? 'MIDI desligado' : s.inputs.length ? s.inputs.join(', ') : 'Nenhuma controladora. Liga-a por USB.'}
+            {!s.connected ? 'MIDI desligado' : s.inputs.length ? s.inputs.join(', ') : 'Nenhuma controladora. Conecte por USB.'}
           </span>
           {!s.connected && (
             <button className="btn small" onClick={() => void midi.connect()}>
@@ -111,18 +111,18 @@ export function MidiPanel() {
               <tr>
                 <th>Função</th>
                 <th className="c-type">Tipo</th>
-                <th className="c-ctl">Controlo</th>
+                <th className="c-ctl">Controle</th>
                 <th className="c-act">
                   <button
                     className={'lib-sort mp-chain' + (chain ? ' on' : '')}
-                    disabled={!s.connected || (!chain && rows.every((a) => mapped(a.id)))}
+                    disabled={!chain && rows.every((a) => mapped(a.id))}
                     onClick={() => {
                       if (chain) {
                         setChain(false)
                         midi.learn(null)
                       } else setChain(true)
                     }}
-                    title="Aprende uma a uma as funções deste grupo que ainda não têm controlo"
+                    title="Aprende uma por uma as funções deste grupo que ainda não têm controle"
                   >
                     {chain ? 'Parar sequência' : 'Aprender em sequência'}
                   </button>
@@ -131,17 +131,19 @@ export function MidiPanel() {
             </thead>
             <tbody>
               {rows.map((a) => {
-                const key = midi.keyFor(a.id)
+                const keys = midi.keysFor(a.id)
+                const key = keys[0]
                 const learning = s.learning === a.id
                 return (
                   <tr key={a.id} className={learning ? 'learning' : key ? 'mapped' : ''}>
                     <td>{a.label}</td>
                     <td className="c-type">{TYPE_HINT[a.type]}</td>
-                    <td className="c-ctl">{learning ? 'mexe o controlo…' : key ? describeKey(key) : '—'}</td>
+                    <td className="c-ctl" title={keys.map(describeKey).join('\n') || undefined}>
+                      {learning ? 'mexa no controle ou aperte uma tecla…' : key ? keys.map(describeKey).join(' · ') : '—'}
+                    </td>
                     <td className="c-act">
                       <button
                         className={'mp-learn' + (learning ? ' on' : '')}
-                        disabled={!s.connected}
                         onClick={() => {
                           setChain(false)
                           midi.learn(a.id)

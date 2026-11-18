@@ -6,7 +6,7 @@ from demucs.spec import spectro, ispectro
 import torch.nn.functional as F
 
 torch.backends.mha.set_fastpath_enabled(False)
-bag = get_model("htdemucs"); m = bag.models[0]; m.eval()
+bag = get_model(sys.argv[3] if len(sys.argv) > 3 else "htdemucs"); m = bag.models[0]; m.eval()
 L = int(m.segment * m.samplerate)
 import wave as _w
 # A 32-bit float WAV made by afconvert: read the data chunk by hand (the wave module only reads PCM).
@@ -17,7 +17,10 @@ a = a[: a.size // 2 * 2].reshape(-1, 2).T
 a = a[:, 44100 * 60: 44100 * 60 + L].copy()
 mix = torch.from_numpy(a)[None]
 with torch.no_grad():
-    ref = m(mix)[0].numpy()  # [4, 2, L]
+    # A bag (htdemucs_ft): each source from the models weighted for it.
+    W = torch.tensor(bag.weights if hasattr(bag, "weights") else [[1.0] * len(m.sources)])
+    outs = torch.stack([k.eval()(mix)[0] for k in (bag.models if hasattr(bag, "models") else [m])])  # [K, S, 2, L]
+    ref = ((outs * W[:, :, None, None]).sum(0) / W.sum(0)[:, None, None]).numpy()
     z = m._spec(mix); mag = m._magnitude(z)
 sess = ort.InferenceSession(sys.argv[2])
 spec, wave = sess.run(None, {"mix": mix.numpy(), "mag": mag.numpy()})

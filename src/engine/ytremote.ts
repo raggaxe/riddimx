@@ -5,17 +5,39 @@
  * MediaStream so the deck can run it through EQ, filter and stems.
  */
 
-type StemFiles = Record<'vocals' | 'drums' | 'bass' | 'other', Uint8Array>
+type StemPart = 'vocals' | 'drums' | 'bass' | 'other'
+export type StemFiles = Record<StemPart, Uint8Array>
+
+/** The desktop app's updater (electron/updater.cjs). */
+export interface UpdateState {
+  status: 'idle' | 'checking' | 'none' | 'available' | 'downloading' | 'ready' | 'error' | 'dev'
+  current: string // this app's version
+  version?: string // the new one
+  notes?: string
+  url?: string
+  progress?: number
+  error?: string
+  checkedAt?: number
+}
 
 interface DesktopBridge {
   capture(webContentsId: number): Promise<boolean>
   pathOf(file: File): string | null
   readAudio(filePath: string): Promise<Uint8Array | null>
   stemsAvailable(): Promise<boolean>
+  stemsHas?(id: string): Promise<string | null> // the model that made the stored stems
+  setZoom?(factor: number): Promise<void> // size of the whole interface
+  updateState?(): Promise<UpdateState | null>
+  updateCheck?(): Promise<void>
+  updateInstall?(): Promise<void>
+  onUpdate?(callback: (state: UpdateState) => void): () => void
+  onZoomKey?(callback: (step: number) => void): () => void // ⌘+ (1) / ⌘− (−1) / ⌘0 (0)
   stemsCached(id: string): Promise<StemFiles | null>
-  stemsSave(id: string, stems: Record<'vocals' | 'drums' | 'bass' | 'other', Float32Array>, rate: number): Promise<StemFiles | null>
+  stemsSave(id: string, stems: Record<StemPart, Float32Array>, rate: number): Promise<StemFiles | null>
   onStemsProgress(callback: (id: string, progress: number) => void): () => void
   lyricsAvailable?(): Promise<boolean>
+  micAccess?(): Promise<'granted' | 'denied' | 'restricted' | 'not-determined' | 'unknown'>
+  micSettings?(): Promise<void>
   lyricsModel?(): Promise<{ bin: boolean; ready: boolean; sizeMb: number }>
   lyricsInstall?(): Promise<boolean>
   onLyricsInstallProgress?(callback: (progress: number) => void): () => void
@@ -75,7 +97,12 @@ export class RemotePlayer {
   private ready = false
   private ignoreBefore = 0 // reports older than this predate our last seek
 
-  constructor(host: HTMLElement, deck: string, private events: RemoteEvents, onStream: (stream: MediaStream) => void) {
+  constructor(
+    host: HTMLElement,
+    deck: string,
+    private events: RemoteEvents,
+    onStream: (stream: MediaStream) => void,
+  ) {
     this.channel = new BroadcastChannel('vx-yt-' + deck)
     this.channel.onmessage = (e) => this.onMessage(e.data)
     const view = document.createElement('webview') as any

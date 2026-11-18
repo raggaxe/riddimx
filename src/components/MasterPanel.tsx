@@ -61,12 +61,12 @@ export function MasterPanel() {
             className={'mx-dyn-btn mf2-power' + (d.comp ? ' on' : '')}
             aria-pressed={d.comp}
             onClick={() => set({ comp: !d.comp })}
-            title="Compressor: mistura mais cheia e constante. Ajusta o ganho até a redução andar pelos 2 a 6 dB"
+            title="Compressor: mistura mais cheia e constante. Ajuste o ganho até a redução andar pelos 2 a 6 dB"
           >
             <i className={'mx-gr' + (d.comp ? '' : ' off')} aria-hidden="true" />
             COMPRESSOR
           </button>
-          <div className="mf2-presets" role="group" aria-label="Predefinições do compressor">
+          <div className="mf2-presets" role="group" aria-label="Presets do compressor">
             {COMP_PRESETS.map((p) => (
               <button
                 key={p.name}
@@ -141,7 +141,7 @@ export function MasterPanel() {
             className={'mx-dyn-btn mf2-power' + (d.lim ? ' on' : '')}
             aria-pressed={d.lim}
             onClick={() => set({ lim: !d.lim })}
-            title="Limiter: nada passa do teto. Se a redução ficar sempre acima de 3 dB, baixa o master"
+            title="Limiter: nada passa do teto. Se a redução ficar sempre acima de 3 dB, abaixe o master"
           >
             <i className={'mx-gr' + (d.lim ? '' : ' off')} aria-hidden="true" />
             LIMITER

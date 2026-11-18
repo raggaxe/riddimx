@@ -145,7 +145,7 @@ class SpotifyService extends Store<SpotifyState> {
   }
 
   async getToken(): Promise<string> {
-    if (!this.token) throw new Error('Liga a conta Spotify primeiro (separador Spotify)')
+    if (!this.token) throw new Error('Conecte a conta Spotify primeiro (Ajustes › Contas)')
     if (Date.now() > this.token.expires_at - 60_000) {
       await this.requestToken({
         grant_type: 'refresh_token',
