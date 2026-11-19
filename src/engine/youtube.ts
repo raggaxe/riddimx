@@ -16,7 +16,7 @@ export function loadYT(): Promise<any> {
       script.src = 'https://www.youtube.com/iframe_api'
       script.onerror = () => {
         apiPromise = null
-        reject(new Error('Não foi possível carregar o player do YouTube'))
+        reject(new Error('Couldn\'t load the YouTube player'))
       }
       document.head.appendChild(script)
     })

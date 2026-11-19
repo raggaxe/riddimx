@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { deckA, deckB, type Deck } from '../engine/deck'
-import { lyrics } from '../engine/lyrics'
+import { LYRICS_ON, lyrics } from '../engine/lyrics'
 import { useStore } from '../store'
 
 const clock = (t: number) => Math.floor(t / 60) + ':' + (t % 60).toFixed(1).padStart(4, '0')
@@ -43,7 +43,7 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
   const stemsReady = s.aiStems === 'ready'
   const source = deck.clipSource(voiceOnly && stemsReady)
   const duration = source?.duration ?? 0
-  const lines = lyr[s.ref ?? 'file:' + s.title] ?? []
+  const lines = LYRICS_ON ? (lyr[s.ref ?? 'file:' + s.title] ?? []) : []
   // What the drawing shows: the whole track, or 2 s either side of the selection.
   // While dragging, the view holds still (it would otherwise follow the selection being drawn).
   const held = useRef<[number, number] | null>(null)
@@ -102,7 +102,7 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
   if (!source) {
     return (
       <p className="dr-note">
-        Carrega uma música (arquivo) no deck {deckName} para recortar uma frase dela.
+        Load a track (file) on the deck {deckName} to cut a phrase from it.
         {(a.kind === 'local' || b.kind === 'local') && (
           <button className="link" onClick={() => setDeckName(deckName === 'A' ? 'B' : 'A')}>
             Usar o deck {deckName === 'A' ? 'B' : 'A'}
@@ -132,7 +132,7 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
         </span>
         <label
           className="dr-listen"
-          title={stemsReady ? 'Só a voz, separada pela IA' : 'A voz separada fica pronta quando os stems IA do deck acabarem'}
+          title={stemsReady ? 'Vocals only, split by AI' : 'The split vocal is ready when the deck\'s AI stems are done'}
         >
           <input
             type="checkbox"
@@ -140,13 +140,13 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
             disabled={!stemsReady}
             onChange={(e) => setVoiceOnly(e.target.checked)}
           />
-          Só a voz
+          Vocals only
         </label>
       </div>
       <canvas
         ref={canvas}
         className="dr-clip-wave"
-        title="Arraste por cima da frase que você quer"
+        title="Drag over the phrase you want"
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId)
           held.current = view
@@ -168,21 +168,21 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
         <span>
           {sel
             ? clock(sel[0]) + ' – ' + clock(sel[1]) + ' · ' + (sel[1] - sel[0]).toFixed(1) + ' s'
-            : 'Arraste na onda para escolher a frase'}
+            : 'Drag on the waveform to pick the phrase'}
         </span>
         {sel && (
           <>
-            <button onClick={() => setSel([Math.max(0, sel[0] - 0.1), sel[1]])} title="Começar 0,1 s antes">
+            <button onClick={() => setSel([Math.max(0, sel[0] - 0.1), sel[1]])} title="Start 0.1 s earlier">
               ◂
             </button>
-            <button onClick={() => setSel([Math.min(sel[1] - 0.2, sel[0] + 0.1), sel[1]])} title="Começar 0,1 s depois">
+            <button onClick={() => setSel([Math.min(sel[1] - 0.2, sel[0] + 0.1), sel[1]])} title="Start 0.1 s later">
               ▸
             </button>
             <i />
-            <button onClick={() => setSel([sel[0], Math.max(sel[0] + 0.2, sel[1] - 0.1)])} title="Acabar 0,1 s antes">
+            <button onClick={() => setSel([sel[0], Math.max(sel[0] + 0.2, sel[1] - 0.1)])} title="End 0.1 s earlier">
               ◂
             </button>
-            <button onClick={() => setSel([sel[0], Math.min(duration, sel[1] + 0.1)])} title="Acabar 0,1 s depois">
+            <button onClick={() => setSel([sel[0], Math.min(duration, sel[1] + 0.1)])} title="End 0.1 s later">
               ▸
             </button>
           </>
@@ -191,16 +191,16 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
           className={'dr-clip-zoom' + (zoom ? ' on' : '')}
           disabled={!sel}
           onClick={() => setZoom(!zoom)}
-          title={zoom ? 'Ver a música toda' : 'Aproximar em volta da frase, para acertar o início e o fim'}
+          title={zoom ? 'Show the whole track' : 'Zoom in around the phrase to set its start and end'}
         >
-          {zoom ? 'Toda' : 'Zoom'}
+          {zoom ? 'Whole' : 'Zoom'}
         </button>
-        <button className="dr-clip-deck" onClick={fromDeck} title="Começa onde o deck está agora (2,5 s)">
-          Do deck
+        <button className="dr-clip-deck" onClick={fromDeck} title="Start where the deck is now (2.5 s)">
+          From the deck
         </button>
       </div>
       {lines.length > 0 && (
-        <div className="dr-chips dr-lines" aria-label="Frases da letra">
+        <div className="dr-chips dr-lines" aria-label="Lyric lines">
           {lines.map((l, i) => (
             <button
               key={i}
@@ -209,7 +209,7 @@ export function ClipPicker({ onClip }: { onClip(buffer: AudioBuffer | null, name
                 setSel([l.time, Math.min(duration, lines[i + 1]?.time ?? l.time + 4)])
                 setZoom(true)
               }}
-              title={'Escolher esta frase: ' + l.text}
+              title={'Use this phrase: ' + l.text}
             >
               {l.text}
             </button>

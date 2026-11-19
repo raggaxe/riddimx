@@ -11,6 +11,7 @@ import { library } from '../library'
 import { lyrics } from '../engine/lyrics'
 import logo from '../assets/riddimx-x.svg'
 import { useStore } from '../store'
+import { panic } from '../panic'
 
 /** Master level, left over right, as two thin horizontal bars. */
 function MasterMeter() {
@@ -55,7 +56,7 @@ function MasterMeter() {
   }, [])
 
   return (
-    <div className="tb-meter" ref={box} role="img" aria-label="Nível do master">
+    <div className="tb-meter" ref={box} role="img" aria-label="Master level">
       {[0, 1].map((i) => (
         <span key={i}>
           <i ref={(el) => (bars.current[i] = el)} />
@@ -101,7 +102,7 @@ function HotSource() {
       const hot = mixer.dynamics.limReduction < -3 || peak(out) > 0.98
       if (hot) {
         const loudest = sources.map((s) => ({ name: s.name, p: peak(s.a) })).sort((x, y) => y.p - x.p)[0]
-        if (label.current) label.current.textContent = 'QUENTE · ' + loudest.name
+        if (label.current) label.current.textContent = 'HOT · ' + loudest.name
         until = now + 1200
       }
       label.current?.classList.toggle('on', now < until)
@@ -118,7 +119,7 @@ function HotSource() {
       ref={label}
       className="tb-hot"
       role="status"
-      title="Acende quando a pista está alta demais (o limiter trabalha muito): abaixe o ganho ou o fader dessa fonte"
+      title="Lights up when the mix is too hot (the limiter works hard): turn down the gain or fader of that source"
     />
   )
 }
@@ -131,7 +132,7 @@ function Clock() {
     return () => window.clearInterval(timer)
   }, [])
   return (
-    <time className="tb-clock" dateTime={now.toISOString()} title="Hora">
+    <time className="tb-clock" dateTime={now.toISOString()} title="Time">
       {now.getHours()}:{String(now.getMinutes()).padStart(2, '0')}
     </time>
   )
@@ -151,6 +152,7 @@ export function TopBar() {
   const set = useStore(settings)
   const open = useStore(ui).settings !== null
   const up = useStore(updates)
+  const pan = useStore(panic)
   const [, tick] = useState(0)
 
   useEffect(() => {
@@ -164,16 +166,16 @@ export function TopBar() {
   ;[a, b].forEach((s, i) => {
     if (s.aiStems === 'working') busy.push('Stems ' + 'AB'[i] + ' ' + Math.round(s.aiProgress * 100) + '%')
   })
-  for (const [name, p] of Object.entries(lyr.working)) busy.push('Letra ' + name + ' ' + Math.round(p * 100) + '%')
-  if (lib.analyzing) busy.push('Medindo BPM e tom')
+  for (const [name, p] of Object.entries(lyr.working)) busy.push('Lyrics ' + name + ' ' + Math.round(p * 100) + '%')
+  if (lib.analyzing) busy.push('Measuring BPM and key')
   if (lib.separating)
     busy.push(
-      'Stems biblioteca ' +
+      'Library stems ' +
         Math.round(lib.sepProgress * 100) +
         '%' +
         (lib.stemsWaiting.length ? ' (+' + lib.stemsWaiting.length + ')' : ''),
     )
-  if (bpm.looking.length) busy.push('Procurando BPM de ' + bpm.looking.length)
+  if (bpm.looking.length) busy.push('Looking for BPM of ' + bpm.looking.length)
 
   return (
     <header className="topbar">
@@ -198,19 +200,27 @@ export function TopBar() {
           <button
             className={'tb-update' + (up.status === 'ready' ? ' ready' : '')}
             onClick={() => (up.status === 'ready' ? updates.install() : ui.openSettings('geral'))}
-            title={(up.notes ? 'Novidades:\n' + up.notes + '\n\n' : '') + updateText(up)}
+            title={(up.notes ? 'What\'s new:\n' + up.notes + '\n\n' : '') + updateText(up)}
           >
             <i aria-hidden="true" />
             {up.status === 'ready'
-              ? 'Reiniciar e atualizar para ' + up.version
-              : 'Versão ' + up.version + (up.status === 'downloading' ? ' · ' + Math.round((up.progress ?? 0) * 100) + '%' : '')}
+              ? 'Restart and update to ' + up.version
+              : 'Version ' + up.version + (up.status === 'downloading' ? ' · ' + Math.round((up.progress ?? 0) * 100) + '%' : '')}
           </button>
         )}
         <button
+          className={'tb-panic' + (pan.busy ? ' busy' : '')}
+          onClick={() => void panic.run()}
+          disabled={pan.busy}
+          title="PANIC: stops every echo tail and stuck sound, reopens the sound card on the same outputs (fixes a changed sample rate, crackle or silence). The music keeps its place. If the engine is still stuck, the window restarts and the tracks come back on their decks."
+        >
+          {pan.busy ? 'RESETTING…' : 'PANIC'}
+        </button>
+        <button
           className={'tb-gear' + (open ? ' on' : '')}
           onClick={() => ui.openSettings(open ? null : 'geral')}
-          title="Ajustes: placa de áudio, controladora, teclado, tamanho e cores"
-          aria-label="Ajustes"
+          title="Settings: audio interface, controller, keyboard, size and colours"
+          aria-label="Settings"
           aria-expanded={open}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -224,7 +234,7 @@ export function TopBar() {
           className={'rec' + (mix.recording ? ' on' : '')}
           aria-pressed={mix.recording}
           onClick={() => mixer.toggleRecording()}
-          title={mix.recording ? 'Parar e salvar a gravação' : 'Gravar a mistura'}
+          title={mix.recording ? 'Stop and save the recording' : 'Record the mix'}
         >
           <i />
           {mix.recording ? Math.floor(recorded / 60) + ':' + String(recorded % 60).padStart(2, '0') : 'REC'}

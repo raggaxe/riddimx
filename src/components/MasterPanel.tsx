@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { mixer } from '../engine/mixer'
 import { COMP_PRESETS, LIMITS } from '../engine/dynamics'
+import { deckA, deckB } from '../engine/deck'
+import { LUFS_TARGET } from '../engine/loudness'
 import { useStore } from '../store'
 import { Knob } from './Knob'
 
@@ -29,13 +31,24 @@ export function Reduction({ read, label }: { read: () => number; label: string }
   }, [read])
   return (
     <div className="mf-gr" role="img" aria-label={label}>
-      <span>REDUÇÃO</span>
+      <span>GR</span>
       <div className="mf-gr-track">
         <i ref={bar} />
       </div>
       <b ref={text}>0.0</b>
     </div>
   )
+}
+
+/** The make-up gain auto mode is using, read a few times a second while it runs. */
+function useAutoGain(on: boolean): number {
+  const [gain, setGain] = useState(mixer.dynamics.autoMakeup)
+  useEffect(() => {
+    if (!on) return
+    const t = window.setInterval(() => setGain(Math.round(mixer.dynamics.autoMakeup * 10) / 10), 250)
+    return () => window.clearInterval(t)
+  }, [on])
+  return gain
 }
 
 export const compGr = () => mixer.dynamics.compReduction
@@ -45,6 +58,45 @@ export const limGr = () => mixer.dynamics.limReduction
  * The master's two plugins, as rack units: a compressor (with presets) to even the mix out and make it
  * fuller, and a limiter that never lets the master go over its ceiling.
  */
+/** Loudness match: every file track at the same loudness (LUFS), whatever level it was mastered at. */
+function LoudnessUnit() {
+  const on = useStore(mixer).loudMatch
+  const a = useStore(deckA)
+  const b = useStore(deckB)
+  const row = (name: string, s: typeof a, match: number) => (
+    <span key={name}>
+      {name}{' '}
+      {s.kind === 'none'
+        ? '—'
+        : s.lufs === null
+          ? s.kind === 'local'
+            ? 'measuring…'
+            : 'not measurable (stream)'
+          : s.lufs.toFixed(1) + ' LUFS' + (on ? ' → ' + (match > 0 ? '+' : '') + match.toFixed(1) + ' dB' : '')}
+    </span>
+  )
+  return (
+    <section className={'mx-sec mf2-unit' + (on ? ' on' : '')} aria-label="Loudness match">
+      <header className="mf2-head">
+        <button
+          className={'mx-dyn-btn mf2-power' + (on ? ' on' : '')}
+          aria-pressed={on}
+          onClick={() => mixer.setLoudMatch(!on)}
+          title={'Every track is measured (LUFS) as it loads and brought to ' + LUFS_TARGET + ' LUFS on its deck, so the next tune is never louder or quieter than the last. GAIN still trims on top.'}
+        >
+          <i className={'mx-gr' + (on ? '' : ' off')} aria-hidden="true" />
+          LOUDNESS MATCH
+        </button>
+        <span className="mf2-sub">target {LUFS_TARGET} LUFS</span>
+      </header>
+      <div className="mf2-read mf2-lufs">
+        {row('A', a, deckA.matchDb)}
+        {row('B', b, deckB.matchDb)}
+      </div>
+    </section>
+  )
+}
+
 export function MasterPanel() {
   const d = useStore(mixer).dynamics
   const set = mixer.setDynamics.bind(mixer)
@@ -52,21 +104,23 @@ export function MasterPanel() {
   const [rLo, rHi] = LIMITS.release
   const [qLo, qHi] = LIMITS.ratio
   const [lrLo, lrHi] = LIMITS.limRelease
+  const autoGain = useAutoGain(d.comp && d.autoGain)
 
   return (
     <div className="mf2">
-      <section className={'mx-sec mf2-unit' + (d.comp ? ' on' : '')} aria-label="Compressor do master">
+      <LoudnessUnit />
+      <section className={'mx-sec mf2-unit' + (d.comp ? ' on' : '')} aria-label="Master compressor">
         <header className="mf2-head">
           <button
             className={'mx-dyn-btn mf2-power' + (d.comp ? ' on' : '')}
             aria-pressed={d.comp}
             onClick={() => set({ comp: !d.comp })}
-            title="Compressor: mistura mais cheia e constante. Ajuste o ganho até a redução andar pelos 2 a 6 dB"
+            title="Compressor: a fuller, steadier mix. Aim for 2 to 6 dB of gain reduction"
           >
             <i className={'mx-gr' + (d.comp ? '' : ' off')} aria-hidden="true" />
             COMPRESSOR
           </button>
-          <div className="mf2-presets" role="group" aria-label="Presets do compressor">
+          <div className="mf2-presets" role="group" aria-label="Compressor presets">
             {COMP_PRESETS.map((p) => (
               <button
                 key={p.name}
@@ -82,7 +136,7 @@ export function MasterPanel() {
         </header>
         <div className="mf2-body">
           <Knob
-            label="LIMIAR"
+            label="THRESH"
             value={d.threshold}
             min={LIMITS.threshold[0]}
             max={LIMITS.threshold[1]}
@@ -91,7 +145,7 @@ export function MasterPanel() {
             onChange={(v) => set({ threshold: v })}
           />
           <Knob
-            label="RÁCIO"
+            label="RATIO"
             value={toLog(d.ratio, qLo, qHi)}
             min={0}
             max={1}
@@ -100,7 +154,7 @@ export function MasterPanel() {
             onChange={(t) => set({ ratio: fromLog(t, qLo, qHi) })}
           />
           <Knob
-            label="ATAQUE"
+            label="ATTACK"
             value={toLog(d.attack, aLo, aHi)}
             min={0}
             max={1}
@@ -117,40 +171,51 @@ export function MasterPanel() {
             format={(t) => ms(fromLog(t, rLo, rHi))}
             onChange={(t) => set({ release: fromLog(t, rLo, rHi) })}
           />
-          <Knob
-            label="GANHO"
-            value={d.makeup}
-            min={LIMITS.makeup[0]}
-            max={LIMITS.makeup[1]}
-            reset={2}
-            format={dB}
-            onChange={(v) => set({ makeup: v })}
-          />
+          <div className="mf2-gain">
+            <Knob
+              label={d.autoGain ? 'GAIN · AUTO' : 'GAIN'}
+              value={d.autoGain ? autoGain : d.makeup}
+              min={LIMITS.makeup[0]}
+              max={LIMITS.makeup[1]}
+              reset={2}
+              format={dB}
+              onChange={(v) => set({ makeup: v, autoGain: false })}
+            />
+            <button
+              className={'mx-dyn-btn mf2-auto' + (d.autoGain ? ' on' : '')}
+              aria-pressed={d.autoGain}
+              onClick={() => set({ autoGain: !d.autoGain, makeup: d.autoGain ? Math.round(autoGain * 10) / 10 : d.makeup })}
+              title="Auto make-up: the compressed mix stays as loud as it came in, so switching presets (Soft → Radio) never jumps in volume. Turning GAIN by hand switches it off"
+            >
+              AUTO
+            </button>
+          </div>
           <div className="mf2-read">
             <span>
-              {d.threshold.toFixed(0)} dB · {d.ratio.toFixed(1)}:1 · +{d.makeup.toFixed(1)} dB
+              {d.threshold.toFixed(0)} dB · {d.ratio.toFixed(1)}:1 · {dB(d.autoGain ? autoGain : d.makeup)}
+              {d.autoGain ? ' auto' : ''}
             </span>
-            {d.comp ? <Reduction read={compGr} label="Redução do compressor" /> : <em>Desligado: o som passa sem mexer</em>}
+            {d.comp ? <Reduction read={compGr} label="Compressor gain reduction" /> : <em>Off: the sound passes untouched</em>}
           </div>
         </div>
       </section>
 
-      <section className={'mx-sec mf2-unit lim' + (d.lim ? ' on' : '')} aria-label="Limiter do master">
+      <section className={'mx-sec mf2-unit lim' + (d.lim ? ' on' : '')} aria-label="Master limiter">
         <header className="mf2-head">
           <button
             className={'mx-dyn-btn mf2-power' + (d.lim ? ' on' : '')}
             aria-pressed={d.lim}
             onClick={() => set({ lim: !d.lim })}
-            title="Limiter: nada passa do teto. Se a redução ficar sempre acima de 3 dB, abaixe o master"
+            title="Limiter: nothing goes over the ceiling. If it keeps reducing more than 3 dB, turn the master down"
           >
             <i className={'mx-gr' + (d.lim ? '' : ' off')} aria-hidden="true" />
             LIMITER
           </button>
-          <span className="mf2-sub">nunca passa do teto</span>
+          <span className="mf2-sub">never over the ceiling</span>
         </header>
         <div className="mf2-body">
           <Knob
-            label="TETO"
+            label="CEILING"
             value={d.ceiling}
             min={LIMITS.ceiling[0]}
             max={LIMITS.ceiling[1]}
@@ -168,8 +233,8 @@ export function MasterPanel() {
             onChange={(t) => set({ limRelease: fromLog(t, lrLo, lrHi) })}
           />
           <div className="mf2-read">
-            <span>Teto {d.ceiling.toFixed(1)} dB</span>
-            {d.lim ? <Reduction read={limGr} label="Redução do limiter" /> : <em>Desligado: os picos podem distorcer</em>}
+            <span>Ceiling {d.ceiling.toFixed(1)} dB</span>
+            {d.lim ? <Reduction read={limGr} label="Limiter gain reduction" /> : <em>Off: peaks may distort</em>}
           </div>
         </div>
       </section>

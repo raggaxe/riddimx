@@ -39,6 +39,7 @@ interface LibraryState {
   entries: Entry[]
   lists: string[]
   error: string | null
+  checking: boolean // a pasted link is being checked before it is added
   analyzing: string | null // id of the file being measured now
   onDeck: Record<string, string> // deck name → id of the entry last loaded there
   played: string[] // ids loaded on a deck during this session
@@ -92,6 +93,7 @@ class Library extends Store<LibraryState> {
       entries: loadLinks(),
       lists: loadLists(),
       error: null,
+      checking: false,
       analyzing: null,
       onDeck: {},
       played: [],
@@ -162,8 +164,6 @@ class Library extends Store<LibraryState> {
 
   // ───────────────────────── AI stems ─────────────────────────
 
-  private wanted: Record<string, Deck> = {} // asked for a deck while still being separated: loaded there when done
-
   /** Whether the file is still waiting for its AI stems (desktop app only; links never wait). */
   waitingStems(entry: Entry): boolean {
     return entry.kind === 'local' && this.reachable(entry) && !!desktop?.stemsSave && !entry.stems
@@ -217,7 +217,7 @@ class Library extends Store<LibraryState> {
           const sha = await fileId(bytes)
           const stored = await stemsModel(sha)
           if (stored === MODEL) result = MODEL
-          else if (!stored && !upgrading && !this.checked.has(id) && !this.wanted[id] && rest.length) {
+          else if (!stored && !upgrading && !this.checked.has(id) && !this.asked.has(id) && rest.length) {
             // Nothing stored: separated after every other waiting file has been looked at (that takes
             // seconds, and frees the ones whose stems are already there).
             this.checked.add(id)
@@ -244,15 +244,15 @@ class Library extends Store<LibraryState> {
       this.checked.delete(id)
       if (!this.byId(id)) continue // removed meanwhile
       this.patchEntry(id, { stems: result })
-      const deck = this.wanted[id]
-      delete this.wanted[id]
-      if (deck && !deck.get().playing) this.load(this.byId(id)!, deck)
     }
     this.splitting = false
   }
 
   /** Separate this one next (the DJ asked for it). */
+  private asked = new Set<string>() // the DJ tried to load these: separated first, never put off
+
   private hurry(id: string): void {
+    this.asked.add(id)
     const rest = this.state.stemsWaiting.filter((x) => x !== id)
     if (rest.length !== this.state.stemsWaiting.length) this.set({ stemsWaiting: [id, ...rest] })
   }
@@ -271,7 +271,7 @@ class Library extends Store<LibraryState> {
       const key = members[0]
       const named = members.map((id) => names[id]).find(Boolean)
       const shortest = members.map((id) => this.byId(id)!.title).sort((a, b) => a.length - b.length)[0]
-      return { key, name: named ?? 'Riddim de ' + shortest, members }
+      return { key, name: named ?? 'Riddim of ' + shortest, members }
     })
     this.set({ riddims })
   }
@@ -346,7 +346,7 @@ class Library extends Store<LibraryState> {
     const yt = parseYouTubeId(url)
     const sp = yt ? null : parseSpotifyTrack(url)
     if (!yt && !sp) {
-      this.set({ error: 'Link não reconhecido. Use um link de vídeo do YouTube ou de faixa do Spotify.' })
+      this.set({ error: 'Link not recognised. Use a YouTube video link or a Spotify track link.' })
       return null
     }
     const kind = yt ? 'youtube' : 'spotify'
@@ -372,6 +372,41 @@ class Library extends Store<LibraryState> {
     const named = !/^(YouTube|Spotify) [\w-]+$/.test(e.title)
     if (e.kind === 'youtube' && e.ref && named) bpmStore.lookup('youtube:' + e.ref, e.title, e.artist)
     if (e.kind === 'spotify' && e.ref && named) bpmStore.lookup('spotify:' + e.ref, `${e.artist} - ${e.title}`, e.artist)
+  }
+
+  /**
+   * Adds a link after checking it can be played here: YouTube's oEmbed answers 401 / 403 when the
+   * owner does not allow the video outside youtube.com, and 404 when it is private or gone. Those
+   * never enter the library. Offline, the link is added and checked when it loads.
+   */
+  async addLinkChecked(url: string): Promise<Entry | null> {
+    const yt = parseYouTubeId(url)
+    if (!yt) return this.addLink(url)
+    if (this.state.entries.some((e) => e.kind === 'youtube' && e.ref === yt)) return this.addLink(url)
+    this.set({ error: null, checking: true })
+    let meta: { title?: string; author_name?: string } | null = null
+    try {
+      const video = encodeURIComponent('https://www.youtube.com/watch?v=' + yt)
+      const res = await fetch('https://www.youtube.com/oembed?format=json&url=' + video)
+      if (res.status === 401 || res.status === 403) {
+        this.set({ checking: false, error: "Not added: this video's owner doesn't allow it to play outside YouTube." })
+        return null
+      }
+      if (res.status === 404 || res.status === 400) {
+        this.set({ checking: false, error: 'Not added: the video is private, removed or the link is wrong.' })
+        return null
+      }
+      if (res.ok) meta = await res.json()
+    } catch {
+      /* offline: added, checked when it loads */
+    }
+    this.set({ checking: false })
+    const entry = this.addLink(url)
+    if (entry && meta?.title) {
+      this.rename(entry.id, meta.title, meta.author_name || '')
+      this.lookup({ ...entry, title: meta.title, artist: meta.author_name || '' })
+    }
+    return entry
   }
 
   /** YouTube's public oEmbed endpoint gives title and channel without loading a player. */
@@ -412,7 +447,7 @@ class Library extends Store<LibraryState> {
   }
 
   remove(id: string): void {
-    delete this.wanted[id]
+    this.asked.delete(id)
     this.set({
       stemsWaiting: this.state.stemsWaiting.filter((x) => x !== id),
       stemsUpgrade: this.state.stemsUpgrade.filter((x) => x !== id),
@@ -431,7 +466,7 @@ class Library extends Store<LibraryState> {
     if (target) {
       this.set({ error: null })
       this.load(entry, target)
-    } else this.set({ error: 'Os dois decks estão tocando: arraste para um deck ou use os botões A / B' })
+    } else this.set({ error: 'Both decks are playing: drag the track onto a deck or use the A / B buttons' })
   }
 
   /** Links: their length is only known once a deck has them; keep it for the library. */
@@ -451,7 +486,7 @@ class Library extends Store<LibraryState> {
   private async reopen(entry: Entry, deck: Deck): Promise<void> {
     const bytes = entry.path && desktop ? await desktop.readAudio(entry.path) : null
     if (!bytes) {
-      this.set({ error: `Não encontrei "${entry.title}". Foi movido ou apagado? Adicione de novo.` })
+      this.set({ error: `Couldn't find "${entry.title}". Was it moved or deleted? Add it again.` })
       return
     }
     const name = entry.path!.split('/').pop()!
@@ -460,9 +495,22 @@ class Library extends Store<LibraryState> {
     void deck.loadFile(file)
   }
 
-  /** Can be loaded now: links always; files when open in this session or known on disk, with their stems done. */
+  /** Local file still waiting for its BPM, key and length to be measured. */
+  waitingAnalysis(entry: Entry): boolean {
+    return entry.kind === 'local' && this.reachable(entry) && entry.duration === undefined
+  }
+
+  /** Local file the app could not decode: it cannot be played. */
+  unreadable(entry: Entry): boolean {
+    return entry.kind === 'local' && entry.duration === 0
+  }
+
+  /**
+   * Can be loaded now: links always; files when open in this session or known on disk, analysed, and
+   * (desktop app) with their stems done. Nothing goes onto a deck before that.
+   */
   playable(entry: Entry): boolean {
-    return this.reachable(entry) && !this.waitingStems(entry)
+    return this.reachable(entry) && !this.unreadable(entry) && !this.waitingAnalysis(entry) && !this.waitingStems(entry)
   }
 
   byId(id: string): Entry | undefined {
@@ -470,11 +518,18 @@ class Library extends Store<LibraryState> {
   }
 
   load(entry: Entry, deck: Deck): void {
-    if (this.waitingStems(entry)) {
-      // Not ready yet: it goes to the front of the queue and onto this deck when done (if the deck is free then).
-      this.wanted[entry.id] = deck
+    if (this.unreadable(entry)) {
+      const error = `"${entry.title}" can't be played: the file is damaged or not an audio format the app reads.`
+      this.set({ error })
+      if (deck.get().kind === 'none') deck.notice(error)
+      return
+    }
+    if (this.waitingAnalysis(entry) || this.waitingStems(entry)) {
+      // Not ready yet: it goes to the front of the queue and stays in the library; the DJ loads it when it is.
       this.hurry(entry.id)
-      this.set({ error: `"${entry.title}" ainda está separando as faixas: entra no deck ${deck.name} quando acabar` })
+      const error = `"${entry.title}" is still being analysed and split into stems. It will be ready in the library when done.`
+      this.set({ error })
+      if (deck.get().kind === 'none') deck.notice(error)
       return
     }
     this.set({

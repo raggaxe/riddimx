@@ -69,6 +69,16 @@ class VxStems extends AudioWorkletProcessor {
       const side = (midL - midR) * 0.5 * g[1]
       outL[i] = lowL * lowGain + centre + side + highL * g[4]
       if (outR !== outL) outR[i] = lowR * lowGain + centre - side + highR * g[4]
+      // Each stem on its own too (outputs 1..5: vocal, instr, bass, kick, hat), for the AUX sends.
+      if (outputs.length > 5) {
+        const bassG = g[2] * (1 - this.gate)
+        const kickG = g[3] * this.gate
+        outputs[1][0][i] = centre; outputs[1][1][i] = centre
+        outputs[2][0][i] = side; outputs[2][1][i] = -side
+        outputs[3][0][i] = lowL * bassG; outputs[3][1][i] = lowR * bassG
+        outputs[4][0][i] = lowL * kickG; outputs[4][1][i] = lowR * kickG
+        outputs[5][0][i] = highL * g[4]; outputs[5][1][i] = highR * g[4]
+      }
     }
     return true
   }
@@ -89,8 +99,8 @@ export async function createStems(ctx: BaseAudioContext): Promise<AudioWorkletNo
   await ready
   return new AudioWorkletNode(ctx, 'vx-stems', {
     numberOfInputs: 1,
-    numberOfOutputs: 1,
-    outputChannelCount: [2],
+    numberOfOutputs: 6, // the mix, then each stem alone (vocal, instr, bass, kick, hat)
+    outputChannelCount: [2, 2, 2, 2, 2, 2],
     channelCount: 2,
     channelCountMode: 'explicit',
   })

@@ -15,92 +15,89 @@ export function PhonePanel() {
       <div className="ap2 st">
         <section className="mx-sec ap2-unit">
           <header className="ap2-head">
-            <b>Celular como controladora</b>
+            <b>Phone as a controller</b>
           </header>
-          <p className="ph-note">Só no app do Mac: é ele que conversa com o celular pelo Wi-Fi.</p>
+          <p className="ph-note">Mac app only: it's the one that talks to the phone over Wi-Fi.</p>
         </section>
       </div>
     )
 
   return (
     <div className="ap2 st">
-      <section className="mx-sec ap2-unit" aria-label="Celular como controladora">
+      <section className="mx-sec ap2-unit" aria-label="Phone as a controller">
         <header className="ap2-head">
-          <b>Celular como controladora</b>
-          <span>pads, knobs, faders e jog no celular, sem fio</span>
+          <b>Phone as a controller</b>
+          <span>pads, knobs, faders and jog on the phone, wireless</span>
         </header>
         <div className="ap2-body">
           <button className={'ap2-btn' + (r.on ? '' : ' st-go')} onClick={() => void remote.turn(!r.on)} disabled={r.busy}>
-            {r.on ? 'DESLIGAR' : 'LIGAR'}
+            {r.on ? 'TURN OFF' : 'TURN ON'}
           </button>
           <span className="ap2-info">
             {r.error
-              ? 'Não foi possível ligar: ' + r.error
+              ? 'Couldn\'t turn on: ' + r.error
               : !r.on
-                ? 'Desligado: nada fica aberto na rede'
+                ? 'Off: nothing is open on the network'
                 : r.clients
                   ? r.clients === 1
-                    ? 'Ligado · 1 celular conectado'
-                    : 'Ligado · ' + r.clients + ' celulares conectados'
-                  : 'Ligado · esperando o celular…'}
+                    ? 'On · 1 phone connected'
+                    : 'On · ' + r.clients + ' phones connected'
+                  : 'On · waiting for the phone…'}
           </span>
         </div>
       </section>
 
       {r.on && (
-        <section className="mx-sec ap2-unit" aria-label="Conectar o celular">
+        <section className="mx-sec ap2-unit" aria-label="Connect the phone">
           <header className="ap2-head">
-            <b>Conectar</b>
-            <span>celular e Mac no mesmo Wi-Fi</span>
+            <b>Connect</b>
+            <span>phone and Mac on the same Wi-Fi</span>
           </header>
           {url ? (
             <div className="ph-pair">
               {qr && (
-                <svg className="ph-qr" viewBox={'0 0 ' + qr.n + ' ' + qr.n} role="img" aria-label="QR code do endereço">
+                <svg className="ph-qr" viewBox={'0 0 ' + qr.n + ' ' + qr.n} role="img" aria-label="QR code of the address">
                   <rect width={qr.n} height={qr.n} fill="#fff" />
                   <path d={qr.d} fill="#000" />
                 </svg>
               )}
               <ol className="ph-steps">
-                <li>Abra a câmera do celular e aponte para o QR code.</li>
-                <li>Toque no link: o controle abre no navegador.</li>
+                <li>Open the phone's camera and point it at the QR code.</li>
+                <li>Tap the link: the controller opens in the browser.</li>
                 <li>
-                  Se o navegador perguntar sobre <b>dispositivos por perto</b> ou <b>rede local</b>, toque em Permitir: é assim que
-                  ele chega no Mac. Se negou antes, abra o link no Chrome.
+                  If the browser asks about <b>nearby devices</b> ou <b>rede local</b>, tap Allow: that's how it reaches the Mac. If you denied it before, open the link in Chrome.
                 </li>
                 <li>
-                  Para virar app: <b>Compartilhar › Adicionar à Tela de Início</b> (iPhone) ou <b>⋮ › Adicionar à tela inicial</b>{' '}
+                  To make it an app: <b>Share › Add to Home Screen</b> (iPhone) or <b>⋮ › Add to Home screen</b>{' '}
                   (Android).
                 </li>
-                <li>Deixe o celular sem bloqueio de tela automático enquanto toca.</li>
+                <li>Keep the phone from auto-locking while you play.</li>
               </ol>
               <div className="ph-url">
                 <code>{url}</code>
                 {r.urls.length > 1 && (
-                  <button className="ap2-btn" onClick={() => setWhich((which + 1) % r.urls.length)} title="Outro endereço deste Mac">
-                    OUTRA REDE
+                  <button className="ap2-btn" onClick={() => setWhich((which + 1) % r.urls.length)} title="Another address of this Mac">
+                    OTHER NETWORK
                   </button>
                 )}
               </div>
             </div>
           ) : (
-            <p className="ph-note">Este Mac não está em nenhuma rede. Conecte no Wi-Fi.</p>
+            <p className="ph-note">This Mac isn't on any network. Connect to Wi-Fi.</p>
           )}
         </section>
       )}
 
-      <section className="mx-sec ap2-unit" aria-label="Segurança">
+      <section className="mx-sec ap2-unit" aria-label="Security">
         <header className="ap2-head">
-          <b>Segurança</b>
+          <b>Security</b>
         </header>
         <p className="ph-note">
-          Só entra quem tem o código que vai no QR code. Se alguém da rede tiver o link e não devia, troque o código: os
-          celulares conectados saem e precisam ler o QR de novo. Na primeira vez o macOS pode perguntar se o RiddimX pode
-          receber conexões: responda Permitir.
+          Only someone with the code inside the QR code gets in. If someone on the network has the link and shouldn't, change the code: connected phones drop out and need to scan the QR again. The first time, macOS may ask whether RiddimX can accept connections: answer Allow.
         </p>
         <div className="ap2-body">
           <button className="ap2-btn" onClick={() => void remote.renew()} disabled={r.busy}>
-            TROCAR CÓDIGO
+            CHANGE CODE
           </button>
         </div>
       </section>

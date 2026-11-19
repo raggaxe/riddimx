@@ -27,7 +27,7 @@ export const SFX: Sfx[] = [
   { id: 'one-more', label: 'One more' },
   { id: 'ela-toma', label: 'Ela toma' },
   { id: 'shatta-102', label: 'Shatta 102' },
-  { id: 'siren', label: 'Sirene dub' },
+  { id: 'siren', label: 'Dub siren' },
 ]
 
 /** What each of the eight pads holds until the user puts something else there. */

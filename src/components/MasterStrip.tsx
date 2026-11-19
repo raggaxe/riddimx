@@ -55,12 +55,12 @@ export function MixSection({
 export function MasterIsolator() {
   const i = useStore(isolator)
   const bands = [
-    { key: 'low', label: 'GRAVES', kill: i.killLow },
-    { key: 'mid', label: 'MÉDIOS', kill: i.killMid },
-    { key: 'top', label: 'AGUDOS', kill: i.killTop },
+    { key: 'low', label: 'LOW', kill: i.killLow },
+    { key: 'mid', label: 'MID', kill: i.killMid },
+    { key: 'top', label: 'HIGH', kill: i.killTop },
   ] as const
   return (
-    <MixSection title="Isolator" className="mx-iso">
+    <MixSection title="Isolator" className="mx-iso bus">
       {bands.map((b) => (
         <div key={b.key} className={'mx-iso-band' + (b.kill ? ' killed' : '')}>
           <Knob
@@ -76,16 +76,16 @@ export function MasterIsolator() {
             className={'mx-kill' + (b.kill ? ' on' : '')}
             aria-pressed={b.kill}
             onClick={() => isolator.kill(b.key, !b.kill)}
-            title={'KILL: corta os ' + b.label.toLowerCase() + ' de toda a pista (aperte de novo para voltar)'}
+            title={'KILL: cuts the ' + b.label.toLowerCase() + ' of the whole mix (press again to bring back)'}
           >
             KILL
           </button>
         </div>
       ))}
       <i className="mx-div" aria-hidden="true" />
-      <div className="mx-cuts" title="Onde acabam os graves e começam os agudos">
+      <div className="mx-cuts" title="Where the lows end and the highs begin">
         <Knob
-          label="CORTE ↓"
+          label="CUT ↓"
           value={i.lowHz}
           min={60}
           max={400}
@@ -94,7 +94,7 @@ export function MasterIsolator() {
           onChange={(v) => isolator.update({ lowHz: v })}
         />
         <Knob
-          label="CORTE ↑"
+          label="CUT ↑"
           value={i.highHz}
           min={1500}
           max={8000}
@@ -165,7 +165,7 @@ export function VuPair() {
   }, [])
   const marks = [-20, -10, -7, -5, -3, -1, 0, 1, 2, 3]
   return (
-    <div className="mx-vu" title="Nível do master, esquerda e direita. A luz vermelha acende quando chega perto do limite">
+    <div className="mx-vu" title="Master level, left and right. The red light comes on near the limit">
       {['L', 'R'].map((side, i) => (
         <svg key={side} viewBox="0 0 80 50" className="vu-face" role="img" aria-label={'VU ' + side}>
           <defs>
@@ -238,12 +238,12 @@ export function SoundSystem() {
   return (
     <MixSection
       title="Sound system"
-      className="mx-ss"
+      className="mx-ss bus"
       more={() => ui.open('master')}
-      moreLabel="Compressor e limiter em detalhe (aba Master, embaixo)"
+      moreLabel="Compressor and limiter in detail (Master tab, below)"
     >
       <Knob
-        label="PESO"
+        label="WEIGHT"
         value={o.weight}
         min={0}
         max={1}
@@ -263,7 +263,7 @@ export function SoundSystem() {
       <button
         className={'mx-drop' + (o.dropping ? ' on' : '')}
         onClick={() => outboard.drop()}
-        title="DROP: tira o grave um compasso e volta no primeiro tempo"
+        title="DROP: takes the bass out for a bar and brings it back on the one"
       >
         DROP
       </button>
@@ -272,7 +272,7 @@ export function SoundSystem() {
           className={'mx-dyn-btn' + (d.comp ? ' on' : '')}
           aria-pressed={d.comp}
           onClick={() => set({ comp: !d.comp })}
-          title="COMP: mistura mais cheia e constante (a luz mostra quanto comprime)"
+          title="COMP: a fuller, steadier mix (the light shows how much it squeezes)"
         >
           {d.comp ? <GrLight read={compGr} /> : <i className="mx-gr off" aria-hidden="true" />}
           COMP
@@ -281,7 +281,7 @@ export function SoundSystem() {
           className={'mx-dyn-btn' + (d.lim ? ' on' : '')}
           aria-pressed={d.lim}
           onClick={() => set({ lim: !d.lim })}
-          title="LIM: o master nunca passa do teto (a luz mostra quando segura)"
+          title="LIM: the master never goes over the ceiling (the light shows when it holds)"
         >
           {d.lim ? <GrLight read={limGr} /> : <i className="mx-gr off" aria-hidden="true" />}
           LIM
@@ -300,7 +300,7 @@ const pct = (v: number) => Math.round(v * 100) + '%'
 export function MicSection() {
   const m = useStore(mic)
   return (
-    <MixSection title="Mic" className="mx-mic" more={() => ui.open('voice')} moreLabel="Todos os efeitos da voz (aba Voz)">
+    <MixSection title="Mic input" className="mx-mic" more={() => ui.open('voice')} moreLabel="All mic effects (Mic tab)">
       <button
         className={'mx-talk' + (m.talk ? ' on' : '') + (m.speaking ? ' speaking' : '') + (m.error ? ' err' : '')}
         aria-pressed={m.talk}
@@ -309,21 +309,21 @@ export function MicSection() {
           if (m.error && /Privacidade/.test(m.error)) mic.openSettings()
           mic.setTalk(!m.talk)
         }}
-        title={m.error ?? (m.talk ? 'Fechar o microfone' : 'Abrir o microfone para a pista (na 1ª vez o Mac pede autorização)')}
+        title={m.error ?? (m.talk ? 'Close the mic' : 'Open the mic to the floor (the first time the Mac asks for permission)')}
       >
         <i aria-hidden="true" />
-        {m.talk ? 'NO AR' : m.error ? 'SEM MIC' : 'FALAR'}
+        {m.talk ? 'ON AIR' : m.error ? 'NO MIC' : 'TALK'}
       </button>
-      <Knob label="NÍVEL" value={m.level} min={0} max={1.5} reset={1} format={pct} onChange={(v) => mic.update({ level: v })} />
-      <Knob label="ECO" value={m.echo} min={0} max={1} reset={0.4} format={pct} onChange={(v) => mic.update({ echo: v })} />
-      <Knob label="MOLA" value={m.spring} min={0} max={1} reset={0.25} format={pct} onChange={(v) => mic.update({ spring: v })} />
+      <Knob label="LEVEL" value={m.level} min={0} max={1.5} reset={1} format={pct} onChange={(v) => mic.update({ level: v })} />
+      <Knob label="ECHO" value={m.echo} min={0} max={1} reset={0.4} format={pct} onChange={(v) => mic.update({ echo: v })} />
+      <Knob label="SPRING" value={m.spring} min={0} max={1} reset={0.25} format={pct} onChange={(v) => mic.update({ spring: v })} />
       <Knob
-        label="BAIXAR"
+        label="DUCK"
         value={m.duck}
         min={0}
         max={1}
         reset={0.5}
-        format={(v) => (v < 0.02 ? 'nunca' : '−' + Math.round(-20 * Math.log10(1 - v * 0.75)) + ' dB')}
+        format={(v) => (v < 0.02 ? 'never' : '−' + Math.round(-20 * Math.log10(1 - v * 0.75)) + ' dB')}
         onChange={(v) => mic.update({ duck: v })}
       />
     </MixSection>

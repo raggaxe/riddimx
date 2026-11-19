@@ -45,7 +45,7 @@ function nameOf(pad: Gamepad): string {
   const id = pad.id.replace(/\s*\(.*\)\s*$/, '').trim()
   if (/dualshock|054c.*0(5c4|9cc)/i.test(pad.id)) return 'DualShock 4'
   if (/dualsense|054c.*0ce6/i.test(pad.id)) return 'DualSense'
-  return id || 'Comando'
+  return id || 'Gamepad'
 }
 
 function start(): void {

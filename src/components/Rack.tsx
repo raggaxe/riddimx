@@ -11,6 +11,9 @@ import { MixSection } from './MasterStrip'
 
 const pct = (v: number) => Math.round(v * 100) + '%'
 
+/** Auto dub in the rack: hidden for now, kept on the roadmap. */
+const AUTO_DUB_ON = false
+
 /**
  * Tape echo with a spring tank (its own tab at the bottom): hold THROW to send a deck in, the time
  * follows the music (or TAP / TEMPO by hand), the repeats, the tape, the spring and a kick on it.
@@ -22,32 +25,60 @@ export function EchoUnit() {
   const hold = (deck: 'A' | 'B') => ({
     onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
       e.currentTarget.setPointerCapture(e.pointerId)
-      outboard.throw(deck, true)
+      outboard.throwPress(deck, true)
     },
-    onPointerUp: () => outboard.throw(deck, false),
-    onPointerCancel: () => outboard.throw(deck, false),
+    onPointerUp: () => outboard.throwPress(deck, false),
+    onPointerCancel: () => outboard.throwPress(deck, false),
   })
   const manual = o.timeMode === 'manual'
   return (
     <div className="echo-desk">
-      <MixSection title="Atirar" className="echo-throw">
+      <MixSection title="Throw" className="echo-throw">
         <div className="echo-throws">
-          <button className={'ru-throw a' + (o.throwing.A ? ' on' : '')} {...hold('A')} title="Segurar: atira o deck A para o eco">
-            THROW A
+          {(['A', 'B'] as const).map((d) => (
+            <button
+              key={d}
+              className={'ru-throw ' + d.toLowerCase() + (o.throwing[d] ? ' on' : '')}
+              {...hold(d)}
+              title={
+                o.throwMode === 'bar'
+                  ? 'Press: deck ' + d + ' drops out, its last beat rings in the echo, the music is back on the one of the next bar. Press again: back now'
+                  : 'Hold: deck ' + d + ' goes into the echo; let go and the repeats carry on'
+              }
+            >
+              THROW {d}
+            </button>
+          ))}
+        </div>
+        <div className="seg echo-mode" role="radiogroup" aria-label="THROW mode">
+          <button
+            role="radio"
+            aria-checked={o.throwMode === 'bar'}
+            className={o.throwMode === 'bar' ? 'on' : ''}
+            onClick={() => outboard.setThrowMode('bar')}
+            title="One press: the music stops, the echo rings, the music returns on the next bar"
+          >
+            TO BAR
           </button>
-          <button className={'ru-throw b' + (o.throwing.B ? ' on' : '')} {...hold('B')} title="Segurar: atira o deck B para o eco">
-            THROW B
+          <button
+            role="radio"
+            aria-checked={o.throwMode === 'hold'}
+            className={o.throwMode === 'hold' ? 'on' : ''}
+            onClick={() => outboard.setThrowMode('hold')}
+            title="Works while held; the music keeps playing under the echo"
+          >
+            HOLD
           </button>
         </div>
-        <Knob label="ENVIO A" value={o.send.A} min={0} max={1} reset={0} format={pct} onChange={(v) => outboard.setSend('A', v)} />
-        <Knob label="ENVIO B" value={o.send.B} min={0} max={1} reset={0} format={pct} onChange={(v) => outboard.setSend('B', v)} />
+        <Knob label="SEND A" value={o.send.A} min={0} max={1} reset={0} format={pct} onChange={(v) => outboard.setSend('A', v)} />
+        <Knob label="SEND B" value={o.send.B} min={0} max={1} reset={0} format={pct} onChange={(v) => outboard.setSend('B', v)} />
       </MixSection>
-      <MixSection title={manual ? 'Tempo · à mão' : 'Tempo · segue a música'} className="echo-time">
+      <MixSection title={manual ? 'Time · by hand' : 'Time · follows the music'} className="echo-time">
         <select
           className="ru-select"
           value={o.division}
-          aria-label="Tempo do eco"
-          title="Tempo do eco pela batida da música"
+          aria-label="Echo time"
+          title="Echo time from the beat of the music"
           onChange={(e) => {
             outboard.update({ division: e.target.value as Division })
             outboard.syncTime()
@@ -63,12 +94,12 @@ export function EchoUnit() {
           className={'ru-tap' + (manual ? ' on' : '')}
           onClick={() => outboard.tap()}
           onDoubleClick={() => outboard.syncTime()}
-          title="Bata 2 ou mais vezes no tempo que você quer. Duplo clique: volta a seguir a música"
+          title="Tap 2 or more times at the tempo you want. Double-click: follow the music again"
         >
           TAP · {Math.round(outboard.echoTime * 1000)} ms
         </button>
         <Knob
-          label="TEMPO"
+          label="TIME"
           value={outboard.echoTime}
           min={0.05}
           max={2}
@@ -77,27 +108,27 @@ export function EchoUnit() {
           onChange={(v) => outboard.setManualTime(v)}
         />
       </MixSection>
-      <MixSection title="Fita" className="echo-tape">
+      <MixSection title="Tape" className="echo-tape">
         <Knob
-          label="REPETIR"
+          label="FEEDBACK"
           value={o.feedback}
           min={0}
           max={1.1}
           reset={0.55}
-          format={(v) => (v > 1 ? 'SOLTO ' : '') + Math.round(v * 100) + '%'}
+          format={(v) => (v > 1 ? 'RUNAWAY ' : '') + Math.round(v * 100) + '%'}
           onChange={(v) => outboard.update({ feedback: v })}
         />
         <Knob
-          label="TOM"
+          label="TONE"
           value={o.tone}
           min={0}
           max={1}
           reset={0.45}
-          format={(v) => (v < 0.35 ? 'escuro' : v > 0.7 ? 'claro' : 'fita')}
+          format={(v) => (v < 0.35 ? 'dark' : v > 0.7 ? 'bright' : 'tape')}
           onChange={(v) => outboard.update({ tone: v })}
         />
         <Knob
-          label="DESGASTE"
+          label="WEAR"
           value={o.wobble}
           min={0}
           max={1}
@@ -106,15 +137,15 @@ export function EchoUnit() {
           onChange={(v) => outboard.update({ wobble: v })}
         />
       </MixSection>
-      <MixSection title="Mola" className="echo-spring">
-        <Knob label="MOLA" value={o.spring} min={0} max={1} reset={0.4} format={pct} onChange={(v) => outboard.update({ spring: v })} />
-        <button className="ru-crash" onClick={() => outboard.crash()} title="Pancada na mola: o estrondo do reverb de mola">
-          PANCADA
+      <MixSection title="Spring" className="echo-spring">
+        <Knob label="SPRING" value={o.spring} min={0} max={1} reset={0.4} format={pct} onChange={(v) => outboard.update({ spring: v })} />
+        <button className="ru-crash" onClick={() => outboard.crash()} title="Kick the spring: the crash of the spring reverb">
+          KICK
         </button>
       </MixSection>
-      <MixSection title="Saída" className="echo-out">
+      <MixSection title="Output" className="echo-out">
         <Knob
-          label="NÍVEL"
+          label="LEVEL"
           value={o.echoLevel}
           min={0}
           max={1}
@@ -145,16 +176,16 @@ function AutoDubControls() {
         aria-pressed={ad.on}
         title={
           ad.on
-            ? 'Parar: a música volta a como estava'
+            ? 'Stop: the music goes back to how it was'
             : ready
-              ? 'Ligar: a app faz a versão dub do deck ' + live!.name + ' ao vivo'
-              : 'Coloque uma música (arquivo) tocando primeiro'
+              ? 'On: the app makes a live dub version of deck ' + live!.name + ''
+              : 'Get a track (file) playing first'
         }
       >
-        <b>{ad.on ? 'PARAR' : 'AUTO'}</b>
+        <b>{ad.on ? 'STOP' : 'AUTO'}</b>
         <span>{target ? 'deck ' + target : '—'}</span>
       </button>
-      <div className="ru-seg" role="group" aria-label="Intensidade">
+      <div className="ru-seg" role="group" aria-label="Intensity">
         {(Object.keys(DUB_LEVELS) as DubLevel[]).map((l) => (
           <button
             key={l}
@@ -168,13 +199,13 @@ function AutoDubControls() {
         ))}
       </div>
       <div className={'ru-adub-screen' + (ad.on ? ' on' : '')} aria-live="polite">
-        <b>{ad.on ? ad.scene : ready ? 'Pronto' : '�Esperando'}</b>
+        <b>{ad.on ? ad.scene : ready ? 'Ready' : 'Waiting'}</b>
         <span>
           {ad.on
-            ? (ad.doing ?? (ad.grid ? 'muda no início de cada frase' : 'sem grid de batida: segue o andamento'))
+            ? (ad.doing ?? (ad.grid ? 'changes at the start of each phrase' : 'no beat grid: follows the tempo'))
             : ready
-              ? 'aperte AUTO para começar'
-              : 'toca uma música'}
+              ? 'press AUTO to start'
+              : 'play a track'}
         </span>
       </div>
     </>
@@ -208,18 +239,24 @@ export function Rack() {
   }, [])
   return (
     <div className="rack dub-rack" ref={box}>
+      <span className="rack-tag" title="Dub effects for the whole mix: not one deck's">DUB FX</span>
       <section className="dub-area" aria-label="Dub">
-        <button className="dub-badge" onClick={() => ui.open('dubbox')} title="Dub: todos os ajustes na aba Dub Box, embaixo">
+        <button className="dub-badge" onClick={() => ui.open('dubbox')} title="Dub: all settings in the Dub Box tab, below">
           <DubMark />
           <span>DUB</span>
         </button>
         <div className="dub-part dub-box">
           <DubBoxStrip />
         </div>
-        <i className="dub-sep" aria-hidden="true" />
-        <div className="dub-part dub-auto" role="group" aria-label="Dub automático">
-          <AutoDubControls />
-        </div>
+        {/* Auto dub is parked for now (on the roadmap): the Dub Box takes the whole row. */}
+        {AUTO_DUB_ON && (
+          <>
+            <i className="dub-sep" aria-hidden="true" />
+            <div className="dub-part dub-auto" role="group" aria-label="Auto dub">
+              <AutoDubControls />
+            </div>
+          </>
+        )}
       </section>
     </div>
   )

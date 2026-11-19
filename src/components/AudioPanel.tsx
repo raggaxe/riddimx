@@ -22,25 +22,25 @@ export function AudioPanel() {
       <section className="mx-sec ap2-unit" aria-label="Output master">
         <header className="ap2-head">
           <b>Output master</b>
-          <span>caixas · o que a pista ouve</span>
-          {m.splitAvailable && <i className="ap2-tag">4 canais</i>}
+          <span>speakers · what the floor hears</span>
+          {m.splitAvailable && <i className="ap2-tag">4 channels</i>}
         </header>
         <div className="ap2-body">
           <select
             value={m.masterDevice}
-            aria-label="Output do master"
-            title="Placa ou controladora de 4 canais: escolha ela aqui e “Canais 3-4” no headphone"
+            aria-label="Master output"
+            title="4-channel interface or controller: pick it here and “Channels 3-4” for the headphones"
             onChange={(e) => void mixer.setMasterDevice(e.target.value)}
           >
-            <option value="">Padrão do sistema</option>
+            <option value="">System default</option>
             {m.devices.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.label}
               </option>
             ))}
           </select>
-          <button className="ap2-btn" onClick={() => mixer.testTone('master')} title="Três bips no master">
-            TESTAR
+          <button className="ap2-btn" onClick={() => mixer.testTone('master')} title="Three beeps on the master">
+            TEST
           </button>
         </div>
       </section>
@@ -48,17 +48,17 @@ export function AudioPanel() {
       <section className={'mx-sec ap2-unit' + (hpOn ? '' : ' off')} aria-label="Headphone">
         <header className="ap2-head">
           <b>Headphone</b>
-          <span>cue · só você ouve</span>
+          <span>cue · only you hear it</span>
         </header>
         <div className="ap2-body">
           <select
             value={m.hpDevice}
-            aria-label="Output do headphone"
-            title="Sem placa de 4 canais: master num output e headphone em outro (ex.: caixas USB ou Bluetooth e a saída de fone do Mac)"
+            aria-label="Headphone output"
+            title="No 4-channel interface: master on one output and headphones on another (e.g. USB or Bluetooth speakers and the Mac's headphone jack)"
             onChange={(e) => void mixer.setHeadphoneDevice(e.target.value)}
           >
-            <option value="">Desligado</option>
-            {m.splitAvailable && <option value="split">Canais 3-4 da placa do master</option>}
+            <option value="">Off</option>
+            {m.splitAvailable && <option value="split">Channels 3-4 of the master interface</option>}
             {m.devices
               .filter((d) => d.id !== m.masterDevice)
               .map((d) => (
@@ -67,8 +67,8 @@ export function AudioPanel() {
                 </option>
               ))}
           </select>
-          <button className="ap2-btn" disabled={!hpOn} onClick={() => mixer.testTone('phones')} title="Três bips no headphone">
-            TESTAR
+          <button className="ap2-btn" disabled={!hpOn} onClick={() => mixer.testTone('phones')} title="Three beeps in the headphones">
+            TEST
           </button>
           <div className={'ap2-knobs' + (hpOn ? '' : ' bypassed')}>
             <Knob label="VOLUME" value={m.hpVolume} min={0} max={1} reset={0.8} format={pct} onChange={(v) => mixer.setHeadphoneVolume(v)} />
@@ -85,22 +85,22 @@ export function AudioPanel() {
         </div>
       </section>
 
-      <section className="mx-sec ap2-unit" aria-label="Input do microfone">
+      <section className="mx-sec ap2-unit" aria-label="Microphone input">
         <header className="ap2-head">
           <b>Input mic</b>
-          <span>voz e gravação de drops</span>
+          <span>mic and drop recording</span>
         </header>
         <div className="ap2-body">
           <select
             value={m.inputDevice}
-            aria-label="Input do microfone"
-            title="Entrada de onde vem o microfone: a da placa (XLR / P10) ou o mic do Mac"
+            aria-label="Microphone input"
+            title="Where the mic comes in: the interface's (XLR / jack) or the Mac's mic"
             onChange={(e) => {
               mixer.setInputDevice(e.target.value)
               void mic.reopen()
             }}
           >
-            <option value="">Padrão do sistema</option>
+            <option value="">System default</option>
             {m.inputs.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.label}
@@ -110,31 +110,28 @@ export function AudioPanel() {
         </div>
       </section>
 
-      <section className="mx-sec ap2-unit ap2-sys" aria-label="Sistema de áudio">
+      <section className="mx-sec ap2-unit ap2-sys" aria-label="Audio system">
         <header className="ap2-head">
-          <b>Sistema</b>
+          <b>System</b>
         </header>
         <div className="ap2-body">
           <span className="ap2-info">
-            {Math.round(ctx.sampleRate / 100) / 10} kHz{latency > 0 && ' · latência ≈ ' + latency + ' ms'} · {m.devices.length}{' '}
+            {Math.round(ctx.sampleRate / 100) / 10} kHz{latency > 0 && ' · latency ≈ ' + latency + ' ms'} · {m.devices.length}{' '}
             {m.devices.length === 1 ? 'output' : 'outputs'} · {m.inputs.length} {m.inputs.length === 1 ? 'input' : 'inputs'}
           </span>
           <button
             className="ap2-btn"
             onClick={() => void mixer.refreshDevices()}
-            title="Procurar a placa de novo (depois de conectar)"
+            title="Look for the interface again (after plugging it in)"
           >
-            ATUALIZAR
+            REFRESH
           </button>
         </div>
       </section>
 
       {m.audioError && <p className="deck-msg error ap2-err">{m.audioError}</p>}
       <p className="ap2-hint">
-        <b>Placa de áudio:</b> conecte no USB, clique em ATUALIZAR, escolha a placa no Output master e aperte TESTAR. Placa
-        de 4 canais (ou controladora com saída de fone): no Headphone escolha “Canais 3-4”. Sem placa: master nas caixas
-        e headphone na saída de fone do Mac. O botão de fone de cada canal no mixer manda o deck para o cue, mesmo com o
-        fader embaixo.
+        <b>Audio interface:</b> plug it into USB, click REFRESH, pick the interface as Master output and press TEST. 4-channel interface (or a controller with a headphone out): pick “Channels 3-4” for the headphones. No interface: master on the speakers and headphones on the Mac's headphone jack. Each channel's headphone button in the mixer sends that deck to the cue, even with the fader down.
       </p>
     </div>
   )

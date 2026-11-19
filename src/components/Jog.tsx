@@ -112,15 +112,15 @@ export function Jog({ deck }: { deck: Deck }) {
     <div
       className={'jog tt' + (touched ? ' touched' : '') + (s.playing ? ' spinning' : '') + (s.kind === 'none' ? ' empty' : '')}
       role="slider"
-      aria-label={'Disco do deck ' + deck.name + '. Segurar e girar: scratch'}
+      aria-label={'Deck platter ' + deck.name + '. Hold and turn: scratch'}
       aria-valuenow={0}
       tabIndex={0}
       title={
         s.kind === 'local'
-          ? 'Segure e gire: scratch (o disco para sob a mão e volta a tocar ao soltar). Para acertar o tempo: botões ‹ ›'
+          ? 'Hold and turn: scratch (the record stops under your hand and plays again when released). To fix the tempo: ‹ › buttons'
           : s.playing
-            ? 'Gire para acertar o tempo (empurrar / travar)'
-            : 'Gire para andar na música'
+            ? 'Turn to fix the tempo (push / hold back)'
+            : 'Turn to move through the track'
       }
       onPointerDown={(e) => {
         if (deck.get().kind === 'none') return

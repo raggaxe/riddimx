@@ -467,7 +467,7 @@ function installModel(progress) {
       }
       out.end()
       await once(out, 'finish')
-      if (got !== MODEL_SIZE || hash.digest('hex') !== MODEL_SHA256) throw new Error('o arquivo baixado não confere')
+      if (got !== MODEL_SIZE || hash.digest('hex') !== MODEL_SHA256) throw new Error('the downloaded file does not match')
       await fs.promises.rename(part, WHISPER_MODEL)
     } catch (e) {
       out.destroy()

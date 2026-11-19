@@ -14,7 +14,7 @@ export function Splitter({ part, sign, label }: { part: keyof Layout; sign: 1 | 
       aria-orientation="horizontal"
       aria-label={label}
       tabIndex={0}
-      title={label + ' (arrastar; duplo clique volta ao padrão)'}
+      title={label + ' (drag; double-click goes back to default)'}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId)
         start.current = { y: e.clientY, size: ui.get().layout[part] }

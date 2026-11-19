@@ -62,18 +62,18 @@ interface Snapshot {
 }
 
 export const MOVES: Record<Move, { label: string; hint: string; long: boolean }> = {
-  cut: { label: 'NO UM', hint: 'Corte seco no primeiro tempo: a outra entra do cue e esta para', long: false },
-  echoOut: { label: 'ECO OUT', hint: 'A que sai vai para o eco de fita e fecha; a outra entra no compasso seguinte', long: false },
+  cut: { label: 'ON THE ONE', hint: 'Hard cut on the one: the other comes in from the cue and this one stops', long: false },
+  echoOut: { label: 'ECHO OUT', hint: 'The outgoing one goes into the tape echo and closes; the other comes in on the next bar', long: false },
   bassSwap: {
-    label: 'TROCA GRAVE',
-    hint: 'As duas tocam juntas; a meio o grave passa de uma para a outra, depois a que sai desaparece',
+    label: 'BASS SWAP',
+    hint: 'Both play together; halfway the bass passes from one to the other, then the outgoing one fades',
     long: true,
   },
-  sweep: { label: 'VARREDURA', hint: 'Filtro abre na que sai enquanto o crossfader passa para a outra', long: true },
-  tapeStop: { label: 'PARAGEM', hint: 'A que sai abranda até parar como fita; a outra entra quando pára', long: false },
+  sweep: { label: 'SWEEP', hint: 'The filter opens on the outgoing one while the crossfader moves to the other', long: true },
+  tapeStop: { label: 'TAPE STOP', hint: 'The outgoing one slows to a stop like tape; the other comes in when it stops', long: false },
   drop: {
-    label: 'DROP E ENTRA',
-    hint: 'Tira o grave um compasso e volta no um; se a outra estiver pronta, entra nesse momento',
+    label: 'DROP & IN',
+    hint: 'Bass out for a bar, back on the one; if the other is ready, it comes in right then',
     long: false,
   },
 }

@@ -3,6 +3,7 @@
  * All four effects are wired in parallel with the dry signal; only the selected one gets any level.
  */
 import { dubSettings, type DubSettings } from './dub'
+import { choke } from './choke'
 
 export const FX = ['echo', 'reverb', 'flanger', 'wah'] as const
 export type FxType = (typeof FX)[number]
@@ -34,6 +35,7 @@ export class FxUnit {
   private dubSpring: GainNode
   private dubWobble: GainNode
   private dubHeld = false
+  private echoFeedback!: GainNode
 
   constructor(private ctx: BaseAudioContext) {
     const gain = (value: number): GainNode => {
@@ -62,7 +64,7 @@ export class FxUnit {
     // Echo: repeats that fade out, timed to the beat when the BPM is known.
     this.echoDelay = ctx.createDelay(2)
     this.echoDelay.delayTime.value = 0.375
-    const echoFeedback = gain(0.45)
+    const echoFeedback = (this.echoFeedback = gain(0.45))
     this.input.connect(this.echoDelay)
     this.echoDelay.connect(echoFeedback)
     echoFeedback.connect(this.echoDelay)
@@ -139,6 +141,13 @@ export class FxUnit {
     this.dubSpring.gain.setTargetAtTime(cfg.space * 1.4, now, 0.03)
     this.dubWobble.gain.setTargetAtTime(cfg.drift * 0.006, now, 0.05)
     if (this.dubHeld || cfg.release === 'ring') this.dubFeedback.gain.setTargetAtTime(cfg.feedback, now, 0.03)
+  }
+
+  /** PANIC: the dub echo and the FX echo stop repeating. */
+  flush(): void {
+    this.dubSend.gain.setTargetAtTime(0, this.ctx.currentTime, 0.01)
+    choke(this.dubFeedback.gain, this.ctx)
+    choke(this.echoFeedback.gain, this.ctx)
   }
 
   /** Dub throw: true while the button is held (or latched). `beat` = seconds per beat as heard. */

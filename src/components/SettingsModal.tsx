@@ -13,13 +13,13 @@ import { PhonePanel } from './PhonePanel'
 import { remote } from '../remote'
 
 const PAGES: { id: SettingsPage; label: string; hint: string }[] = [
-  { id: 'geral', label: 'Geral', hint: 'Tamanho, cores, jog e pista' },
-  { id: 'decks', label: 'Decks', hint: 'Botões DUB e ◀◀ Rewind' },
-  { id: 'audio', label: 'Placa de áudio', hint: 'Output master, headphone, input do mic' },
-  { id: 'midi', label: 'Controles', hint: 'Controladora MIDI, comando e teclado' },
-  { id: 'celular', label: 'Celular', hint: 'O celular vira controladora sem fio' },
-  { id: 'contas', label: 'Contas', hint: 'Spotify' },
-  { id: 'ia', label: 'Letras e IA', hint: 'Idioma das letras, modelo, stems' },
+  { id: 'geral', label: 'General', hint: 'Size, colours, jog and track' },
+  { id: 'decks', label: 'Decks', hint: 'DUB and ◀◀ Rewind buttons' },
+  { id: 'audio', label: 'Audio interface', hint: 'Master output, headphones, mic input' },
+  { id: 'midi', label: 'Controls', hint: 'MIDI controller, gamepad and keyboard' },
+  { id: 'celular', label: 'Phone', hint: 'The phone becomes a wireless controller' },
+  { id: 'contas', label: 'Accounts', hint: 'Spotify' },
+  { id: 'ia', label: 'AI', hint: 'AI stems' },
 ]
 
 /**
@@ -51,9 +51,9 @@ export function SettingsModal() {
 
   return (
     <div className="sm-backdrop" onPointerDown={(e) => e.target === e.currentTarget && close()}>
-      <div className="sm" role="dialog" aria-modal="true" aria-label="Ajustes" tabIndex={-1} ref={box}>
-        <nav className="sm-side" aria-label="Páginas dos ajustes">
-          <h2>Ajustes</h2>
+      <div className="sm" role="dialog" aria-modal="true" aria-label="Settings" tabIndex={-1} ref={box}>
+        <nav className="sm-side" aria-label="Settings pages">
+          <h2>Settings</h2>
           {PAGES.map((p) => (
             <button
               key={p.id}
@@ -73,7 +73,7 @@ export function SettingsModal() {
         <section className="sm-main">
           <header className="sm-head">
             <h3>{PAGES.find((p) => p.id === page)?.label}</h3>
-            <button className="sm-close" onClick={close} aria-label="Fechar" title="Fechar (Esc)">
+            <button className="sm-close" onClick={close} aria-label="Close" title="Close (Esc)">
               <svg viewBox="0 0 12 12" aria-hidden="true">
                 <path d="M2 2l8 8M10 2l-8 8" />
               </svg>

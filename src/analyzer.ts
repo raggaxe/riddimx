@@ -143,8 +143,8 @@ async function analyse(ref: string): Promise<number | null> {
   const ok = best !== null && best.confidence >= MIN_CONFIDENCE
   log(
     best
-      ? `${ok ? '✓' : '✗'} ${title}: ${best.bpm} BPM (confiança ${best.confidence.toFixed(2)})`
-      : `✗ ${title}: sem sinal de áudio`,
+      ? `${ok ? '✓' : '✗'} ${title}: ${best.bpm} BPM (confidence ${best.confidence.toFixed(2)})`
+      : `✗ ${title}: no audio signal`,
   )
   return ok ? best!.bpm : null
 }
@@ -156,7 +156,7 @@ async function pump(): Promise<void> {
     const ref = queue.shift()!
     current = ref
     announce()
-    setStatus(`A analisar… (${queue.length} na fila)`)
+    setStatus(`Analysing… (${queue.length} queued)`)
     let bpm: number | null = null
     try {
       bpm = await analyse(ref)
@@ -169,7 +169,7 @@ async function pump(): Promise<void> {
   current = null
   running = false
   announce()
-  if (active) setStatus('Pronto. Esperando clipes.')
+  if (active) setStatus('Ready. Waiting for clips.')
 }
 
 channel.onmessage = (e) => {
@@ -206,7 +206,7 @@ startBtn.addEventListener('click', async () => {
     const audio = stream.getAudioTracks()[0]
     if (!audio) {
       stream.getTracks().forEach((t) => t.stop())
-      setStatus('Sem áudio. Tente de novo: escolha esta aba e ative "compartilhar áudio da aba".', true)
+      setStatus('No audio. Try again: pick this tab and turn on "share tab audio".', true)
       return
     }
     stream.getVideoTracks().forEach((t) => (t.enabled = false))
@@ -226,16 +226,16 @@ startBtn.addEventListener('click', async () => {
       player?.pauseVideo?.()
       startBtn.hidden = false
       announce()
-      setStatus('Compartilhamento encerrado. Clique em Ativar para retomar.', true)
+      setStatus('Sharing ended. Click Enable to resume.', true)
     })
     active = true
     startBtn.hidden = true
     $('help').hidden = true
-    setStatus('Pronto. Esperando clipes.')
+    setStatus('Ready. Waiting for clips.')
     announce()
     void pump()
   } catch {
-    setStatus('Compartilhamento cancelado. Clique em Ativar e aceite o pedido do browser.', true)
+    setStatus('Sharing cancelled. Click Enable and accept the browser\'s request.', true)
   }
 })
 

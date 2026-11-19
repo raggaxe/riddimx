@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="RiddimX">
 <meta name="theme-color" content="#0f1115">
-<title>RiddimX Controle</title>
+<title>RiddimX Controller</title>
 <style>
 :root {
   --bg: #0f1115; --panel: #171a21; --raise: #20242d; --line: #2c313c; --text: #e9ecf1; --dim: #8a93a3;
@@ -25,12 +25,12 @@ body {
 }
 button { font: inherit; color: inherit; touch-action: manipulation; }
 .top { display: flex; gap: 4px; padding: 6px 8px; align-items: center; border-bottom: 1px solid var(--line); background: var(--panel); }
-.tab { flex: 1; height: 34px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-weight: 700; letter-spacing: .06em; }
+.tab { flex: 1; height: 34px; border: 1px solid var(--line); background: var(--raise); border-radius: 0; font-weight: 700; letter-spacing: .06em; }
 .tab.now { background: var(--c); color: #111; border-color: var(--c); }
 .tab[data-p="A"] { --c: var(--a); } .tab[data-p="B"] { --c: var(--b); } .tab[data-p="mix"], .tab[data-p="dub"], .tab[data-p="fx"] { --c: #cfd5df; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); flex: none; margin: 0 4px; }
 .dot.on { background: #35c46a; }
-.fs { width: 34px; height: 34px; flex: none; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; }
+.fs { width: 34px; height: 34px; flex: none; border: 1px solid var(--line); background: var(--raise); border-radius: 0; }
 .fs svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
 main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 .page { display: none; padding: 8px; gap: 8px; }
@@ -62,7 +62,7 @@ main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling
 .knob.drag .cap { fill: #2a2f3a; }
 
 .jogrow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; }
-.bend { height: 64px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-size: 20px; }
+.bend { height: 64px; border: 1px solid var(--line); background: var(--raise); border-radius: 0; font-size: 20px; }
 .bend.on { background: var(--c); color: #111; }
 .jog { width: min(58vw, 34vh, 260px); aspect-ratio: 1; border-radius: 50%; position: relative; touch-action: none;
   background: radial-gradient(circle, #1b1e25 0 18%, #0b0c0f 19% 22%, #16181e 23% 100%);
@@ -79,7 +79,7 @@ main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling
 .slider { position: relative; height: 40px; background: var(--panel); touch-action: none; }
 .slider::before { content: ""; position: absolute; left: 12px; right: 12px; top: 50%; height: 2px; margin-top: -1px; background: var(--raise); }
 .slider .mid { position: absolute; left: 50%; top: 8px; bottom: 8px; width: 1px; background: var(--line); }
-.slider .th { position: absolute; top: 4px; bottom: 4px; width: 24px; margin-left: -12px; background: var(--raise); border: 1px solid var(--line); border-radius: 2px; }
+.slider .th { position: absolute; top: 4px; bottom: 4px; width: 24px; margin-left: -12px; background: var(--raise); border: 1px solid var(--line); border-radius: 0; }
 .slider .th::after { content: ""; position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: var(--c); }
 .slider.drag .th { border-color: var(--c); }
 .vslider { height: 160px; width: 100%; }
@@ -88,15 +88,15 @@ main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling
 .vslider .th::after { left: 4px; right: 4px; top: 50%; bottom: auto; width: auto; height: 2px; margin: -1px 0 0; }
 
 .modes { display: grid; grid-template-columns: repeat(4, 1fr) 54px; gap: 4px; }
-.mode, .shift { height: 30px; border: 1px solid var(--line); background: var(--panel); border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--dim); }
+.mode, .shift { height: 30px; border: 1px solid var(--line); background: var(--panel); border-radius: 0; font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--dim); }
 .mode.now { color: var(--c); border-color: var(--c); }
 .shift.on { background: var(--text); color: #111; }
 .pads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-.pad { height: 58px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-weight: 700; font-size: 11px; letter-spacing: .04em; color: var(--dim); }
+.pad { height: 58px; border: 1px solid var(--line); background: var(--raise); border-radius: 0; font-weight: 700; font-size: 11px; letter-spacing: .04em; color: var(--dim); }
 .pad.lit { border-color: var(--c); color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
 .pad.down, .btn.down { background: var(--c); color: #111; }
 .trans { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-.btn { height: 54px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-weight: 800; font-size: 12px; letter-spacing: .06em; }
+.btn { height: 54px; border: 1px solid var(--line); background: var(--raise); border-radius: 0; font-weight: 800; font-size: 12px; letter-spacing: .06em; }
 .btn.lit { color: var(--c); border-color: var(--c); }
 .btn.play.lit { background: var(--c); color: #111; }
 .btn svg { width: 18px; height: 18px; fill: currentColor; vertical-align: middle; }
@@ -154,10 +154,10 @@ main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling
 .pr { display: grid; gap: 6px; }
 .choice { display: grid; gap: 3px; }
 .opts { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
-.opt { height: 32px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-size: 9.5px; font-weight: 700; letter-spacing: .03em; color: var(--dim); padding: 0 3px; overflow: hidden; white-space: normal; line-height: 1.1; }
+.opt { height: 32px; border: 1px solid var(--line); background: var(--raise); border-radius: 0; font-size: 9.5px; font-weight: 700; letter-spacing: .03em; color: var(--dim); padding: 0 3px; overflow: hidden; white-space: normal; line-height: 1.1; }
 .opt.now { color: #111; background: var(--c); border-color: var(--c); }
 .pf { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
-.flip { height: 36px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--dim); }
+.flip { height: 36px; border: 1px solid var(--line); background: var(--raise); border-radius: 0; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--dim); }
 .flip.on { color: var(--c); border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
 .pf .btn { height: 44px; font-size: 11px; }
 
@@ -193,11 +193,11 @@ main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling
   <button class="tab" data-p="mix">MIXER</button>
   <button class="tab" data-p="dub">DUB</button>
   <button class="tab" data-p="fx">FX</button>
-  <i class="dot" id="dot" title="Conexão"></i>
-  <button class="fs" id="fs" aria-label="Tela cheia"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg></button>
+  <i class="dot" id="dot" title="Connection"></i>
+  <button class="fs" id="fs" aria-label="Full screen"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg></button>
 </div>
 <main id="main"></main>
-<div class="off show" id="off"><div><b>Conectando ao RiddimX…</b>O celular precisa estar no mesmo Wi-Fi do Mac, com o app aberto e o Celular ligado em Ajustes.</div></div>
+<div class="off show" id="off"><div><b>Connecting to RiddimX…</b>The phone must be on the same Wi-Fi as the Mac, with the app open and Phone turned on in Settings.</div></div>
 
 <script>
 'use strict'
@@ -368,8 +368,8 @@ const MODES = [['cue', 'CUE'], ['loop', 'LOOP'], ['stems', 'STEMS'], ['riddim', 
 const PAD_LABELS = {
   cue: [['1', '2', '3', '4'], ['×1', '×2', '×3', '×4']],
   loop: [['4', '8', 'IN', 'OUT'], ['½', '×2', '1', '16']],
-  stems: [['VOZ', 'INSTR', 'BAIXO', 'BUMBO'], ['SÓ VOZ', 'SÓ INSTR', 'SÓ BAIXO', 'SÓ BUMBO']],
-  riddim: [['VERSION', 'ACAP', 'D&B', 'TUDO'], ['VERSION', 'ACAP', 'D&B', 'TUDO']],
+  stems: [['VOCAL', 'INSTR', 'BASS', 'KICK'], ['VOCAL ONLY', 'INSTR ONLY', 'BASS ONLY', 'KICK ONLY']],
+  riddim: [['VERSION', 'ACAP', 'D&B', 'ALL'], ['VERSION', 'ACAP', 'D&B', 'ALL']],
 }
 const RIDDIM = [[0, 1, 1, 1, 1], [1, 0, 0, 0, 0], [0, 0, 1, 1, 1], [1, 1, 1, 1, 1]] // vocal instr bass kick hat
 
@@ -382,21 +382,21 @@ function deckPage(name) {
   const act = (k) => () => 'deck' + d + '.' + k
 
   const info = el('div', 'info')
-  const title = el('div', 't', '—'), artist = el('div', 'r', 'Carregue uma música no app')
+  const title = el('div', 't', '—'), artist = el('div', 'r', 'Load a track in the app')
   const bpm = el('div', 'bpm', '—<small>BPM</small>')
   const prog = el('div', 'prog'); const bar = el('i'); prog.append(bar)
   info.append(title, bpm, artist, prog)
   updaters.push((s) => {
     const x = s[d]
     title.textContent = x.kind === 'none' ? 'Deck ' + d + ' vazio' : x.title || '—'
-    artist.textContent = x.kind === 'none' ? 'Carregue uma música no app' : [x.artist, x.dur ? '-' + fmt(x.dur - x.pos) : '', x.key || ''].filter(Boolean).join(' · ')
+    artist.textContent = x.kind === 'none' ? 'Load a track in the app' : [x.artist, x.dur ? '-' + fmt(x.dur - x.pos) : '', x.key || ''].filter(Boolean).join(' · ')
     bpm.innerHTML = (x.bpm ? x.bpm.toFixed(1) : '—') + '<small>' + (x.rate ? (x.rate > 0 ? '+' : '') + x.rate.toFixed(1) + '%' : 'BPM') + '</small>'
     bar.style.width = (x.dur ? (100 * x.pos) / x.dur : 0) + '%'
   })
 
   const knobs = el('div', 'knobs')
-  knobs.append(knob('GANHO', act('gain'), at('gain')), knob('AGUDO', act('high'), at('high')), knob('MÉDIO', act('mid'), at('mid')),
-    knob('GRAVE', act('low'), at('low')), knob('FILTRO', act('filter'), at('filter')), knob('FX', act('fxAmount'), at('fxAmount'), false))
+  knobs.append(knob('GAIN', act('gain'), at('gain')), knob('HIGH', act('high'), at('high')), knob('MID', act('mid'), at('mid')),
+    knob('LOW', act('low'), at('low')), knob('FILTER', act('filter'), at('filter')), knob('FX', act('fxAmount'), at('fxAmount'), false))
 
   // The platter: hand on it holds the record (scratch); turning it moves the music like the screen's platter.
   const jogrow = el('div', 'jogrow')
@@ -484,7 +484,7 @@ function mixPage() {
     const act = (k) => () => 'deck' + d + '.' + k
     const at = (k) => () => d + '.' + k
     const knobs = el('div', 'knobs')
-    knobs.append(knob('AGUDO', act('high'), at('high')), knob('MÉDIO', act('mid'), at('mid')), knob('GRAVE', act('low'), at('low')), knob('FILTRO', act('filter'), at('filter')))
+    knobs.append(knob('HIGH', act('high'), at('high')), knob('MID', act('mid'), at('mid')), knob('LOW', act('low'), at('low')), knob('FILTER', act('filter'), at('filter')))
     const vol = slider(act('volume'), at('volume'), { vertical: true })
     s.append(el('div', 'lbl2', 'DECK ' + d), knobs, vol.el, button('CUE 🎧', act('pfl'), { lit: (x) => x[d].pfl }))
     p.append(s)
@@ -494,7 +494,7 @@ function mixPage() {
   const auto = el('div', 'row')
   auto.append(button('◀ A', 'mixer.fadeA', { lit: (s) => s.mixer.fading === 0 }), button('BEATMATCH', 'mixer.beatmatch'), button('B ▶', 'mixer.fadeB', { lit: (s) => s.mixer.fading === 1 }))
   xf.append(el('div', 'lbl2', 'CROSSFADER'), cross.el, auto, faderRow('MASTER', () => 'mixer.master', () => 'mixer.master', { show: (v) => Math.round(v * 100) + '%' }),
-    button('● GRAVAR', 'mixer.rec', { lit: (s) => s.mixer.rec }))
+    button('● REC', 'mixer.rec', { lit: (s) => s.mixer.rec }))
   p.append(xf)
   return p
 }
@@ -531,9 +531,9 @@ function dubPage() {
     sampler.append(b)
   }
   moves = el('div', 'moves')
-  p.append(top, preset, el('div', 'slot'), el('div', 'lbl2', 'BOTÕES RÁPIDOS'), slots,
+  p.append(top, preset, el('div', 'slot'), el('div', 'lbl2', 'QUICK PADS'), slots,
     faderRow('VOLUME', () => 'dubbox.level', () => 'dub.level', { show: (v) => Math.round(v * 100) + '%' }),
-    el('div', 'lbl2', 'SAMPLER'), sampler, el('div', 'lbl2', 'TRANSIÇÕES'), moves)
+    el('div', 'lbl2', 'SAMPLER'), sampler, el('div', 'lbl2', 'TRANSITIONS'), moves)
   return p
 }
 

@@ -3,6 +3,7 @@ import { mixer } from './mixer'
 import { decks, type Deck } from './deck'
 import { isolator } from './isolator'
 import { mic } from './mic'
+import { choke } from './choke'
 
 /**
  * Outboard gear in the rack, on the master: a tape echo with a spring reverb (fed by throws from
@@ -32,6 +33,7 @@ export interface OutboardState {
   spring: number // 0..1, spring reverb on the echo
   echoLevel: number // 0..1, return level
   throwing: { A: boolean; B: boolean }
+  throwMode: 'bar' | 'hold' // THROW button: cuts the music into the echo until the next bar, or works while held
   send: { A: number; B: number } // 0..1, how much of each deck always feeds the echo (THROW = all of it)
   timeMode: 'sync' | 'manual' // echo time from the tempo of the music, or set by hand (TIME / TAP)
   manualTime: number // seconds, 0.05..2
@@ -157,6 +159,7 @@ class Outboard extends Store<OutboardState> {
       spring: clamp(s.spring ?? 0.4, 0, 1),
       echoLevel: clamp(s.echoLevel ?? 0.8, 0, 1),
       throwing: { A: false, B: false },
+      throwMode: s.throwMode === 'hold' ? 'hold' : 'bar',
       send: { A: clamp(s.send?.A ?? 0, 0, 1), B: clamp(s.send?.B ?? 0, 0, 1) },
       timeMode: s.timeMode === 'manual' ? 'manual' : 'sync',
       manualTime: clamp(s.manualTime ?? 0.375, 0.05, 2),
@@ -254,7 +257,7 @@ class Outboard extends Store<OutboardState> {
   }
 
   private persist(): void {
-    const { division, feedback, tone, wobble, spring, echoLevel, weight, weightHz, units, send, timeMode, manualTime, page, pageOf } =
+    const { division, feedback, tone, wobble, spring, echoLevel, weight, weightHz, units, send, timeMode, manualTime, page, pageOf, throwMode } =
       this.state
     try {
       localStorage.setItem(
@@ -272,6 +275,7 @@ class Outboard extends Store<OutboardState> {
           send,
           timeMode,
           manualTime,
+          throwMode,
           page,
           pageOf,
         }),
@@ -318,6 +322,48 @@ class Outboard extends Store<OutboardState> {
 
   // ───────────────────────── tape echo ─────────────────────────
 
+  private barThrow: Record<'A' | 'B', number[]> = { A: [], B: [] } // timers of a THROW to the bar
+
+  setThrowMode(throwMode: 'bar' | 'hold'): void {
+    this.set({ throwMode })
+    this.persist()
+  }
+
+  /**
+   * The THROW button (screen, controller, phone). In 'bar' mode one press throws to the bar: the
+   * music drops out, its last beat rings in the echo, and the music is back on the one of the next
+   * bar. Pressed again before that: back at once. In 'hold' mode it throws while held.
+   */
+  throwPress(deck: 'A' | 'B', down: boolean): void {
+    if (this.state.throwMode === 'hold') return this.throw(deck, down)
+    if (!down) return
+    if (this.barThrow[deck].length) return this.endBarThrow(deck)
+    const d = decks.find((x) => x.name === deck)
+    const bar = d?.nextBar()
+    mixer.resume()
+    this.throw(deck, true)
+    if (!d || !bar) {
+      // No grid or not playing: a short throw, the music never stops.
+      this.barThrow[deck] = [window.setTimeout(() => this.endBarThrow(deck), 500)]
+      return
+    }
+    d.throwMute(true)
+    // A beat of music goes into the echo; after that nothing more, so it repeats only what was thrown.
+    const catchFor = Math.min(bar.beat, bar.wait)
+    const sendClose = window.setTimeout(() => this.sends[deck].gain.setTargetAtTime(0, mixer.ctx.currentTime, 0.01), catchFor * 1000)
+    // A bar that starts in under a beat leaves no room for the echo: wait for the one after it.
+    const back = bar.wait < bar.beat ? bar.wait + bar.beat * 4 : bar.wait
+    d.throwMute(false, mixer.ctx.currentTime + back)
+    this.barThrow[deck] = [sendClose, window.setTimeout(() => this.endBarThrow(deck, false), back * 1000)]
+  }
+
+  private endBarThrow(deck: 'A' | 'B', now = true): void {
+    for (const t of this.barThrow[deck]) window.clearTimeout(t)
+    this.barThrow[deck] = []
+    if (now) decks.find((x) => x.name === deck)?.throwMute(false)
+    this.throw(deck, false)
+  }
+
   /** Throw a deck into the echo (held); let go and the repeats carry on by themselves. */
   throw(deck: 'A' | 'B', on: boolean): void {
     mixer.resume()
@@ -330,6 +376,18 @@ class Outboard extends Store<OutboardState> {
    * Closes the echo tail: the repeats fade out over `seconds` (feedback pulled down), then REPETIR is
    * back where the DJ left it. Used at the end of ECO OUT so the old tune does not keep echoing.
    */
+  /** PANIC: both throws let go, the drop undone, the tape echo stops repeating. */
+  panic(): void {
+    for (const d of ['A', 'B'] as const) {
+      if (this.barThrow[d].length) this.endBarThrow(d)
+      else if (this.state.throwing[d]) this.throw(d, false)
+    }
+    this.setKill(false)
+    if (this.state.dropping) this.set({ dropping: false })
+    window.clearTimeout(this.dampTimer)
+    choke(this.feedbackGain.gain, mixer.ctx)
+  }
+
   damp(seconds: number): void {
     const now = mixer.ctx.currentTime
     const g = this.feedbackGain.gain

@@ -21,13 +21,13 @@ const ALL: StemState = { vocal: true, instr: true, bass: true, kick: true, hat: 
 
 /** The desk moves, from the full song down to the bare riddim. */
 const SCENES: Record<string, Scene> = {
-  full: { name: 'Tudo', stems: ALL },
-  riddim: { name: 'Sem voz', stems: { ...ALL, vocal: false } },
-  drumbass: { name: 'Baixo e bateria', stems: { vocal: false, instr: false, bass: true, kick: true, hat: true } },
-  bass: { name: 'Só baixo e bumbo', stems: { vocal: false, instr: false, bass: true, kick: true, hat: false } },
-  drums: { name: 'Só bateria', stems: { vocal: false, instr: false, bass: false, kick: true, hat: true } },
-  skank: { name: 'Instrumentos e bateria', stems: { vocal: false, instr: true, bass: false, kick: true, hat: true } },
-  voice: { name: 'Voz com o baixo', stems: { vocal: true, instr: false, bass: true, kick: true, hat: false } },
+  full: { name: 'All', stems: ALL },
+  riddim: { name: 'No vocals', stems: { ...ALL, vocal: false } },
+  drumbass: { name: 'Bass and drums', stems: { vocal: false, instr: false, bass: true, kick: true, hat: true } },
+  bass: { name: 'Bass and kick only', stems: { vocal: false, instr: false, bass: true, kick: true, hat: false } },
+  drums: { name: 'Drums only', stems: { vocal: false, instr: false, bass: false, kick: true, hat: true } },
+  skank: { name: 'Instruments and drums', stems: { vocal: false, instr: true, bass: false, kick: true, hat: true } },
+  voice: { name: 'Vocals with the bass', stems: { vocal: true, instr: false, bass: true, kick: true, hat: false } },
 }
 
 /** Which scenes each level uses, and how often it changes (in bars). */
@@ -36,8 +36,8 @@ const LEVELS: Record<
   { label: string; hint: string; scenes: string[]; every: number; throws: number; crash: number; drop: number }
 > = {
   leve: {
-    label: 'Leve',
-    hint: 'Muda devagar (a cada 8 compassos), quase sempre com o riddim inteiro; poucos ecos',
+    label: 'Light',
+    hint: 'Changes slowly (every 8 bars), almost always with the full riddim; few echoes',
     scenes: ['full', 'riddim', 'drumbass', 'riddim'],
     every: 8,
     throws: 0.35,
@@ -45,8 +45,8 @@ const LEVELS: Record<
     drop: 0,
   },
   medio: {
-    label: 'Médio',
-    hint: 'A cada 4 compassos tira e põe partes; eco na última palavra das frases',
+    label: 'Medium',
+    hint: 'Every 4 bars takes parts out and puts them back; echo on the last word of phrases',
     scenes: ['full', 'riddim', 'drumbass', 'voice', 'bass', 'riddim', 'full'],
     every: 4,
     throws: 0.6,
@@ -54,8 +54,8 @@ const LEVELS: Record<
     drop: 0.15,
   },
   pesado: {
-    label: 'Pesado',
-    hint: 'Desmonta a música toda: só baixo, só bateria, ecos e molas a cada passo, drops no um',
+    label: 'Heavy',
+    hint: 'Takes the whole track apart: bass only, drums only, echoes and springs at every step, drops on the one',
     scenes: ['drumbass', 'bass', 'drums', 'voice', 'skank', 'full', 'bass'],
     every: 4,
     throws: 0.85,
@@ -158,7 +158,7 @@ class AutoDub extends Store<AutoDubState> {
     if (barInPhrase === phraseBars - 1 && inBar === 3 && Math.random() < level.throws) {
       outboard.throw(name, true)
       window.setTimeout(() => outboard.throw(name, false), len * 900)
-      this.flash('Eco', len * 2)
+      this.flash('Echo', len * 2)
     }
     // Last bar of a phrase, sometimes: the bass drops out, to come back with the new scene on the one.
     if (barInPhrase === phraseBars - 1 && inBar === 0 && Math.random() < level.drop) {
@@ -179,7 +179,7 @@ class AutoDub extends Store<AutoDubState> {
       this.set({ scene: scene.name })
       if (Math.random() < level.crash) {
         outboard.crash()
-        this.flash('Mola', len * 2)
+        this.flash('Spring', len * 2)
       }
     }
   }

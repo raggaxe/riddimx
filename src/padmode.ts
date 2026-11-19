@@ -32,25 +32,25 @@ export const RIDDIM_PADS: { label: string; short: string; hint: string; stems: S
   {
     label: 'VERSION',
     short: 'VERS',
-    hint: 'Riddim version: tudo menos a voz',
+    hint: 'Riddim version: everything but the vocals',
     stems: { ...ALL_STEMS, vocal: false },
   },
   {
     label: 'ACAPELLA',
     short: 'ACAP',
-    hint: 'Acapella: só a voz',
+    hint: 'Acapella: vocals only',
     stems: { vocal: true, instr: false, bass: false, kick: false, hat: false },
   },
   {
     label: 'D&B',
     short: 'D&B',
-    hint: 'Só baixo e bateria: sem voz nem instrumentos',
+    hint: 'Bass and drums only: no vocals or instruments',
     stems: { vocal: false, instr: false, bass: true, kick: true, hat: true },
   },
   {
-    label: 'TUDO',
-    short: 'TUDO',
-    hint: 'A música inteira de volta',
+    label: 'ALL',
+    short: 'ALL',
+    hint: 'The whole track back',
     stems: { ...ALL_STEMS },
   },
 ]

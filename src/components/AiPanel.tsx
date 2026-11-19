@@ -1,4 +1,4 @@
-import { LYRICS_LANGS, lyrics, type LyricsLang } from '../engine/lyrics'
+import { LYRICS_LANGS, LYRICS_ON, lyrics, type LyricsLang } from '../engine/lyrics'
 import { MODEL } from '../engine/ai/demucs'
 import { library } from '../library'
 import { useStore } from '../store'
@@ -15,26 +15,27 @@ export function AiPanel() {
 
   const model =
     lyr.model === 'checking'
-      ? 'Verificando…'
+      ? 'Checking…'
       : lyr.model === 'none'
-        ? 'Só na app do Mac'
+        ? 'Mac app only'
         : lyr.model === 'ready'
-          ? 'Instalado'
+          ? 'Installed'
           : lyr.model === 'installing'
-            ? 'Instalando ' + Math.round(lyr.modelProgress * 100) + '%'
-            : 'Não instalado'
+            ? 'Installing ' + Math.round(lyr.modelProgress * 100) + '%'
+            : 'Not installed'
 
   return (
     <div className="ap2 st">
-      <section className="mx-sec ap2-unit" aria-label="Letras">
+      {LYRICS_ON && (
+      <section className="mx-sec ap2-unit" aria-label="Lyrics">
         <header className="ap2-head">
-          <b>Letras</b>
-          <span>transcritas no Mac quando o catálogo não conhece a música</span>
+          <b>Lyrics</b>
+          <span>transcribed on the Mac when the catalogue doesn't know the song</span>
         </header>
         <div className="ap2-body">
-          <label className="st-field" title="Língua em que as músicas são cantadas: ajuda a transcrever as letras">
-            Idioma
-            <select value={lyr.lang} onChange={(e) => lyrics.setLang(e.target.value as LyricsLang)} aria-label="Idioma das letras">
+          <label className="st-field" title="Language the songs are sung in: helps transcribe the lyrics">
+            Language
+            <select value={lyr.lang} onChange={(e) => lyrics.setLang(e.target.value as LyricsLang)} aria-label="Lyrics language">
               {LYRICS_LANGS.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.label}
@@ -43,43 +44,43 @@ export function AiPanel() {
             </select>
           </label>
           <span className="ap2-info">
-            Modelo: <b className={lyr.model === 'ready' ? 'st-ok' : ''}>{model}</b>
+            Model: <b className={lyr.model === 'ready' ? 'st-ok' : ''}>{model}</b>
           </span>
           {(lyr.model === 'missing' || lyr.model === 'installing') && (
             <button
               className={'ap2-btn' + (lyr.modelError ? ' st-err' : '')}
               disabled={lyr.model === 'installing'}
               onClick={() => void lyrics.installModel()}
-              title={'Baixa uma vez o modelo de letras (' + lyr.modelSizeMb + ' MB, da Hugging Face)'}
+              title={'Downloads the lyrics model once (' + lyr.modelSizeMb + ' MB, from Hugging Face)'}
             >
-              {lyr.modelError ? 'TENTAR DE NOVO' : 'INSTALAR · ' + lyr.modelSizeMb + ' MB'}
+              {lyr.modelError ? 'TRY AGAIN' : 'INSTALL · ' + lyr.modelSizeMb + ' MB'}
             </button>
           )}
         </div>
-        {lyr.modelError && <p className="deck-msg error ap2-err">A instalação falhou: {lyr.modelError}</p>}
+        {lyr.modelError && <p className="deck-msg error ap2-err">Install failed: {lyr.modelError}</p>}
       </section>
+      )}
 
       <section className="mx-sec ap2-unit" aria-label="Stems IA">
         <header className="ap2-head">
           <b>Stems IA</b>
-          <span>voz, bateria, baixo e instrumentos separados</span>
+          <span>vocals, drums, bass and instruments apart</span>
         </header>
         <div className="ap2-body">
           <span className="ap2-info">
-            Modelo: <b>{MODEL}</b>
+            Model: <b>{MODEL}</b>
           </span>
           <span className="ap2-info">
             {lib.separating
-              ? 'Separando ' + Math.round(lib.sepProgress * 100) + '%' + (waiting > 1 ? ' · mais ' + (waiting - 1) + ' na fila' : '')
+              ? 'Splitting ' + Math.round(lib.sepProgress * 100) + '%' + (waiting > 1 ? ' · ' + (waiting - 1) + ' more queued' : '')
               : waiting
-                ? waiting + ' na fila'
-                : 'Biblioteca em dia'}
-            {upgrading > 0 && ' · ' + upgrading + ' para refazer com o modelo novo'}
+                ? waiting + ' queued'
+                : 'Library up to date'}
+            {upgrading > 0 && ' · ' + upgrading + ' to redo with the new model'}
           </span>
         </div>
         <p className="ap2-hint">
-          Cada música nova é separada ao entrar na biblioteca, e só fica disponível quando os stems ficam prontos. Os
-          stems ficam salvos no Mac: a mesma música não é separada duas vezes.
+          Every new track is split as it enters the library, and is only available once its stems are ready. Stems are kept on the Mac: the same track is never split twice.
         </p>
       </section>
     </div>

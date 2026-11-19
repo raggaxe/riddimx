@@ -141,13 +141,13 @@ export function Waveform({ deck, children, info }: { deck: Deck; children?: Reac
       {/* Info line: time played · left · whole track (at the current pitch), then the deck's key and tempo tools. */}
       <div className="times">
         <span className="t-cell">
-          <small>DECORRIDO</small>
+          <small>ELAPSED</small>
           <span className="t-elapsed" ref={elapsed}>
             0:00.0
           </span>
         </span>
         <span className="t-cell">
-          <small>RESTANTE</small>
+          <small>REMAINING</small>
           <span className="t-left" ref={remaining}>
             0:00.0
           </span>
@@ -156,7 +156,7 @@ export function Waveform({ deck, children, info }: { deck: Deck; children?: Reac
           <small>TOTAL</small>
           <span ref={total}>0:00.0</span>
         </span>
-        <span className="t-bar" ref={counter} title="Compasso.batida (o compasso 1, 5, 9… começa uma frase)" />
+        <span className="t-bar" ref={counter} title="Bar.beat (bars 1, 5, 9… start a phrase)" />
         {info}
       </div>
     </div>

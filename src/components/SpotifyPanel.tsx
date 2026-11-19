@@ -29,7 +29,7 @@ function CopyButton({ text }: { text: string }) {
         })
       }}
     >
-      {done ? 'Copiado' : 'Copiar'}
+      {done ? 'Copied' : 'Copy'}
     </button>
   )
 }
@@ -52,7 +52,7 @@ export function SpotifyPanel() {
     if (!s.loggedIn) return
     spotify
       .api('GET', '/me')
-      .then((u) => setMe({ name: u?.display_name || u?.id || 'Conta Spotify', premium: u?.product === 'premium' }))
+      .then((u) => setMe({ name: u?.display_name || u?.id || 'Spotify account', premium: u?.product === 'premium' }))
       .catch(() => setMe(null))
   }, [s.loggedIn])
 
@@ -101,10 +101,10 @@ export function SpotifyPanel() {
     return (
       <div className="spot">
         <section className="spot-setup">
-          <h5>Spotify não conectado</h5>
-          <p className="empty">A conta do Spotify se conecta uma vez, nos Ajustes. Depois a busca aparece aqui.</p>
+          <h5>Spotify not connected</h5>
+          <p className="empty">The Spotify account connects once, in Settings. Then search shows up here.</p>
           <button className="btn" onClick={() => ui.openSettings('contas')}>
-            Conectar em Ajustes › Contas
+            Connect in Settings › Accounts
           </button>
         </section>
       </div>
@@ -128,13 +128,13 @@ export function SpotifyPanel() {
             <input
               type="search"
               value={query}
-              placeholder="Procurar no Spotify: música, artista, álbum"
-              aria-label="Procurar no Spotify"
+              placeholder="Search Spotify: track, artist, album"
+              aria-label="Search Spotify"
               autoFocus
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
             />
-            {searching && <span className="spot-busy">procurando…</span>}
+            {searching && <span className="spot-busy">searching…</span>}
           </label>
         </div>
         {failed && <p className="deck-msg error">{failed}</p>}
@@ -142,21 +142,21 @@ export function SpotifyPanel() {
           {results.length === 0 ? (
             <p className="empty">
               {query.trim().length < 2
-                ? 'Digite para buscar. A / B toca no deck, + salva na biblioteca, duplo clique carrega no deck livre.'
+                ? 'Type to search. A / B plays on the deck, + saves to the library, double-click loads on the free deck.'
                 : searching
                   ? ''
-                  : 'Nada encontrado.'}
+                  : 'Nothing found.'}
             </p>
           ) : (
             <table>
               <thead>
                 <tr>
-                  <th className="spot-cover" aria-label="Capa" />
-                  <th className="c-title">Título</th>
-                  <th className="c-artist">Artista</th>
-                  <th className="spot-album">Álbum</th>
-                  <th className="c-num">Tempo</th>
-                  <th className="c-act" aria-label="Ações" />
+                  <th className="spot-cover" aria-label="Cover" />
+                  <th className="c-title">Title</th>
+                  <th className="c-artist">Artist</th>
+                  <th className="spot-album">Album</th>
+                  <th className="c-num">Time</th>
+                  <th className="c-act" aria-label="Actions" />
                 </tr>
               </thead>
               <tbody>
@@ -176,18 +176,18 @@ export function SpotifyPanel() {
                       <td className="spot-album">{t.album}</td>
                       <td className="c-num">{clock(t.duration)}</td>
                       <td className="c-act">
-                        <button className="row-btn a" onClick={() => send(t, deckA)} aria-label={'Tocar no deck A: ' + t.title}>
+                        <button className="row-btn a" onClick={() => send(t, deckA)} aria-label={'Play on deck A: ' + t.title}>
                           A
                         </button>
-                        <button className="row-btn b" onClick={() => send(t, deckB)} aria-label={'Tocar no deck B: ' + t.title}>
+                        <button className="row-btn b" onClick={() => send(t, deckB)} aria-label={'Play on deck B: ' + t.title}>
                           B
                         </button>
                         <button
                           className={'row-btn' + (saved ? ' saved' : '')}
                           disabled={saved}
                           onClick={() => send(t, null)}
-                          aria-label={saved ? 'Já está na biblioteca' : 'Salvar na biblioteca: ' + t.title}
-                          title={saved ? 'Já está na biblioteca' : 'Salvar na biblioteca'}
+                          aria-label={saved ? 'Already in the library' : 'Save to library: ' + t.title}
+                          title={saved ? 'Already in the library' : 'Save to library'}
                         >
                           {saved ? '✓' : '+'}
                         </button>
@@ -202,18 +202,18 @@ export function SpotifyPanel() {
       </section>
 
       <aside className="spot-side">
-        <h5>Conta</h5>
+        <h5>Account</h5>
         <p className="spot-account">
           <i className={'dot' + (s.ready ? ' on' : '')} aria-hidden="true" />
           <span>
-            <b>{me?.name ?? 'Conectada'}</b>
+            <b>{me?.name ?? 'Connected'}</b>
             <small>
-              {me && !me.premium ? 'Sem Premium: não toca nos decks' : s.ready ? 'Player pronto' : 'Player liga ao tocar a primeira faixa'}
+              {me && !me.premium ? 'No Premium: won\'t play on the decks' : s.ready ? 'Player ready' : 'Player starts when the first track plays'}
             </small>
           </span>
         </p>
         <button className="btn small" onClick={() => ui.openSettings('contas')}>
-          Conta em Ajustes
+          Account in Settings
         </button>
         {s.error && <p className="deck-msg error">{s.error}</p>}
       </aside>
@@ -231,7 +231,7 @@ export function SpotifyAccount() {
     if (!s.loggedIn) return
     spotify
       .api('GET', '/me')
-      .then((u) => setMe({ name: u?.display_name || u?.id || 'Conta Spotify', premium: u?.product === 'premium' }))
+      .then((u) => setMe({ name: u?.display_name || u?.id || 'Spotify account', premium: u?.product === 'premium' }))
       .catch(() => setMe(null))
   }, [s.loggedIn])
 
@@ -243,14 +243,14 @@ export function SpotifyAccount() {
           <p className="spot-account">
             <i className={'dot' + (s.ready ? ' on' : '')} aria-hidden="true" />
             <span>
-              <b>{me?.name ?? 'Conectada'}</b>
+              <b>{me?.name ?? 'Connected'}</b>
               <small>
-                {me && !me.premium ? 'Sem Premium: não toca nos decks' : s.ready ? 'Player pronto' : 'Player liga ao tocar a primeira faixa'}
+                {me && !me.premium ? 'No Premium: won\'t play on the decks' : s.ready ? 'Player ready' : 'Player starts when the first track plays'}
               </small>
             </span>
           </p>
           <button className="btn small" onClick={() => spotify.logout()}>
-            Desconectar conta
+            Disconnect account
           </button>
           {s.error && <p className="deck-msg error">{s.error}</p>}
         </section>
@@ -262,20 +262,20 @@ export function SpotifyAccount() {
     return (
       <div className="spot">
         <section className="spot-setup">
-          <h5>Conectar o Spotify (uma vez)</h5>
+          <h5>Connect Spotify (once)</h5>
           <ol className="spot-steps">
             <li>
               <span>
-                Crie uma app em{' '}
+                Create an app at{' '}
                 <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noreferrer">
                   developer.spotify.com/dashboard
                 </a>
-                . Precisa de conta Premium.
+                . Needs a Premium account.
               </span>
             </li>
             <li>
               <span>
-                Em <b>Redirect URIs</b> adicione exatamente:
+                Em <b>Redirect URIs</b> add exactly:
               </span>
               <code>{spotify.redirectUri}</code>
               <CopyButton text={spotify.redirectUri} />
@@ -286,7 +286,7 @@ export function SpotifyAccount() {
               </span>
             </li>
             <li>
-              <span>Cole o Client ID da app e conecte a conta.</span>
+              <span>Paste the app's Client ID and connect the account.</span>
             </li>
           </ol>
           <form
@@ -300,12 +300,12 @@ export function SpotifyAccount() {
             <input
               value={clientId}
               placeholder="Client ID"
-              aria-label="Client ID da sua app Spotify"
+              aria-label="Your Spotify app's Client ID"
               spellCheck={false}
               onChange={(e) => setClientId(e.target.value)}
             />
             <button className="btn" disabled={!clientId.trim()}>
-              Conectar conta
+              Connect account
             </button>
           </form>
           {s.error && <p className="deck-msg error">{s.error}</p>}
@@ -318,10 +318,10 @@ export function SpotifyAccount() {
 function Limits() {
   return (
     <div className="spot-limits">
-      <h5>Limites do Spotify</h5>
-      <p>Áudio protegido: num deck Spotify só há play, cue, loops e volume (sem pitch, EQ nem onda).</p>
-      <p>Só toca uma faixa Spotify de cada vez.</p>
-      <p>As regras do Spotify não permitem misturar as faixas em apps distribuídas: uso pessoal.</p>
+      <h5>Spotify limits</h5>
+      <p>Protected audio: a Spotify deck only has play, cue, loops and volume (no pitch, EQ or waveform).</p>
+      <p>Only one Spotify track plays at a time.</p>
+      <p>Spotify's rules don't allow mixing tracks in distributed apps: personal use.</p>
     </div>
   )
 }

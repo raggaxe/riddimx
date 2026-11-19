@@ -24,6 +24,7 @@ export interface MixerState {
   recordedAt: number // performance.now() when the recording started
   dynamics: Dynamics // compressor and limiter on the master
   fading: 0 | 1 | null // automatic crossfade running towards deck A (0) or B (1)
+  loudMatch: boolean // every file track brought to the same loudness (LUFS) on its deck
 }
 
 interface MixerChannel {
@@ -31,7 +32,7 @@ interface MixerChannel {
 }
 
 const LS = 'vx_audio'
-type Saved = Pick<MixerState, 'cueMix' | 'hpVolume' | 'masterDevice' | 'hpDevice' | 'inputDevice' | 'xfCurve' | 'dynamics'>
+type Saved = Pick<MixerState, 'cueMix' | 'hpVolume' | 'masterDevice' | 'hpDevice' | 'inputDevice' | 'xfCurve' | 'dynamics' | 'loudMatch'>
 
 function saved(): Partial<Saved> {
   try {
@@ -87,6 +88,7 @@ class Mixer extends Store<MixerState> {
       recordedAt: 0,
       dynamics: cleanDynamics(s.dynamics),
       fading: null,
+      loudMatch: s.loudMatch !== false,
     })
     const ctx = (this.ctx = new AudioContext({ latencyHint: 'interactive' }))
     this.masterGain = ctx.createGain()
@@ -119,11 +121,11 @@ class Mixer extends Store<MixerState> {
   }
 
   private persist(): void {
-    const { cueMix, hpVolume, masterDevice, hpDevice, inputDevice, xfCurve, dynamics } = this.state
+    const { cueMix, hpVolume, masterDevice, hpDevice, inputDevice, xfCurve, dynamics, loudMatch } = this.state
     try {
       localStorage.setItem(
         LS,
-        JSON.stringify({ cueMix, hpVolume, masterDevice, hpDevice, inputDevice, xfCurve, dynamics } satisfies Saved),
+        JSON.stringify({ cueMix, hpVolume, masterDevice, hpDevice, inputDevice, xfCurve, dynamics, loudMatch } satisfies Saved),
       )
     } catch {
       /* not remembered */
@@ -208,6 +210,12 @@ class Mixer extends Store<MixerState> {
   }
 
   // ───────────────────────── compressor and limiter ─────────────────────────
+
+  /** Loudness match on or off: the decks follow (each one listens to the mixer). */
+  setLoudMatch(loudMatch: boolean): void {
+    this.set({ loudMatch })
+    this.persist()
+  }
 
   /** Change the master dynamics; turning a knob by hand drops the preset name. */
   setDynamics(change: Partial<Dynamics>): void {
@@ -321,13 +329,41 @@ class Mixer extends Store<MixerState> {
     return id && this.state.inputs.some((d) => d.id === id) ? { deviceId: { exact: id } } : {}
   }
 
+  /**
+   * PANIC: close and reopen the sound card on the same outputs, the way it was set up (this also
+   * picks up a sample rate the interface changed under us), then check the engine is running again.
+   */
+  async reopen(): Promise<boolean> {
+    const { masterDevice, hpDevice } = this.state
+    try {
+      await this.ctx.suspend()
+      // Let go of the device for a moment so it really is opened again.
+      await (this.ctx as any).setSinkId(masterDevice ? '' : { type: 'none' })
+    } catch {
+      /* not supported: suspend and resume still restart the stream */
+    }
+    await this.refreshDevices()
+    await this.setMasterDevice(masterDevice && this.state.devices.some((d) => d.id === masterDevice) ? masterDevice : '')
+    if (hpDevice !== 'split') await this.setHeadphoneDevice(hpDevice)
+    this.dynamics.apply(this.state.dynamics)
+    try {
+      await this.ctx.resume()
+    } catch {
+      return false
+    }
+    // Running means the clock moves: give it a moment and look.
+    const t0 = this.ctx.currentTime
+    await new Promise((r) => setTimeout(r, 400))
+    return this.ctx.state === 'running' && this.ctx.currentTime > t0
+  }
+
   /** Speakers: '' = whatever the system uses by default. */
   async setMasterDevice(id: string): Promise<void> {
     try {
       await (this.ctx as any).setSinkId(id)
       this.set({ masterDevice: id, audioError: null })
     } catch {
-      this.set({ audioError: 'Não deu para usar esse output no master.' })
+      this.set({ audioError: 'Couldn\'t use that output for the master.' })
     }
     const splitAvailable = this.ctx.destination.maxChannelCount >= 4
     this.set({ splitAvailable })
@@ -380,7 +416,7 @@ class Mixer extends Store<MixerState> {
       this.masterOut.connect(dest)
       if (id === 'split') {
         id = ''
-        error = 'O output do master não tem canais 3-4.'
+        error = 'The master output has no channels 3-4.'
       } else if (id) {
         try {
           this.hpOut.connect(this.stream)
@@ -391,7 +427,7 @@ class Mixer extends Store<MixerState> {
           this.hpOut.disconnect()
           this.player.srcObject = null
           id = ''
-          error = 'Não deu para usar esse output no headphone.'
+          error = 'Couldn\'t use that output for the headphones.'
         }
       }
     }

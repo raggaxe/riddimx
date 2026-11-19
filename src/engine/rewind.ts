@@ -14,11 +14,11 @@ export interface RewindSettings {
 
 export const REWIND_PRESETS: { name: string; settings: RewindSettings }[] = [
   {
-    name: 'Clássico',
+    name: 'Classic',
     settings: { duration: 1.05, tape: 2.4, startSpeed: 0.9, endSpeed: 3.2, fadeAt: 0.52, muffle: 0, shout: '', after: 'cue' },
   },
   {
-    name: 'Rápido',
+    name: 'Fast',
     settings: { duration: 0.6, tape: 2, startSpeed: 1.4, endSpeed: 5, fadeAt: 0.45, muffle: 0.2, shout: '', after: 'cue' },
   },
   {
@@ -26,7 +26,7 @@ export const REWIND_PRESETS: { name: string; settings: RewindSettings }[] = [
     settings: { duration: 1.3, tape: 3, startSpeed: 0.8, endSpeed: 3.5, fadeAt: 0.6, muffle: 0.3, shout: 'pull-up', after: 'drop' },
   },
   {
-    name: 'Dub longo',
+    name: 'Long dub',
     settings: { duration: 2.6, tape: 4, startSpeed: 0.5, endSpeed: 2.4, fadeAt: 0.55, muffle: 0.7, shout: '', after: 'cue' },
   },
 ]

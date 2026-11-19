@@ -14,7 +14,7 @@ export function DubSoundMenu() {
   const [at, setAt] = useState<{ top: number; left: number } | null>(null)
   const root = useRef<HTMLDivElement>(null)
   const picker = useRef<HTMLInputElement>(null)
-  const current = d.preset ?? ((d.patch.voice === 'sample' && d.patch.sampleName) || 'Ajustado')
+  const current = d.preset ?? ((d.patch.voice === 'sample' && d.patch.sampleName) || 'Edited')
 
   useEffect(() => {
     if (!open) return
@@ -46,7 +46,7 @@ export function DubSoundMenu() {
           setAt({ top: r.bottom + 8, left: r.left + r.width / 2 })
           setOpen(!open)
         }}
-        title="Escolher o som do FIRE"
+        title="Pick the FIRE sound"
       >
         <span>{current}</span>
         <svg viewBox="0 0 10 6" width="8" height="5" aria-hidden="true">
@@ -77,7 +77,7 @@ export function DubSoundMenu() {
               </button>
             ))}
           </div>
-          {d.user.length > 0 && <h5>Seus</h5>}
+          {d.user.length > 0 && <h5>Yours</h5>}
           <div className="dbx-pop-grid">
             {d.user.map((x) => (
               <button
@@ -91,7 +91,7 @@ export function DubSoundMenu() {
               </button>
             ))}
           </div>
-          <h5>Sons</h5>
+          <h5>Sounds</h5>
           <div className="dbx-pop-grid">
             {SFX.filter((x) => x.id !== 'siren').map((x) => {
               const on = d.preset === null && d.patch.sample === 'sfx:' + x.id
@@ -110,10 +110,10 @@ export function DubSoundMenu() {
           </div>
           <div className="dbx-pop-foot">
             <button role="menuitem" onClick={() => picker.current?.click()}>
-              Arquivo seu…
+              Your file…
             </button>
             <button role="menuitem" onClick={() => choose(() => dubBox.surprise())}>
-              Surpresa
+              Surprise
             </button>
           </div>
           <input

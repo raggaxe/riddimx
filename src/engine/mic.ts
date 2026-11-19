@@ -42,10 +42,10 @@ type Settings = Pick<MicState, 'level' | 'echo' | 'spring' | 'duck' | 'filter' |
 
 /** Ready-made voices: one press sets the colour and the effects. */
 export const VOICE_PRESETS: { id: string; label: string; set: Partial<Settings> }[] = [
-  { id: 'clean', label: 'LIMPA', set: { filter: 0, drive: 0, echo: 0.15, spring: 0.1, repeats: 0.3, tone: 0.55, time: 'rack' } },
+  { id: 'clean', label: 'CLEAN', set: { filter: 0, drive: 0, echo: 0.15, spring: 0.1, repeats: 0.3, tone: 0.55, time: 'rack' } },
   { id: 'dub', label: 'DUB MC', set: { filter: 0.12, drive: 0.15, echo: 0.55, spring: 0.3, repeats: 0.6, tone: 0.4, time: '3/8' } },
-  { id: 'radio', label: 'RÁDIO', set: { filter: 0.62, drive: 0.35, echo: 0.35, spring: 0.15, repeats: 0.45, tone: 0.6, time: '1/4' } },
-  { id: 'mega', label: 'MEGAFONE', set: { filter: 0.45, drive: 0.85, echo: 0.4, spring: 0.25, repeats: 0.5, tone: 0.5, time: '1/2' } },
+  { id: 'radio', label: 'RADIO', set: { filter: 0.62, drive: 0.35, echo: 0.35, spring: 0.15, repeats: 0.45, tone: 0.6, time: '1/4' } },
+  { id: 'mega', label: 'MEGAPHONE', set: { filter: 0.45, drive: 0.85, echo: 0.4, spring: 0.25, repeats: 0.5, tone: 0.5, time: '1/2' } },
 ]
 
 const LS = 'vx_mic'
@@ -303,7 +303,7 @@ class Mic extends Store<MicState> {
       // On the Mac the system has to say yes first (it asks the user once).
       const access = (await desktop?.micAccess?.()) ?? 'granted'
       if (access === 'denied' || access === 'restricted') {
-        this.set({ error: 'O Mac não deixa a RiddimX ouvir o microfone. Clique para abrir Privacidade › Microfone e autorize.' })
+        this.set({ error: 'The Mac won\'t let RiddimX hear the microphone. Click to open Privacy › Microphone and allow it.' })
         return false
       }
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -312,7 +312,7 @@ class Mic extends Store<MicState> {
       // The device went away (unplugged, Bluetooth dropped): close cleanly so FALAR shows it.
       this.stream.getAudioTracks()[0]?.addEventListener('ended', () => {
         this.close()
-        this.set({ error: 'O microfone desconectou. Conecte de novo e aperte FALAR.' })
+        this.set({ error: 'The microphone disconnected. Plug it in again and press TALK.' })
       })
       this.source = mixer.ctx.createMediaStreamSource(this.stream)
       this.source.connect(this.chain)
@@ -325,8 +325,8 @@ class Mic extends Store<MicState> {
       this.set({
         error:
           name === 'NotFoundError'
-            ? 'Nenhum microfone encontrado. Conecte um e aperte FALAR de novo.'
-            : 'Sem acesso ao microfone. Clique para abrir Privacidade › Microfone e autorize.',
+            ? 'No microphone found. Plug one in and press TALK again.'
+            : 'No access to the microphone. Click to open Privacy › Microphone and allow it.',
       })
       return false
     }

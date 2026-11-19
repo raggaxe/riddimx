@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Deck } from '../engine/deck'
 import { useStore } from '../store'
-import { Scale } from './Meter'
 
 /** Pitch fader ranges, in %. Marks top to bottom: slower at the top, faster at the bottom (like a turntable). */
 const RANGES = [8, 16, 50] as const
@@ -60,7 +59,7 @@ export function PitchColumn({ deck }: { deck: Deck }) {
   }
   useEffect(() => () => cancelAnimationFrame(bendRun.current), [])
   const bend = (dir: number) => ({
-    className: 'btn small' + (bending === dir ? ' held' : ''),
+    className: bending === dir ? 'held' : '',
     onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
       if (e.button !== 0) return
       e.currentTarget.setPointerCapture(e.pointerId)
@@ -79,35 +78,31 @@ export function PitchColumn({ deck }: { deck: Deck }) {
     onBlur: () => bending === dir && bendStop(),
   })
 
+  const marks = marksFor(range)
   return (
-    <aside className={'pitch-col pitch-' + deck.name.toLowerCase()} aria-label={'Pitch do deck ' + deck.name}>
-    <div className="dk-pitch">
-      <div className="pitch-top">
-        <button
-          className={'pitch-read' + (Math.abs(pitch) < 0.05 ? ' zero' : '') + (s.syncOn ? ' synced' : '')}
-          disabled={!deck.canPitch || Math.abs(pitch) < 0.05}
-          onClick={() => deck.setRate(1)}
-          title={s.syncOn ? 'Tempo seguido pelo SYNC' : 'Pitch em %. Clique para voltar a 0'}
-          aria-label={'Pitch ' + pitch.toFixed(1) + '%. Voltar a zero'}
-        >
-          <output>
-            {pitch >= 0 ? '+' : ''}
-            {pitch.toFixed(1)}
-            <small>%</small>
-          </output>
-          {s.syncOn && <em>SYNC</em>}
-        </button>
-        <button
-          className="pitch-range"
-          onClick={nextRange}
-          disabled={!deck.canPitch}
-          title="Alcance do pitch: clique para mudar (8, 16 ou 50%)"
-        >
-          ±{range}
-        </button>
-      </div>
-      <div className="pitch-row">
-        <Scale marks={marksFor(range)} className={deck.name === 'B' ? 'right' : ''} />
+    <div className={'pc pc-' + deck.name.toLowerCase()} role="group" aria-label={'Pitch of deck ' + deck.name}>
+      <button
+        className={'pc-read' + (Math.abs(pitch) < 0.05 ? ' zero' : '') + (s.syncOn ? ' synced' : '')}
+        disabled={!deck.canPitch || Math.abs(pitch) < 0.05}
+        onClick={() => deck.setRate(1)}
+        title={s.syncOn ? 'Tempo followed by SYNC' : 'Pitch in %. Click to go back to 0'}
+        aria-label={'Pitch ' + pitch.toFixed(1) + '%. Back to zero'}
+      >
+        {s.syncOn ? 'SYNC' : (pitch >= 0.05 ? '+' : pitch <= -0.05 ? '−' : '') + Math.abs(pitch).toFixed(1)}
+        {!s.syncOn && <small>%</small>}
+      </button>
+      <button className="pc-range" onClick={nextRange} disabled={!deck.canPitch} title="Pitch range: click to change (8, 16 or 50%)">
+        ±{range}
+      </button>
+      <div className="pc-fader">
+        {/* Marks share the thumb's travel exactly: the same padding as half the thumb, spaced evenly. */}
+        <div className="pc-scale" aria-hidden="true">
+          {marks.map((m, i) => (
+            <span key={i} className={m === null ? 'minor' : m === '0' ? 'major zero' : 'major'}>
+              {m !== null && <b>{m}</b>}
+            </span>
+          ))}
+        </div>
         <input
           type="range"
           min={-range}
@@ -118,78 +113,45 @@ export function PitchColumn({ deck }: { deck: Deck }) {
           aria-label="Pitch"
           onChange={(e) => deck.setRate(1 + Number(e.target.value) / 100)}
           onDoubleClick={() => deck.setRate(1)}
-          title={'Pitch ±' + range + '%: para baixo acelera (duplo clique: zerar)'}
+          title={'Pitch ±' + range + '%: down speeds up (double-click: reset)'}
         />
-        <Scale marks={marksFor(range)} className={deck.name === 'B' ? '' : 'right'} bare />
       </div>
-      <div className="pitch-foot">
+      <div className="pc-bend">
         <button
-          className={'pad keylock' + (locked ? ' set' : '') + (shift ? ' warn' : '')}
-          disabled={!deck.canKeyLock}
-          aria-pressed={locked}
-          onClick={() => deck.toggleKeyLock()}
-          title={
-            s.kind === 'youtube'
-              ? 'YouTube mantém sempre o tom ao mudar o tempo'
-              : s.kind === 'spotify'
-                ? 'Spotify não muda o tempo'
-                : locked
-                  ? 'Key lock ligado: o tempo muda sem mudar o tom. Clique para desligar'
-                  : 'Key lock desligado: o pitch muda também o tom' +
-                    (shift ? ' (agora ' + (shift > 0 ? '+' : '') + shift + ' meio-tom)' : '') +
-                    '. Clique para ligar'
-          }
+          disabled={!deck.canPitch}
+          {...bend(-1)}
+          title="Hold back: slows down while held, more and more (up to 8%)"
+          aria-label="Hold back"
         >
-          <svg viewBox="0 0 12 12" width="9" height="9" aria-hidden="true">
-            <rect x="2.5" y="5.5" width="7" height="5" rx="1" fill="currentColor" />
-            <path
-              d={locked ? 'M4 5.5V4a2 2 0 014 0v1.5' : 'M4 5.5V4a2 2 0 013.9-.6'}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-            />
+          <svg viewBox="0 0 12 12" aria-hidden="true">
+            <path d="M7.5 2.5L4 6l3.5 3.5" />
           </svg>
-          KEY
         </button>
-        <div className="dk-bend">
-          <button
-            disabled={!deck.canPitch}
-            {...bend(-1)}
-            title="Travar: atrasa enquanto segura, cada vez mais (até 8%)"
-            aria-label="Travar"
-          >
-            <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
-              <path
-                d="M7.5 2.5L4 6l3.5 3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <button
-            disabled={!deck.canPitch}
-            {...bend(1)}
-            title="Empurrar: adianta enquanto segura, cada vez mais (até 8%)"
-            aria-label="Empurrar"
-          >
-            <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
-              <path
-                d="M4.5 2.5L8 6 4.5 9.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
+        <button disabled={!deck.canPitch} {...bend(1)} title="Push: speeds up while held, more and more (up to 8%)" aria-label="Push">
+          <svg viewBox="0 0 12 12" aria-hidden="true">
+            <path d="M4.5 2.5L8 6 4.5 9.5" />
+          </svg>
+        </button>
       </div>
+      <button
+        className={'pc-key' + (locked ? ' on' : '') + (shift ? ' warn' : '')}
+        disabled={!deck.canKeyLock}
+        aria-pressed={locked}
+        onClick={() => deck.toggleKeyLock()}
+        title={
+          s.kind === 'youtube'
+            ? 'YouTube always keeps the key when the tempo changes'
+            : s.kind === 'spotify'
+              ? "Spotify doesn't change the tempo"
+              : locked
+                ? 'Key lock on: the tempo changes without changing the key. Click to turn off'
+                : 'Key lock off: the pitch changes the key too' +
+                  (shift ? ' (now ' + (shift > 0 ? '+' : '') + shift + ' semitone)' : '') +
+                  '. Click to turn on'
+        }
+      >
+        KEY
+      </button>
     </div>
-    </aside>
   )
 }

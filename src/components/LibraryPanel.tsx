@@ -8,22 +8,22 @@ import { bpmStore } from '../engine/bpm'
 import { camelot, harmonic, keyStore } from '../engine/key'
 import { parseYouTubeId } from '../engine/youtube'
 import { parseSpotifyTrack } from '../engine/spotify'
-import { lyrics } from '../engine/lyrics'
+import { LYRICS_ON, lyrics } from '../engine/lyrics'
 
-const KIND_LABEL = { local: 'Arquivo', youtube: 'YouTube', spotify: 'Spotify' }
+const KIND_LABEL = { local: 'File', youtube: 'YouTube', spotify: 'Spotify' }
 const KIND_MARK = { local: 'F', youtube: 'YT', spotify: 'SP' }
 
 type Smart = 'match' | 'tempo' | 'key' | 'fresh' | 'played'
 const SMART: { id: Smart; label: string; hint: string }[] = [
   {
     id: 'match',
-    label: 'Combina',
-    hint: 'Tempo e tom compatíveis com o deck que está tocando, ainda não tocadas: as melhores para tocar depois',
+    label: 'Matches',
+    hint: 'Tempo and key compatible with the deck on air, not played yet: the best ones to play next',
   },
-  { id: 'tempo', label: 'Mesmo tempo', hint: 'Tempo a menos de 6 % do deck que está tocando (ou metade / dobro)' },
-  { id: 'key', label: 'Tom compatível', hint: 'Tom que mistura com o do deck que está tocando (roda de Camelot)' },
-  { id: 'fresh', label: 'Por tocar', hint: 'Ainda não tocadas nesta sessão' },
-  { id: 'played', label: 'Tocadas', hint: 'Já carregadas num deck nesta sessão, pela ordem em que tocaram' },
+  { id: 'tempo', label: 'Same tempo', hint: 'Tempo within 6% of the deck on air (or half / double)' },
+  { id: 'key', label: 'Compatible key', hint: 'Key that mixes with the deck on air (Camelot wheel)' },
+  { id: 'fresh', label: 'Not played', hint: 'Not played yet this session' },
+  { id: 'played', label: 'Played', hint: 'Already loaded on a deck this session, in the order they played' },
 ]
 
 type Column = 'title' | 'artist' | 'bpm' | 'key' | 'duration' | 'kind'
@@ -54,7 +54,7 @@ export function LibraryPanel() {
   // The search bar lives on the tab row (App's #tab-tools), so the list gets that row's height.
   const [slot, setSlot] = useState<HTMLElement | null>(null)
   useEffect(() => setSlot(document.getElementById('tab-tools')), [])
-  const { entries, lists, error, analyzing, onDeck, played, riddims, riddimView, separating, sepProgress } = useStore(library)
+  const { entries, lists, error, analyzing, onDeck, played, riddims, riddimView, separating, sepProgress, checking } = useStore(library)
   // Files that cannot be loaded yet (those separated again with the new model play meanwhile, not counted).
   const blocked = entries.filter((e) => library.waitingStems(e)).length
   const riddim = riddims.find((r) => r.key === riddimView) ?? null
@@ -115,7 +115,7 @@ export function LibraryPanel() {
     if (words.length)
       rows = rows.filter((e) => {
         if (words.every((w) => (e.title + ' ' + e.artist).toLowerCase().includes(w))) return true
-        const sung = lyrics.textFor(lyricsKey(e)).toLowerCase()
+        const sung = LYRICS_ON ? lyrics.textFor(lyricsKey(e)).toLowerCase() : ''
         return !!sung && words.every((w) => sung.includes(w))
       })
     if (!sort.by) return sort.desc ? [...rows].reverse() : rows
@@ -162,13 +162,11 @@ export function LibraryPanel() {
     }
   }
 
-  /** Adds the pasted link; then loads it on a deck, on the free deck, or only keeps it. */
-  const loadLink = (deck: Deck | 'free' | null) => {
-    const entry = library.addLink(query)
+  /** Adds the pasted link to the library (never onto a deck: the DJ drags it there when wanted). */
+  const saveLink = async () => {
+    const entry = await library.addLinkChecked(query)
     if (!entry) return
     if (list && !entry.list) library.setList(entry.id, list)
-    if (deck === 'free') library.loadFree(entry, deckA, deckB)
-    else if (deck) library.load(entry, deck)
     setSelected(entry.id)
     setQuery('')
   }
@@ -229,7 +227,7 @@ export function LibraryPanel() {
 
   const onKeys = (e: React.KeyboardEvent) => {
     const entry = shown.find((x) => x.id === selected)
-    const ready = entry && library.reachable(entry) // still separating: it goes on the deck when done
+    const ready = entry && library.reachable(entry) // not ready yet: load() says why
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
       move(e.key === 'ArrowDown' ? 1 : -1)
@@ -278,11 +276,11 @@ export function LibraryPanel() {
           ref={search}
           type="search"
           value={query}
-          placeholder="Procurar, ou colar link do YouTube / Spotify"
-          aria-label="Procurar na biblioteca ou colar um link"
+          placeholder="Search, or paste a YouTube / Spotify link"
+          aria-label="Search the library or paste a link"
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && isLink) loadLink('free')
+            if (e.key === 'Enter' && isLink) void saveLink()
             if (e.key === 'Escape') setQuery('')
             if (e.key === 'ArrowDown' && !isLink) {
               e.preventDefault()
@@ -293,20 +291,12 @@ export function LibraryPanel() {
         />
       </label>
       {isLink && (
-        <>
-          <button className="btn load-a" onClick={() => loadLink(deckA)}>
-            → A
-          </button>
-          <button className="btn load-b" onClick={() => loadLink(deckB)}>
-            → B
-          </button>
-          <button className="btn" onClick={() => loadLink(null)} title="Só guardar na biblioteca">
-            Salvar
-          </button>
-        </>
+        <button className="btn" onClick={() => void saveLink()} disabled={checking} title="Add to the library">
+          {checking ? 'Checking…' : '+ Add'}
+        </button>
       )}
       <button className="btn" onClick={() => picker.current?.click()}>
-        + Arquivos
+        + Files
       </button>
       <input
         ref={picker}
@@ -331,19 +321,19 @@ export function LibraryPanel() {
         }}
         title={
           live
-            ? 'Carrega no deck livre a melhor música para tocar depois: tempo e tom compatíveis com o deck ' +
+            ? 'Loads the best track to play next on the free deck: tempo and key compatible with deck ' +
               (live === a ? 'A' : 'B') +
-              ', ainda não tocada'
-            : 'Coloque uma música tocando primeiro'
+              ', not played yet'
+            : 'Get a track playing first'
         }
       >
-        ✦ Sugerir
+        ✦ Suggest
       </button>
-      <span className="lib-count" title={analyzing ? 'Medindo BPM e tom…' : undefined}>
-        {shown.length} {shown.length === 1 ? 'música' : 'músicas'}
+      <span className="lib-count" title={analyzing ? 'Measuring BPM and key…' : undefined}>
+        {shown.length} {shown.length === 1 ? 'track' : 'tracks'}
         {total > 0 && ' · ' + hours(total)}
-        {analyzing && ' · medindo…'}
-        {blocked > 0 && ` · ${blocked} separando`}
+        {analyzing && ' · measuring…'}
+        {blocked > 0 && ` · ${blocked} splitting`}
       </span>
     </div>
   )
@@ -354,7 +344,7 @@ export function LibraryPanel() {
       {error && <p className="deck-msg error">{error}</p>}
 
       <div className="lib-body">
-        <nav className="lib-lists" aria-label="Listas">
+        <nav className="lib-lists" aria-label="Lists">
           <button
             className={'lib-list' + (list === null && !riddim ? ' active' : '')}
             onClick={() => {
@@ -362,10 +352,10 @@ export function LibraryPanel() {
               library.showRiddim(null)
             }}
           >
-            Todas <i>{entries.length}</i>
+            All <i>{entries.length}</i>
           </button>
-          <h6 className="lib-smart-head" title={live ? 'Comparado com o deck ' + (live === a ? 'A' : 'B') : 'Coloque uma música tocando'}>
-            Inteligentes{live ? ' · deck ' + (live === a ? 'A' : 'B') : ''}
+          <h6 className="lib-smart-head" title={live ? 'Compared with deck ' + (live === a ? 'A' : 'B') : 'Get a track playing'}>
+            Smart{live ? ' · deck ' + (live === a ? 'A' : 'B') : ''}
           </h6>
           {SMART.map((m) => (
             <button
@@ -380,7 +370,7 @@ export function LibraryPanel() {
               {m.id === 'played' && <i>{played.length}</i>}
             </button>
           ))}
-          <h6 className="lib-smart-head">Listas</h6>
+          <h6 className="lib-smart-head">Lists</h6>
           {lists.map((name) => (
             <div
               key={name}
@@ -390,7 +380,7 @@ export function LibraryPanel() {
                 const id = e.dataTransfer.getData(ENTRY_DRAG)
                 if (id) library.setList(id, name)
               }}
-              title="Arraste músicas para cá para salvar nesta lista"
+              title="Drag tracks here to keep them in this list"
             >
               <button
                 onClick={() => {
@@ -402,8 +392,8 @@ export function LibraryPanel() {
               </button>
               <button
                 className="lib-list-del"
-                aria-label={'Apagar lista ' + name}
-                title="Apagar lista (as músicas ficam na biblioteca)"
+                aria-label={'Delete list ' + name}
+                title="Delete list (the tracks stay in the library)"
                 onClick={() => {
                   if (list === name) setList(null)
                   library.removeList(name)
@@ -415,15 +405,15 @@ export function LibraryPanel() {
           ))}
           {naming === null ? (
             <button className="lib-list new" onClick={() => setNaming('')}>
-              + Lista
+              + List
             </button>
           ) : (
             <input
               className="lib-list-name"
               autoFocus
               value={naming}
-              placeholder="Nome da lista"
-              aria-label="Nome da nova lista"
+              placeholder="List name"
+              aria-label="Name of the new list"
               onChange={(e) => setNaming(e.target.value)}
               onBlur={() => setNaming(null)}
               onKeyDown={(e) => {
@@ -439,12 +429,12 @@ export function LibraryPanel() {
           {/* Riddims: found by listening, nothing to set up. (Set aside for now.) */}
           {RIDDIMS_ON && (
             <>
-              <h6 className="lib-riddims-head" title="Versões do mesmo instrumental, encontradas pela app ao ouvir as suas músicas">
+              <h6 className="lib-riddims-head" title="Versions of the same instrumental, found by the app by listening to your tracks">
                 Riddims
               </h6>
               {riddims.length === 0 ? (
                 <p className="lib-riddims-hint">
-                  {analyzing ? 'Ouvindo as músicas…' : 'Aparecem aqui sozinhos quando você tiver várias versões do mesmo instrumental.'}
+                  {analyzing ? 'Listening to the tracks…' : 'They show up here by themselves when you have several versions of the same instrumental.'}
                 </p>
               ) : (
                 riddims.map((r) => (
@@ -452,7 +442,7 @@ export function LibraryPanel() {
                     key={r.key}
                     className={'lib-list riddim' + (riddimView === r.key ? ' active' : '')}
                     onClick={() => library.showRiddim(r.key)}
-                    title={'Ver as ' + r.members.length + ' versões deste riddim'}
+                    title={'See the ' + r.members.length + ' versions of this riddim'}
                   >
                     {r.name} <i>{r.members.length}</i>
                   </button>
@@ -466,19 +456,19 @@ export function LibraryPanel() {
           className="lib-tracks"
           tabIndex={0}
           onKeyDown={onKeys}
-          aria-label="Músicas. Setas: escolher; Enter: carregar; ← deck A; → deck B"
+          aria-label="Tracks. Arrows: pick; Enter: load; ← deck A; → deck B"
         >
           {riddim && (
             <div className="lib-riddim-bar">
               {renaming === null ? (
-                <b onDoubleClick={() => setRenaming(riddim.name)} title="Duplo clique para mudar o nome">
+                <b onDoubleClick={() => setRenaming(riddim.name)} title="Double-click to rename">
                   {riddim.name}
                 </b>
               ) : (
                 <input
                   autoFocus
                   value={renaming}
-                  aria-label="Nome do riddim"
+                  aria-label="Riddim name"
                   onChange={(e) => setRenaming(e.target.value)}
                   onBlur={() => {
                     library.renameRiddim(riddim.key, renaming)
@@ -490,45 +480,45 @@ export function LibraryPanel() {
                   }}
                 />
               )}
-              <span title="Toca uma depois da outra. Se alguma não for deste riddim, tire com ×.">
-                {riddim.members.length} versões do mesmo instrumental: toca-as uma a seguir à outra. Se alguma não for deste riddim, tira-a
-                com ×.
+              <span title="Plays one after the other. If one isn't from this riddim, take it out with ×.">
+                {riddim.members.length} versions of the same instrumental: plays them one after another. If one isn't from this riddim, take it out with ×.
               </span>
               <button className="btn small" onClick={() => setRenaming(riddim.name)}>
                 Mudar nome
               </button>
               <button className="btn small" onClick={() => library.showRiddim(null)}>
-                Voltar
+                Back
               </button>
             </div>
           )}
           {shown.length === 0 ? (
             <p className="empty">
               {entries.length === 0
-                ? 'Biblioteca vazia. Arraste arquivos de áudio para a janela, ou cole um link na caixa de busca, ao lado das abas.'
+                ? 'Empty library. Drag audio files onto the window, or paste a link in the search box next to the tabs.'
                 : words.length
-                  ? 'Nada encontrado para "' + query.trim() + '".'
-                  : 'Lista vazia. Arraste músicas para o nome da lista, à esquerda.'}
+                  ? 'Nothing found for "' + query.trim() + '".'
+                  : 'Empty list. Drag tracks onto the list\'s name, on the left.'}
             </p>
           ) : (
             <table>
               <thead>
                 <tr>
-                  <th className="c-mark" aria-label="No deck" />
-                  {header('title', 'Título', 'c-title')}
-                  {header('artist', 'Artista', 'c-artist')}
+                  <th className="c-mark" aria-label="On deck" />
+                  {header('title', 'Title', 'c-title')}
+                  {header('artist', 'Artist', 'c-artist')}
                   {header('bpm', 'BPM', 'c-num')}
-                  {header('key', 'Tom', 'c-key')}
-                  {header('duration', 'Tempo', 'c-num')}
-                  {list === null && <th className="c-list">Lista</th>}
-                  {header('kind', 'Origem', 'c-kind')}
-                  <th className="c-act" aria-label="Ações" />
+                  {header('key', 'Key', 'c-key')}
+                  {header('duration', 'Time', 'c-num')}
+                  {list === null && <th className="c-list">List</th>}
+                  {header('kind', 'Source', 'c-kind')}
+                  <th className="c-act" aria-label="Actions" />
                 </tr>
               </thead>
               <tbody ref={body}>
                 {shown.map((entry) => {
                   const stale = !library.reachable(entry)
-                  const waiting = library.waitingStems(entry)
+                  const broken = library.unreadable(entry)
+                  const waiting = library.waitingStems(entry) || library.waitingAnalysis(entry)
                   const splitting = separating === entry.id
                   const ref = entry.kind === 'local' ? null : entry.kind + ':' + entry.ref
                   const measuring = analyzing === entry.id
@@ -544,7 +534,7 @@ export function LibraryPanel() {
                       key={entry.id}
                       className={[
                         initial.current.has(entry.id) ? '' : 'fresh',
-                        stale ? 'stale' : '',
+                        stale || broken ? 'stale' : '',
                         waiting ? 'waiting' : '',
                         selected === entry.id ? 'sel' : '',
                         played.includes(entry.id) && !deckOn.length ? 'played' : '',
@@ -558,17 +548,19 @@ export function LibraryPanel() {
                       onDoubleClick={() => !stale && library.loadFree(entry, deckA, deckB)}
                       title={
                         stale
-                          ? 'Arquivo sem caminho conhecido: adicione de novo'
-                          : waiting
-                            ? 'Separando as faixas com IA (voz, bateria, baixo, instrumentos). Fica disponível quando acabar; se carregar agora, entra no deck nessa hora.'
-                            : splitting
-                              ? 'Separando de novo com o modelo novo; até lá toca com as faixas que já tinha'
-                              : undefined
+                          ? 'File with no known location: add it again'
+                          : broken
+                            ? "Can't be played: the file is damaged or not an audio format the app reads"
+                            : waiting
+                              ? 'Being analysed and split into stems with AI (vocals, drums, bass, instruments). It can go on a deck when done.'
+                              : splitting
+                                ? 'Splitting again with the new model; until then it plays with the stems it had'
+                                : undefined
                       }
                     >
                       <td className="c-mark">
                         {deckOn.map((n) => (
-                          <i key={n} className={'on-deck ' + n.toLowerCase()} title={'No deck ' + n}>
+                          <i key={n} className={'on-deck ' + n.toLowerCase()} title={'On deck ' + n}>
                             {n}
                           </i>
                         ))}
@@ -579,7 +571,7 @@ export function LibraryPanel() {
                       >
                         {(waiting || splitting) && (
                           <span className={'stem-wait' + (splitting ? ' on' : '')} style={{ '--p': sepProgress } as React.CSSProperties}>
-                            {splitting ? Math.round(sepProgress * 100) + '%' : 'fila'}
+                            {splitting ? Math.round(sepProgress * 100) + '%' : broken ? '' : 'queue'}
                           </span>
                         )}
                         {entry.title}
@@ -592,7 +584,7 @@ export function LibraryPanel() {
                               e.stopPropagation()
                               library.showRiddim(library.riddimOf(entry.id)!.key)
                             }}
-                            title={'Faz parte de "' + library.riddimOf(entry.id)!.name + '": ver as outras versões'}
+                            title={'Part of "' + library.riddimOf(entry.id)!.name + '": see the other versions'}
                           >
                             riddim · {library.riddimOf(entry.id)!.members.length}
                           </button>
@@ -604,27 +596,27 @@ export function LibraryPanel() {
                               e.stopPropagation()
                               library.leaveRiddim(entry.id)
                             }}
-                            title="Não é deste riddim: tirar daqui"
+                            title="Not from this riddim: take it out"
                           >
                             ×
                           </button>
                         )}
                         {words.length > 0 && !words.every((w) => (entry.title + ' ' + entry.artist).toLowerCase().includes(w)) && (
-                          <em className="lib-sung" title="Encontrada na letra">
-                            na letra
+                          <em className="lib-sung" title="Found in the lyrics">
+                            in lyrics
                           </em>
                         )}
                       </td>
                       <td className="c-artist">{entry.artist || <span className="none">—</span>}</td>
                       <td
                         className={'c-num' + (bpmFit ? ' fit' : '')}
-                        title={bpmFit ? 'Tempo próximo do deck que está tocando' : undefined}
+                        title={bpmFit ? 'Tempo close to the deck on air' : undefined}
                       >
                         {tempo}
                       </td>
                       <td
                         className={'c-key' + (keyFit ? ' fit' : '')}
-                        title={keyFit ? 'Tom compatível com o deck que está tocando' : (key ?? undefined)}
+                        title={keyFit ? 'Key compatible with the deck on air' : (key ?? undefined)}
                       >
                         {key ? camelot(key) : measuring ? '…' : '—'}
                         {key && <small>{key}</small>}
@@ -635,7 +627,7 @@ export function LibraryPanel() {
                           <select
                             className="lib-move"
                             value={entry.list ?? ''}
-                            aria-label={'Lista de ' + entry.title}
+                            aria-label={'List of ' + entry.title}
                             onChange={(e) => library.setList(entry.id, e.target.value || undefined)}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -658,7 +650,7 @@ export function LibraryPanel() {
                           className="row-btn a"
                           disabled={stale}
                           onClick={() => library.load(entry, deckA)}
-                          aria-label={'Carregar no deck A: ' + entry.title}
+                          aria-label={'Load on deck A: ' + entry.title}
                         >
                           A
                         </button>
@@ -666,15 +658,15 @@ export function LibraryPanel() {
                           className="row-btn b"
                           disabled={stale}
                           onClick={() => library.load(entry, deckB)}
-                          aria-label={'Carregar no deck B: ' + entry.title}
+                          aria-label={'Load on deck B: ' + entry.title}
                         >
                           B
                         </button>
                         <button
                           className="row-btn x"
                           onClick={() => library.remove(entry.id)}
-                          aria-label={'Remover da biblioteca: ' + entry.title}
-                          title="Remover da biblioteca"
+                          aria-label={'Remove from library: ' + entry.title}
+                          title="Remove from library"
                         >
                           ×
                         </button>

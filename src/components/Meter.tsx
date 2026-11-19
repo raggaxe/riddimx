@@ -60,7 +60,7 @@ export function Meter({ node, label, stereo = false }: { node: AudioNode; label:
   return (
     <div className={'meter' + (stereo ? ' stereo' : '')} ref={box} role="img" aria-label={label}>
       {Array.from({ length: stereo ? 2 : 1 }, (_, i) => (
-        <div key={i} className="meter-bar" title={stereo ? (i === 0 ? 'Esquerda' : 'Direita') : undefined}>
+        <div key={i} className="meter-bar" title={stereo ? (i === 0 ? 'Left' : 'Right') : undefined}>
           <div className="meter-cover" ref={(el) => (covers.current[i] = el)} />
         </div>
       ))}

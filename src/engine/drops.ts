@@ -20,37 +20,37 @@ export const STYLES: { id: DropStyle; label: string; hint: string; set: Omit<Dro
   {
     id: 'mc',
     label: 'MC',
-    hint: 'Voz de MC: presente, um pouco suja, com eco curto',
+    hint: 'MC voice: upfront, a bit dirty, with a short echo',
     set: { pitch: 0, echo: 0.3, echoTime: 0.14, reverb: 0.1, drive: 0.25, bass: 0.2 },
   },
   {
     id: 'dub',
     label: 'Dub',
-    hint: 'Eco longo e reverb: a frase repete e desaparece',
+    hint: 'Long echo and reverb: the phrase repeats and fades',
     set: { pitch: 0, echo: 0.7, echoTime: 0.375, reverb: 0.45, drive: 0.2, bass: 0.2 },
   },
   {
     id: 'gigante',
-    label: 'Gigante',
-    hint: 'Voz grave e enorme',
+    label: 'Giant',
+    hint: 'Deep, huge voice',
     set: { pitch: -5, echo: 0.35, echoTime: 0.3, reverb: 0.35, drive: 0.15, bass: 0.7 },
   },
   {
     id: 'megafone',
-    label: 'Megafone',
-    hint: 'Só médios, distorcido',
+    label: 'Megaphone',
+    hint: 'Mids only, distorted',
     set: { pitch: 0, echo: 0.2, echoTime: 0.12, reverb: 0, drive: 0.9, bass: -0.6 },
   },
   {
     id: 'radio',
-    label: 'Rádio',
-    hint: 'Fino e comprimido, como numa rádio pirata',
+    label: 'Radio',
+    hint: 'Thin and squeezed, like a pirate radio',
     set: { pitch: 0, echo: 0.15, echoTime: 0.1, reverb: 0.05, drive: 0.35, bass: -0.4 },
   },
   {
     id: 'limpo',
-    label: 'Limpo',
-    hint: 'A voz como é, só arrumada',
+    label: 'Clean',
+    hint: 'The voice as it is, just tidied',
     set: { pitch: 0, echo: 0, echoTime: 0.2, reverb: 0, drive: 0, bass: 0 },
   },
 ]
@@ -70,8 +70,8 @@ export interface DropOptions {
 export const SUGGESTIONS = [
   'RiddimX sound!',
   'Pull up selecta!',
-  'Fogo na pista!',
-  'Segura a pedrada!',
+  'Fire pon di dance!',
+  'Hold the tune!',
   'Big up the massive!',
   'Jah Rastafari!',
 ]
@@ -89,7 +89,7 @@ export async function voices(): Promise<Voice[]> {
 /** The text in one of the Mac's voices; words per minute 90..360. */
 export async function speak(text: string, voice: string, rate: number): Promise<AudioBuffer> {
   const wav = await desktop?.speak?.(text, voice, rate)
-  if (!wav) throw new Error('Não foi possível gerar a voz.')
+  if (!wav) throw new Error('Couldn\'t make the voice.')
   return trim(await mixer.ctx.decodeAudioData(new Uint8Array(wav).buffer))
 }
 
@@ -111,7 +111,7 @@ export class MicTake {
 
   stop(): Promise<AudioBuffer> {
     const recorder = this.recorder
-    if (!recorder) return Promise.reject(new Error('Nada para gravar.'))
+    if (!recorder) return Promise.reject(new Error('Nothing to record.'))
     return new Promise((resolve, reject) => {
       recorder.onstop = async () => {
         this.stream?.getTracks().forEach((t) => t.stop())
@@ -121,7 +121,7 @@ export class MicTake {
           const data = await new Blob(this.parts).arrayBuffer()
           resolve(trim(await mixer.ctx.decodeAudioData(data)))
         } catch {
-          reject(new Error('A gravação não ficou legível.'))
+          reject(new Error('The recording couldn\'t be read.'))
         }
       }
       recorder.stop()

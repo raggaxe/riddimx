@@ -1,6 +1,6 @@
 import { Store, clamp } from './store'
 
-export type Tab = 'library' | 'sampler' | 'dubbox' | 'echo' | 'voice' | 'master' | 'spotify'
+export type Tab = 'library' | 'sampler' | 'dubbox' | 'echo' | 'voice' | 'plugin' | 'master' | 'spotify'
 
 /** Pages of the Ajustes window (a modal over the app). */
 export type SettingsPage = 'geral' | 'decks' | 'audio' | 'midi' | 'contas' | 'celular' | 'ia'
@@ -35,7 +35,10 @@ function saved(): Layout {
 /** Which bottom tab is open, and how the window is divided; shared so any control can change them. */
 class Ui extends Store<{ tab: Tab; layout: Layout; settings: SettingsPage | null }> {
   constructor() {
-    super({ tab: 'library', layout: saved(), settings: null })
+    // ?tab=plugin opens that tab at start (handy for links and screenshots).
+    const asked = new URLSearchParams(location.search).get('tab') as Tab | null
+    const TABS: Tab[] = ['library', 'sampler', 'dubbox', 'echo', 'voice', 'plugin', 'master', 'spotify']
+    super({ tab: asked && TABS.includes(asked) ? asked : 'library', layout: saved(), settings: null })
     this.resize({}) // a layout saved before the rack existed may leave the decks too little room
     // Room the decks do not need (left over from a taller rack, or a bigger window) goes to the browser.
     const spare = window.innerHeight - CHROME - rack - this.state.layout.track - this.state.layout.bottom - STAGE_FIT

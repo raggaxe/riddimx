@@ -25,19 +25,19 @@ export const updates = new Updates()
 export function updateText(u: UpdateState): string {
   switch (u.status) {
     case 'checking':
-      return 'Procurando versão nova…'
+      return 'Looking for a new version…'
     case 'none':
-      return u.error ? 'Sem atualizações (' + u.error + ')' : 'Você está na versão mais nova'
+      return u.error ? 'No updates (' + u.error + ')' : 'You\'re on the latest version'
     case 'available':
-      return 'Versão ' + u.version + ' disponível' + (u.error ? ' (' + u.error + ')' : '')
+      return 'Version ' + u.version + ' available' + (u.error ? ' (' + u.error + ')' : '')
     case 'downloading':
-      return 'Baixando a versão ' + u.version + ' · ' + Math.round((u.progress ?? 0) * 100) + '%'
+      return 'Downloading version ' + u.version + ' · ' + Math.round((u.progress ?? 0) * 100) + '%'
     case 'ready':
-      return 'Versão ' + u.version + ' pronta: instala ao reiniciar'
+      return 'Version ' + u.version + ' ready: installs on restart'
     case 'error':
-      return 'Não deu para atualizar: ' + u.error
+      return 'Couldn\'t update: ' + u.error
     case 'dev':
-      return 'Atualização automática só na app instalada'
+      return 'Automatic updates only in the installed app'
     default:
       return ''
   }

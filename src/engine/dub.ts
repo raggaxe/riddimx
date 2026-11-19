@@ -15,33 +15,33 @@ export interface DubSettings {
 }
 
 export const DUB_BEATS = [
-  { value: 0.25, label: '1/4 batida' },
-  { value: 0.5, label: '1/2 batida' },
-  { value: 0.75, label: '3/4 batida' },
-  { value: 1, label: '1 batida' },
-  { value: 1.5, label: '1½ batidas' },
-  { value: 2, label: '2 batidas' },
+  { value: 0.25, label: '1/4 beat' },
+  { value: 0.5, label: '1/2 beat' },
+  { value: 0.75, label: '3/4 beat' },
+  { value: 1, label: '1 beat' },
+  { value: 1.5, label: '1½ beats' },
+  { value: 2, label: '2 beats' },
 ]
 
 export const DUB_PRESETS: { name: string; settings: DubSettings }[] = [
   {
-    name: 'Clássico',
+    name: 'Classic',
     settings: { beats: 0.75, feedback: 0.72, lowCut: 380, tone: 3000, level: 1, space: 0, drift: 0, dry: 'keep', release: 'ring', mode: 'hold' },
   },
   {
-    name: 'Throw seco',
+    name: 'Dry throw',
     settings: { beats: 0.75, feedback: 0.62, lowCut: 500, tone: 3500, level: 1.1, space: 0.15, drift: 0, dry: 'cut', release: 'ring', mode: 'hold' },
   },
   {
-    name: 'Espaço',
+    name: 'Space',
     settings: { beats: 1, feedback: 0.85, lowCut: 300, tone: 2200, level: 0.9, space: 0.6, drift: 0.25, dry: 'keep', release: 'ring', mode: 'hold' },
   },
   {
-    name: 'Fita velha',
+    name: 'Old tape',
     settings: { beats: 0.5, feedback: 0.88, lowCut: 650, tone: 1600, level: 1, space: 0.3, drift: 0.6, dry: 'keep', release: 'ring', mode: 'latch' },
   },
   {
-    name: 'Curto',
+    name: 'Short',
     settings: { beats: 0.25, feedback: 0.5, lowCut: 600, tone: 5000, level: 0.8, space: 0, drift: 0, dry: 'keep', release: 'fade', mode: 'hold' },
   },
 ]

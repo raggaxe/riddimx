@@ -1,14 +1,14 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { settings } from '../settings'
 import { decks, type Deck } from '../engine/deck'
-import { lyrics } from '../engine/lyrics'
+import { LYRICS_ON, lyrics } from '../engine/lyrics'
 import { useStore } from '../store'
 
 const HOTCUE_COLORS = ['#e5484d', '#4aa8ff', '#c77dff', '#ff8a3d']
 /** Screen pixels per second of real time. Both lanes share it, so synced decks show their beats lined up. */
 const ZOOM_DEFAULT = 90
-const ZOOM_MIN = 30
-const ZOOM_MAX = 360
+const ZOOM_MIN = 3 // about a whole track across the window
+const ZOOM_MAX = 1200 // a single beat spread wide
 const LS_ZOOM = 'vx_wave_zoom'
 /** Under this many seconds left, a playing deck's remaining time turns red. */
 const END_WARNING = 30
@@ -33,9 +33,23 @@ const clock = (s: number): string => {
  */
 export function TrackView() {
   const canvas = useRef<HTMLCanvasElement>(null)
-  const drag = useRef<{ deck: Deck; x: number; pos: number; sent: number } | null>(null)
+  const drag = useRef<{ deck: Deck; x: number; y: number; pos: number; sent: number; moved: boolean } | null>(null)
   const zoom = useRef(savedZoom())
   const zoomShown = useRef(0) // when the zoom last changed: its value is shown for a moment
+  const [zoomPct, setZoomPct] = useState(() => Math.round((zoom.current / ZOOM_DEFAULT) * 100))
+  /** One place for every zoom change: wheel, buttons, reset. */
+  const setZoom = (next: number) => {
+    const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, next))
+    if (z === zoom.current) return
+    zoom.current = z
+    zoomShown.current = performance.now()
+    setZoomPct(Math.round((z / ZOOM_DEFAULT) * 100))
+    try {
+      localStorage.setItem(LS_ZOOM, String(Math.round(z * 10) / 10))
+    } catch {
+      /* not remembered */
+    }
+  }
 
   useEffect(() => {
     let raf = 0
@@ -73,7 +87,7 @@ export function TrackView() {
           g.font = font(10)
           g.textBaseline = 'middle'
           g.fillStyle = 'rgba(255, 255, 255, 0.22)'
-          g.fillText(deck.name + ' · vazio', 10 * dpr, top + laneH / 2)
+          g.fillText(deck.name + ' · empty', 10 * dpr, top + laneH / 2)
           return
         }
         const pos = deck.getPosition()
@@ -188,7 +202,7 @@ export function TrackView() {
 
         // Lyrics ride along the waveform at the moment they are sung.
         const key = s.ref ?? 'file:' + s.title
-        const lines = s.duration ? lyrics.linesFor(key, s.title, s.artist, s.duration) : null
+        const lines = LYRICS_ON && s.duration ? lyrics.linesFor(key, s.title, s.artist, s.duration) : null
         if (lines?.length) {
           // Where the voice comes in: a small flag on the lane, handy to mix a riddim before the singing.
           const vin = lines[0].time
@@ -201,7 +215,7 @@ export function TrackView() {
             g.fillStyle = '#0b0a08'
             g.font = `800 ${8 * dpr}px -apple-system, system-ui, sans-serif`
             g.textBaseline = 'middle'
-            g.fillText('VOZ', x + 3 * dpr, flagY + 6 * dpr)
+            g.fillText('VOX', x + 3 * dpr, flagY + 6 * dpr)
           }
           g.font = `600 ${10 * dpr}px -apple-system, system-ui, sans-serif`
           g.textBaseline = 'middle'
@@ -292,7 +306,7 @@ export function TrackView() {
     <div className="trackview">
       <canvas
         ref={canvas}
-        aria-label="Ondas dos dois decks"
+        aria-label="Waveforms of both decks"
         onPointerDown={(e) => {
           const rect = e.currentTarget.getBoundingClientRect()
           const deck = decks[e.clientY - rect.top < rect.height / 2 ? 0 : 1]
@@ -302,11 +316,14 @@ export function TrackView() {
           } catch {
             /* pointer already gone */
           }
-          drag.current = { deck, x: e.clientX, pos: deck.getPosition(), sent: 0 }
+          drag.current = { deck, x: e.clientX, y: e.clientY, pos: deck.getPosition(), sent: 0, moved: false }
         }}
         onPointerMove={(e) => {
           const d = drag.current
           if (!d) return
+          // A few pixels of wobble is still a click (a cue), not a drag.
+          if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 4) return
+          d.moved = true
           const now = performance.now()
           // Streaming players take a moment per seek: do not flood them.
           if (d.deck.get().kind !== 'local' && now - d.sent < 80) return
@@ -319,32 +336,35 @@ export function TrackView() {
         }}
         onWheel={(e) => {
           // Wheel or trackpad pinch: zoom in and out around the needle.
-          const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom.current * Math.exp(-e.deltaY * 0.0025)))
-          if (next === zoom.current) return
-          zoom.current = next
-          zoomShown.current = performance.now()
-          try {
-            localStorage.setItem(LS_ZOOM, String(Math.round(next)))
-          } catch {
-            /* not remembered */
-          }
+          setZoom(zoom.current * Math.exp(-e.deltaY * 0.0025))
         }}
-        onDoubleClick={() => {
-          zoom.current = ZOOM_DEFAULT
-          zoomShown.current = performance.now()
-          try {
-            localStorage.setItem(LS_ZOOM, String(ZOOM_DEFAULT))
-          } catch {
-            /* not remembered */
-          }
+        onClick={(e) => {
+          if (e.altKey) setZoom(ZOOM_DEFAULT)
         }}
-        title="Arraste para andar na música · roda do mouse para zoom · duplo clique volta o zoom"
-        onPointerUp={() => (drag.current = null)}
+        title="Click: set the CUE there · drag: move through the track · wheel / pinch: zoom · Option+click: reset zoom"
+        onPointerUp={(e) => {
+          const d = drag.current
+          drag.current = null
+          if (!d || d.moved || e.altKey) return
+          // A click: the CUE goes where the waveform was clicked (same scale the lane is drawn at).
+          const rect = e.currentTarget.getBoundingClientRect()
+          const s = d.deck.get()
+          d.deck.cueAt(d.deck.getPosition() + ((e.clientX - rect.left - rect.width / 2) / zoom.current) * (s.rate || 1))
+        }}
         onPointerCancel={() => (drag.current = null)}
       />
-      {decks.map((deck, i) => (
-        <LyricsTiming key={deck.name} deck={deck} lane={i} />
-      ))}
+      {LYRICS_ON && decks.map((deck, i) => <LyricsTiming key={deck.name} deck={deck} lane={i} />)}
+      <div className="tv-zoom" role="group" aria-label="Waveform zoom">
+        <button onClick={() => setZoom(zoom.current / 1.6)} disabled={zoom.current <= ZOOM_MIN} aria-label="Zoom out" title="Zoom out (see more of the track)">
+          −
+        </button>
+        <button className="tv-zoom-read" onClick={() => setZoom(ZOOM_DEFAULT)} title="Back to 100%">
+          {zoomPct}%
+        </button>
+        <button onClick={() => setZoom(zoom.current * 1.6)} disabled={zoom.current >= ZOOM_MAX} aria-label="Zoom in" title="Zoom in (see more detail)">
+          +
+        </button>
+      </div>
     </div>
   )
 }
@@ -360,26 +380,26 @@ function LyricsTiming({ deck, lane }: { deck: Deck; lane: number }) {
   const step = (e: React.MouseEvent, dir: 1 | -1) => lyrics.nudge(key, dir * (e.shiftKey ? 1 : 0.1))
   return (
     <div className={'lyr-timing ' + (lane === 0 ? 'top' : 'bottom')}>
-      <span title={hand ? 'Acertada à mão' : offset ? 'Alinhada sozinha com a voz da música' : 'Tempo original da letra'}>
-        LETRA {offset > 0 ? '+' : offset < 0 ? '−' : ''}
+      <span title={hand ? 'Set by hand' : offset ? 'Lined up with the voice by itself' : 'Original lyric timing'}>
+        LYRICS {offset > 0 ? '+' : offset < 0 ? '−' : ''}
         {Math.abs(offset).toFixed(1)}s
       </span>
       <button
         onClick={(e) => step(e, -1)}
-        title="Letra mais cedo (0,1 s · Shift: 1 s)"
-        aria-label={'Letra do deck ' + deck.name + ' mais cedo'}
+        title="Lyrics earlier (0.1 s · Shift: 1 s)"
+        aria-label={'Lyrics of deck ' + deck.name + ' earlier'}
       >
         ◀
       </button>
       <button
         onClick={(e) => step(e, 1)}
-        title="Letra mais tarde (0,1 s · Shift: 1 s)"
-        aria-label={'Letra do deck ' + deck.name + ' mais tarde'}
+        title="Lyrics later (0.1 s · Shift: 1 s)"
+        aria-label={'Lyrics of deck ' + deck.name + ' later'}
       >
         ▶
       </button>
       {hand && (
-        <button onClick={() => lyrics.resetTiming(key)} title="Voltar ao tempo automático" aria-label="Tempo automático">
+        <button onClick={() => lyrics.resetTiming(key)} title="Back to automatic timing" aria-label="Automatic timing">
           AUTO
         </button>
       )}

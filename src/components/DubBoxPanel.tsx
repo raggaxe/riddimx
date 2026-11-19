@@ -20,7 +20,7 @@ type Numeric = keyof typeof PATCH_LIMITS
 const hz = (v: number): string => (v >= 1000 ? (v / 1000).toFixed(1) + ' kHz' : Math.round(v) + ' Hz')
 const pct = (v: number): string => Math.round(v * 100) + '%'
 const sec = (v: number): string => (v < 1 ? Math.round(v * 1000) + ' ms' : v.toFixed(2) + ' s')
-const semis = (v: number): string => (v > 0 ? '+' : '') + Math.round(v) + ' meios-tons'
+const semis = (v: number): string => (v > 0 ? '+' : '') + Math.round(v) + ' st'
 const fromA = (v: number): string => semis(12 * Math.log2(v / 440))
 
 const LOG: Numeric[] = ['pitch', 'tone', 'lfoRate', 'echoTone', 'sweepTime', 'attack', 'release']
@@ -28,10 +28,10 @@ const LS_PAGE = 'vx_dbx_page'
 
 type Page = 'sound' | 'shape' | 'echo' | 'channel'
 const PAGES: { id: Page; label: string }[] = [
-  { id: 'sound', label: 'Som' },
-  { id: 'shape', label: 'Forma' },
-  { id: 'echo', label: 'Eco e mola' },
-  { id: 'channel', label: 'Canal' },
+  { id: 'sound', label: 'Sound' },
+  { id: 'shape', label: 'Shape' },
+  { id: 'echo', label: 'Echo & spring' },
+  { id: 'channel', label: 'Channel' },
 ]
 
 /**
@@ -135,31 +135,31 @@ function HoldButton({
 }
 
 const VOICES: { value: Voice; label: string; hint: string }[] = [
-  { value: 'siren', label: 'Sirene', hint: 'Oscilador com oscilação de tom: a sirene clássica' },
-  { value: 'noise', label: 'Ruído', hint: 'Ruído filtrado: whoosh, vento, trovão' },
-  { value: 'spring', label: 'Mola', hint: 'Pancada na reverb de mola: o crash do dub' },
-  { value: 'sample', label: 'Sample', hint: 'Um som seu, ou um dos efeitos da app, tocado com tom, oscilação e eco' },
+  { value: 'siren', label: 'Siren', hint: 'Oscillator with pitch modulation: the classic siren' },
+  { value: 'noise', label: 'Noise', hint: 'Filtered noise: whoosh, wind, thunder' },
+  { value: 'spring', label: 'Spring', hint: 'A hit on the spring reverb: the dub crash' },
+  { value: 'sample', label: 'Sample', hint: 'Your own sound or one of the app sounds, played with pitch, modulation and echo' },
 ]
 
 const WAVES: { value: OscillatorType; label: string }[] = [
-  { value: 'square', label: 'Quadrada' },
-  { value: 'sawtooth', label: 'Serra' },
-  { value: 'triangle', label: 'Triângulo' },
-  { value: 'sine', label: 'Seno' },
+  { value: 'square', label: 'Square' },
+  { value: 'sawtooth', label: 'Saw' },
+  { value: 'triangle', label: 'Triangle' },
+  { value: 'sine', label: 'Sine' },
 ]
 
 const COLORS: { value: NoiseColor; label: string }[] = [
-  { value: 'white', label: 'Branco (brilhante)' },
-  { value: 'pink', label: 'Rosa (equilibrado)' },
-  { value: 'brown', label: 'Castanho (grave)' },
+  { value: 'white', label: 'White (bright)' },
+  { value: 'pink', label: 'Pink (balanced)' },
+  { value: 'brown', label: 'Brown (deep)' },
 ]
 
 const SHAPES: { value: LfoShape; label: string }[] = [
-  { value: 'triangle', label: 'Sobe e desce' },
-  { value: 'sine', label: 'Suave' },
-  { value: 'sawtooth', label: 'Só sobe' },
-  { value: 'square', label: 'Degraus' },
-  { value: 'random', label: 'Aleatória' },
+  { value: 'triangle', label: 'Up & down' },
+  { value: 'sine', label: 'Smooth' },
+  { value: 'sawtooth', label: 'Ramp up' },
+  { value: 'square', label: 'Steps' },
+  { value: 'random', label: 'Random' },
 ]
 
 const beatLabel = (b: number): string => ({ 0.25: '¼', 0.5: '½', 0.75: '¾', 1.5: '1½' })[b] ?? String(b)
@@ -198,9 +198,9 @@ export function DubBoxPanel() {
   }
   const siren = p.voice === 'siren'
   const sample = p.voice === 'sample'
-  const target = siren || sample ? 'o tom' : 'o filtro'
+  const target = siren || sample ? 'the pitch' : 'the filter'
   const sfxValue = p.sample?.startsWith('sfx:') ? p.sample.slice(4) : ''
-  const current = d.preset ?? (sample && p.sampleName ? p.sampleName : (d.basePreset ?? 'Som') + ' (ajustado)')
+  const current = d.preset ?? (sample && p.sampleName ? p.sampleName : (d.basePreset ?? 'Sound') + ' (edited)')
 
   return (
     <div
@@ -221,8 +221,8 @@ export function DubBoxPanel() {
         void loadFile(e.dataTransfer.files[0])
       }}
     >
-      <nav className="side-nav dbp-presets" aria-label="Sons da Dub Box">
-        <h5>Sons</h5>
+      <nav className="side-nav dbp-presets" aria-label="Dub Box sounds">
+        <h5>Sounds</h5>
         {FACTORY.map((x) => (
           <button
             key={x.name}
@@ -230,13 +230,13 @@ export function DubBoxPanel() {
             onDragStart={(e) => e.dataTransfer.setData(DUB_PRESET_DRAG, x.name)}
             className={'side-item' + (d.preset === x.name ? ' active' : '')}
             aria-pressed={d.preset === x.name}
-            title="Clique: usar. Arraste para um botão rápido (1 a 4)"
+            title="Click to use. Drag onto a quick pad (1 to 4)"
             onClick={() => dubBox.usePreset(x.name)}
           >
             {x.name}
           </button>
         ))}
-        {d.user.length > 0 && <h5>Seus</h5>}
+        {d.user.length > 0 && <h5>Yours</h5>}
         {d.user.map((x) => (
           <div
             key={x.name}
@@ -247,27 +247,27 @@ export function DubBoxPanel() {
             <button onClick={() => dubBox.usePreset(x.name)} aria-pressed={d.preset === x.name}>
               {x.name}
             </button>
-            <button className="x" aria-label={'Apagar ' + x.name} title="Apagar este som" onClick={() => dubBox.deletePreset(x.name)}>
+            <button className="x" aria-label={'Delete ' + x.name} title="Delete this sound" onClick={() => dubBox.deletePreset(x.name)}>
               ×
             </button>
           </div>
         ))}
       </nav>
 
-      <section className="dbp-main" aria-label="Som em edição">
+      <section className="dbp-main" aria-label="Sound being edited">
         <div className="dbp-top">
           <HoldButton className="dbx-fire big" on={d.playing} label="FIRE" press={(down) => dubBox.fire(down)} />
           <HoldButton
             className="dbx-throw big"
             on={d.throwing}
-            label="ECO"
-            title="Throw: segurar atira tudo para o eco"
+            label="FX"
+            title="FX: hold to throw everything into the Dub Box echo. Release: only the tail is left"
             press={(down) => dubBox.throw(down)}
           />
-          <strong className="dbp-name" title="Som que o FIRE toca agora">
+          <strong className="dbp-name" title="The sound FIRE plays now">
             {current}
           </strong>
-          <div className="seg" role="radiogroup" aria-label="Voz">
+          <div className="seg" role="radiogroup" aria-label="Voice">
             {VOICES.map((v) => (
               <button
                 key={v.value}
@@ -285,17 +285,17 @@ export function DubBoxPanel() {
             <button
               className="btn small"
               onClick={() => dubBox.surprise()}
-              title="Uma variação aleatória desta voz, dentro de valores que soam bem"
+              title="A random take on this voice, within values that sound good"
             >
-              Surpresa
+              Surprise
             </button>
             <button
               className="btn small"
               disabled={d.preset !== null || !d.basePreset}
               onClick={() => dubBox.resetToPreset()}
-              title={d.basePreset ? 'Voltar a ' + d.basePreset : ''}
+              title={d.basePreset ? 'Back to ' + d.basePreset : ''}
             >
-              Repor
+              Reset
             </button>
             <button
               className={'btn small' + (d.rehearse ? ' rehearse-on' : '')}
@@ -303,19 +303,19 @@ export function DubBoxPanel() {
               disabled={!hp && !d.rehearse}
               onClick={() => dubBox.setRehearse(!d.rehearse)}
               title={
-                hp ? 'Ouvir a Dub Box só no headphone, sem sair para a pista' : 'Escolha o output do headphone em Ajustes › Placa de áudio'
+                hp ? 'Hear the Dub Box in the headphones only, not on the floor' : 'Pick the headphone output in Settings › Audio'
               }
             >
-              {d.rehearse ? 'A ensaiar' : 'Ensaiar'}
+              {d.rehearse ? 'Rehearsing' : 'Rehearse'}
             </button>
           </span>
         </div>
 
         {sample && (
           <div className="dbx-sample">
-            <strong>{p.sampleName || 'Sem som escolhido'}</strong>
-            <select value={sfxValue} aria-label="Efeitos da app" onChange={(e) => e.target.value && void dubBox.useSfx(e.target.value)}>
-              <option value="">{sfxValue ? '' : 'Efeitos da app…'}</option>
+            <strong>{p.sampleName || 'No sound picked'}</strong>
+            <select value={sfxValue} aria-label="App sounds" onChange={(e) => e.target.value && void dubBox.useSfx(e.target.value)}>
+              <option value="">{sfxValue ? '' : 'App sounds…'}</option>
               {SFX.filter((x) => x.id !== 'siren').map((x) => (
                 <option key={x.id} value={x.id}>
                   {x.label}
@@ -325,16 +325,16 @@ export function DubBoxPanel() {
             <button
               className="btn small"
               onClick={() => picker.current?.click()}
-              title="Também dá para arrastar um arquivo para cá ou para a Dub Box no mixer"
+              title="You can also drop a file here or on the Dub Box in the mixer"
             >
-              Arquivo seu…
+              Your file…
             </button>
-            {failed && <span className="deck-msg error">Não consegui ler esse arquivo de áudio.</span>}
+            {failed && <span className="deck-msg error">Couldn't read that audio file.</span>}
             <input ref={picker} type="file" accept="audio/*" hidden onChange={(e) => void loadFile(e.target.files?.[0])} />
           </div>
         )}
 
-        <div className="sub-tabs" role="tablist" aria-label="Ajustes do som">
+        <div className="sub-tabs" role="tablist" aria-label="Sound settings">
           {PAGES.map((x) => (
             <button key={x.id} role="tab" aria-selected={page === x.id} className={page === x.id ? 'on' : ''} onClick={() => open(x.id)}>
               {x.label}
@@ -345,76 +345,76 @@ export function DubBoxPanel() {
         <div className="rw-grid" role="tabpanel">
           {page === 'sound' && (
             <>
-              {siren && <Pick label="Onda" value={p.wave} options={WAVES} onChange={(wave) => set({ wave })} />}
+              {siren && <Pick label="Wave" value={p.wave} options={WAVES} onChange={(wave) => set({ wave })} />}
               {(p.voice === 'noise' || p.voice === 'spring') && (
-                <Pick label="Ruído" value={p.color} options={COLORS} onChange={(color) => set({ color })} />
+                <Pick label="Noise" value={p.color} options={COLORS} onChange={(color) => set({ color })} />
               )}
               <Slider
                 k="pitch"
-                label={siren || sample ? 'Tom' : p.voice === 'noise' ? 'Filtro' : 'Tom da mola'}
+                label={siren || sample ? 'Pitch' : p.voice === 'noise' ? 'Filter' : 'Spring pitch'}
                 show={sample ? fromA : hz}
-                hint={sample ? 'Afinação do sample, em semitons (0 = original; também muda a velocidade)' : undefined}
+                hint={sample ? 'Sample tuning in semitones (0 = original; also changes speed)' : undefined}
               />
               <Slider
                 k="lfoRate"
-                label="Oscilação"
+                label="LFO rate"
                 show={(v) => v.toFixed(v < 1 ? 2 : 1) + ' Hz'}
-                hint={'Quantas vezes por segundo mexe ' + target}
+                hint={'How many times per second it moves ' + target}
               />
-              <Slider k="lfoDepth" label="Profundidade" show={semis} hint={'Quanto mexe ' + target + ', em semitons'} />
-              <Slider k="echo" label="Eco" show={pct} hint="Quanto do som vai para o eco" />
-              {sample && <Check label="Repetir enquanto carregas" checked={p.loop} onChange={(loop) => set({ loop })} />}
-              {sample && <Check label="Ao contrário" checked={p.reverse} onChange={(reverse) => set({ reverse })} />}
+              <Slider k="lfoDepth" label="LFO depth" show={semis} hint={'How far it moves ' + target + ', in semitones'} />
+              <Slider k="echo" label="Echo send" show={pct} hint="How much of the sound goes into the echo. The echo is always on: each FIRE leaves this much tail" />
+              {sample && <Check label="Loop while held" checked={p.loop} onChange={(loop) => set({ loop })} />}
+              {sample && <Check label="Reverse" checked={p.reverse} onChange={(reverse) => set({ reverse })} />}
             </>
           )}
           {page === 'shape' && (
             <>
               {!siren && !sample && (
-                <Slider k="resonance" label="Ressonância" show={(v) => v.toFixed(1) + ' dB'} hint="Assobio do filtro" />
+                <Slider k="resonance" label="Resonance" show={(v) => v.toFixed(1) + ' dB'} hint="Filter whistle" />
               )}
-              {sample && <Slider k="start" label="Começa em" show={pct} hint="Ponto do sample onde começa a tocar" />}
-              <Slider k="tone" label="Brilho" show={hz} hint="Corta os agudos da voz" />
-              {p.voice !== 'spring' && <Slider k="attack" label="Entrada" show={sec} hint="Quanto demora a aparecer" />}
-              <Slider k="release" label={p.voice === 'spring' ? 'Duração' : 'Ao soltar'} show={sec} hint="Quanto demora a desaparecer" />
-              <Pick label="Oscilação" value={p.lfoShape} options={SHAPES} onChange={(lfoShape) => set({ lfoShape })} />
-              <Slider k="sweep" label="Varrimento" show={semis} hint={'Em cada disparo ' + target + ' sobe (+) ou desce (−) isto'} />
-              <Slider k="sweepTime" label="Tempo varr." show={sec} hint="Tempo do varredura" />
+              {sample && <Slider k="start" label="Start" show={pct} hint="Where in the sample it starts" />}
+              <Slider k="tone" label="Tone" show={hz} hint="Cuts the highs of the voice" />
+              {p.voice !== 'spring' && <Slider k="attack" label="Attack" show={sec} hint="How long it takes to come in" />}
+              <Slider k="release" label={p.voice === 'spring' ? 'Length' : 'Release'} show={sec} hint="How long it takes to fade out" />
+              <Pick label="LFO shape" value={p.lfoShape} options={SHAPES} onChange={(lfoShape) => set({ lfoShape })} />
+              <Slider k="sweep" label="Sweep" show={semis} hint={'On each FIRE ' + target + ' rises (+) or falls (−) this much'} />
+              <Slider k="sweepTime" label="Sweep time" show={sec} hint="How long the sweep takes" />
             </>
           )}
           {page === 'echo' && (
             <>
               <Pick
-                label="Tempo do eco"
+                label="Echo time"
                 value={p.echoBeats}
-                options={ECHO_BEATS.map((b) => ({ value: b, label: beatLabel(b) + (b > 1 ? ' batidas' : ' batida') }))}
+                options={ECHO_BEATS.map((b) => ({ value: b, label: beatLabel(b) + (b > 1 ? ' beats' : ' beat') }))}
                 onChange={(echoBeats) => set({ echoBeats })}
               />
-              <Slider k="feedback" label="Repetições" show={pct} />
-              <Slider k="echoTone" label="Brilho do eco" show={hz} />
-              <Slider k="spring" label="Mola" show={pct} hint="Reverb de mola sobre todo o canal" />
+              <Slider k="feedback" label="Feedback" show={pct} hint="How many repeats" />
+              <Slider k="echoTone" label="Echo tone" show={hz} hint="Each repeat gets darker at this frequency" />
+              <Slider k="spring" label="Spring" show={pct} hint="Spring reverb on the whole channel" />
             </>
           )}
           {page === 'channel' && (
             <>
               <Pick
-                label="Botão FIRE"
+                label="FIRE button"
                 value={d.mode}
                 options={[
-                  { value: 'hold', label: 'Segurar' },
-                  { value: 'latch', label: 'Liga / desliga' },
+                  { value: 'hold', label: 'Hold (plays while pressed)' },
+                  { value: 'latch', label: 'Latch (tap on, tap off)' },
                 ]}
                 onChange={(mode) => dubBox.setMode(mode)}
               />
-              <Check label="Sirene no tom da música que toca" checked={d.followKey} onChange={(v) => dubBox.setFollowKey(v)} />
-              <Check label="Pads do sampler passam por este canal" checked={d.sampler} onChange={(v) => dubBox.setSampler(v)} />
+              <Check label="Siren follows the key of the playing track" checked={d.followKey} onChange={(v) => dubBox.setFollowKey(v)} />
+              <Check label="Sampler pads go through this channel" checked={d.sampler} onChange={(v) => dubBox.setSampler(v)} />
             </>
           )}
         </div>
       </section>
 
-      <aside className="dbp-side" aria-label="Botões rápidos e guardar">
-        <h5 title="Os botões 1 a 4 do mixer tocam o som salvo, sem mudar o que você está editando. Também dá para arrastar um som da lista para cá.">
-          Botões rápidos
+      <aside className="dbp-side" aria-label="Quick pads and save">
+        <h5 title="Pads 1 to 4 in the mixer play the saved sound without changing what you are editing. You can also drag a sound from the list here.">
+          Quick pads
         </h5>
         {d.slots.map((slot, i) => (
           <div
@@ -435,7 +435,7 @@ export function DubBoxPanel() {
               }}
               onPointerUp={() => dubBox.fireSlot(i, false)}
               onPointerCancel={() => dubBox.fireSlot(i, false)}
-              title={slot ? 'Tocar ' + slot.name : 'Vazio'}
+              title={slot ? 'Play ' + slot.name : 'Empty'}
             >
               {i + 1}
             </button>
@@ -443,8 +443,8 @@ export function DubBoxPanel() {
             <button
               className="row-btn show"
               onClick={() => dubBox.assignSlot(i)}
-              title="Salvar o som atual neste botão"
-              aria-label={'Salvar o som atual no botão ' + (i + 1)}
+              title="Save the current sound on this pad"
+              aria-label={'Save the current sound on pad ' + (i + 1)}
             >
               ↓
             </button>
@@ -452,7 +452,7 @@ export function DubBoxPanel() {
               className="row-btn show x"
               disabled={!slot}
               onClick={() => dubBox.clearSlot(i)}
-              aria-label={'Esvaziar botão ' + (i + 1)}
+              aria-label={'Clear pad ' + (i + 1)}
             >
               ×
             </button>
@@ -469,12 +469,12 @@ export function DubBoxPanel() {
           <input
             value={name}
             maxLength={30}
-            placeholder="Nome do seu som"
-            aria-label="Nome do som para salvar"
+            placeholder="Name your sound"
+            aria-label="Name of the sound to save"
             onChange={(e) => setName(e.target.value)}
           />
           <button className="btn small" disabled={!name.trim() || FACTORY.some((x) => x.name === name.trim())}>
-            Salvar
+            Save
           </button>
         </form>
       </aside>

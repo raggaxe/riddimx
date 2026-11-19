@@ -95,7 +95,7 @@ class Remote extends Store<RemoteState> {
     if (t === 'a' && typeof msg.id === 'string') {
       const action = runAction(msg.id, Number(msg.v))
       if (action && (action.type === 'button' || (action.type === 'hold' && Number(msg.v) > 0)))
-        midi.say('Celular · ' + action.label)
+        midi.say('Phone · ' + action.label)
     }
   }
 

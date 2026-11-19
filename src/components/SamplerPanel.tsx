@@ -7,8 +7,8 @@ import { ui } from '../ui'
 
 type View = 'pads' | 'drops'
 const VIEWS: { id: View; label: string; hint: string }[] = [
-  { id: 'pads', label: 'Pads', hint: 'Oito pads de jingles e efeitos' },
-  { id: 'drops', label: 'Drops', hint: 'Criar drops e jingles com voz, para os pads' },
+  { id: 'pads', label: 'Pads', hint: 'Eight pads of jingles and effects' },
+  { id: 'drops', label: 'Drops', hint: 'Make drops and jingles with a voice, for the pads' },
 ]
 const LS_VIEW = 'vx_sampler_view'
 
@@ -77,7 +77,7 @@ export function SamplerPanel() {
 
   return (
     <div className="sampler sp">
-      <nav className="side-nav" aria-label="Secções do sampler">
+      <nav className="side-nav" aria-label="Sampler sections">
         {VIEWS.map((v) => (
           <button
             key={v.id}
@@ -118,21 +118,21 @@ export function SamplerPanel() {
                     if (pad.name) sampler.trigger(i)
                     else choose(i)
                   }}
-                  aria-label={pad.name ? 'Pad ' + (i + 1) + ': ' + pad.name : 'Pad ' + (i + 1) + ' vazio: escolher arquivo'}
+                  aria-label={pad.name ? 'Pad ' + (i + 1) + ': ' + pad.name : 'Pad ' + (i + 1) + ' empty: pick a file'}
                   title={
                     pad.name
-                      ? (pad.playing ? 'Parar' : 'Tocar') + ' (tecla ' + (i + 1) + '). Solte outro som aqui para trocar'
-                      : 'Escolher um arquivo de áudio, ou soltar aqui um efeito ou arquivo'
+                      ? (pad.playing ? 'Stop' : 'Play') + ' (tecla ' + (i + 1) + '). Drop another sound here to swap'
+                      : 'Pick an audio file, or drop an effect or a file here'
                   }
                 >
                   {/* How much of the sample is left: drains over exactly its length. */}
                   {pad.playing && <i key={plays[i]} className="sample-bar" style={{ animationDuration: pad.duration + 's' }} />}
                   <b>{i + 1}</b>
                   {pad.name && <em>{secs(pad.duration)}</em>}
-                  <span>{pad.name ?? '+ som'}</span>
+                  <span>{pad.name ?? '+ sound'}</span>
                 </button>
                 {pad.name && (
-                  <button className="sample-clear" onClick={() => sampler.clear(i)} aria-label={'Esvaziar pad ' + (i + 1)} title="Esvaziar">
+                  <button className="sample-clear" onClick={() => sampler.clear(i)} aria-label={'Clear pad ' + (i + 1)} title="Clear">
                     ×
                   </button>
                 )}
@@ -141,8 +141,8 @@ export function SamplerPanel() {
           </div>
           <div className="sp-bank">
             <div className="sp-bank-head">
-              <h5 title="Clique: ouvir. Arraste para um pad, ou solte lá um arquivo seu. Os pads ficam salvos e são mapeáveis na controladora.">
-                Efeitos
+              <h5 title="Click: listen. Drag onto a pad, or drop your own file there. Pads are saved and can be mapped on the controller.">
+                Effects
               </h5>
               <label className="sampler-vol">
                 <span>Volume</span>
@@ -160,9 +160,9 @@ export function SamplerPanel() {
                 className="btn small sp-stop"
                 disabled={!s.pads.some((p) => p.playing)}
                 onClick={() => sampler.stopAll()}
-                title="Parar todos os pads (Esc)"
+                title="Stop all pads (Esc)"
               >
-                Parar
+                Stop
               </button>
             </div>
             <div className="sfx-bank">
@@ -179,8 +179,8 @@ export function SamplerPanel() {
                     }}
                     onClick={() => void sampler.preview(fx.id)}
                     title={
-                      (used >= 0 ? 'No pad ' + (used + 1) + '. ' : '') +
-                      'Clique: ouvir (no headphone, se estiver ligado). Arrastar para um pad: pôr lá'
+                      (used >= 0 ? 'On pad ' + (used + 1) + '. ' : '') +
+                      'Click: listen (in the headphones, if they\'re on). Drag onto a pad: put it there'
                     }
                   >
                     {fx.label}

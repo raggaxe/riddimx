@@ -62,10 +62,10 @@ function setupUpdater(win) {
   }
 
   async function download(url, file, size, progress) {
-    if (!TRUSTED.test(url)) throw new Error('endereço de download não confiável')
+    if (!TRUSTED.test(url)) throw new Error('untrusted download address')
     const res = await net.fetch(url, { headers: { 'User-Agent': 'RiddimX-Updater' } })
     if (!res.ok || !res.body) throw new Error('download falhou (' + res.status + ')')
-    if (res.url && !TRUSTED.test(res.url)) throw new Error('download redirecionado para fora do GitHub')
+    if (res.url && !TRUSTED.test(res.url)) throw new Error('download redirected outside GitHub')
     const hash = crypto.createHash('sha256')
     const out = fs.createWriteStream(file)
     let got = 0
@@ -83,7 +83,7 @@ function setupUpdater(win) {
       out.destroy()
       throw e
     }
-    if (size && got !== size) throw new Error('tamanho do download não confere')
+    if (size && got !== size) throw new Error('download size does not match')
     return hash.digest('hex')
   }
 
@@ -96,13 +96,13 @@ function setupUpdater(win) {
       const rel = await fetchJson(LATEST)
       const version = rel?.tag_name
       if (!rel || rel.draft || rel.prerelease || !newer(version, app.getVersion())) {
-        send({ status: 'none', checkedAt: Date.now(), error: rel ? undefined : manual ? 'nenhuma versão publicada' : undefined })
+        send({ status: 'none', checkedAt: Date.now(), error: rel ? undefined : manual ? 'no version published' : undefined })
         return
       }
       const zip = rel.assets?.find((a) => a.name === asset)
       const sum = rel.assets?.find((a) => a.name === asset + '.sha256')
       const info = { version: String(version).replace(/^v/, ''), notes: String(rel.body || '').slice(0, 2000), url: rel.html_url }
-      if (!zip || !sum) return send({ status: 'available', ...info, error: 'esta versão não tem o arquivo para este Mac' })
+      if (!zip || !sum) return send({ status: 'available', ...info, error: 'this version has no file for this Mac' })
       send({ status: 'downloading', ...info, progress: 0 })
 
       await fs.promises.rm(dir, { recursive: true, force: true })
@@ -110,17 +110,17 @@ function setupUpdater(win) {
       const sumFile = path.join(dir, asset + '.sha256')
       await download(sum.browser_download_url, sumFile, 0)
       const expected = (await fs.promises.readFile(sumFile, 'utf8')).trim().split(/\s+/)[0].toLowerCase()
-      if (!/^[0-9a-f]{64}$/.test(expected)) throw new Error('SHA-256 publicado inválido')
+      if (!/^[0-9a-f]{64}$/.test(expected)) throw new Error('published SHA-256 is invalid')
       const zipFile = path.join(dir, asset)
       const got = await download(zip.browser_download_url, zipFile, zip.size, (p) => send({ progress: p }))
-      if (got !== expected) throw new Error('o arquivo baixado não confere com o SHA-256')
+      if (got !== expected) throw new Error('the downloaded file does not match its SHA-256')
 
       const out = path.join(dir, 'app')
       await new Promise((resolve, reject) =>
         execFile('/usr/bin/ditto', ['-x', '-k', zipFile, out], (err) => (err ? reject(err) : resolve())),
       )
       const bundle = path.join(out, 'RiddimX.app')
-      if (!fs.existsSync(path.join(bundle, 'Contents', 'MacOS'))) throw new Error('pacote da atualização incompleto')
+      if (!fs.existsSync(path.join(bundle, 'Contents', 'MacOS'))) throw new Error('update package is incomplete')
       ready = { version: info.version, app: bundle }
       installOnQuit = true
       send({ status: 'ready', ...info, progress: 1 })

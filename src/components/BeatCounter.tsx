@@ -33,7 +33,7 @@ export function BeatCounter() {
   }, [])
 
   return (
-    <div className="beat-count" aria-hidden="true" title="Tempo do compasso em cada deck (1 a 4)">
+    <div className="beat-count" aria-hidden="true" title="Bar position on each deck (1 to 4)">
       {['a', 'b'].map((name, lane) => (
         <div key={name} className={'bc-row ' + name} ref={(el) => void (rows.current[lane] = el)}>
           <i />

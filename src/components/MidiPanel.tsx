@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { actions, describeKey, midi, presets } from '../midi'
 import { useStore } from '../store'
 
-const TYPE_HINT = { button: 'botão', hold: 'manter', fader: 'fader', center: 'knob', jog: 'jog' }
+const TYPE_HINT = { button: 'button', hold: 'manter', fader: 'fader', center: 'knob', jog: 'jog' }
 const LS_GROUP = 'vx_midi_group'
 
 /**
@@ -49,13 +49,13 @@ export function MidiPanel() {
   }, [chain, s.learning, s.mappings])
 
   if (!s.supported) {
-    return <p className="empty">Este sistema não suporta MIDI.</p>
+    return <p className="empty">This system doesn't support MIDI.</p>
   }
 
   return (
     <div className="midi mp">
-      <nav className="side-nav" aria-label="Grupos de funções">
-        <h5>Funções</h5>
+      <nav className="side-nav" aria-label="Function groups">
+        <h5>Functions</h5>
         {groups.map((g) => (
           <button
             key={g}
@@ -75,18 +75,18 @@ export function MidiPanel() {
         <div className="mp-bar">
           <span className={'mp-status' + (s.connected && s.inputs.length ? ' on' : '')}>
             <i aria-hidden="true" />
-            {!s.connected ? 'MIDI desligado' : s.inputs.length ? s.inputs.join(', ') : 'Nenhuma controladora. Conecte por USB.'}
+            {!s.connected ? 'MIDI off' : s.inputs.length ? s.inputs.join(', ') : 'No controller. Plug one in over USB.'}
           </span>
           {!s.connected && (
             <button className="btn small" onClick={() => void midi.connect()}>
-              Ligar MIDI
+              Turn MIDI on
             </button>
           )}
-          <span className="mp-signal" title="Último sinal recebido da controladora" aria-live="polite">
-            {s.last ?? 'sem sinal'}
+          <span className="mp-signal" title="Last signal from the controller" aria-live="polite">
+            {s.last ?? 'no signal'}
           </span>
           <span className="mp-preset">
-            <select value={preset} aria-label="Mapeamento pronto" onChange={(e) => setPreset(e.target.value)}>
+            <select value={preset} aria-label="Ready-made mapping" onChange={(e) => setPreset(e.target.value)}>
               {presets.map((p) => (
                 <option key={p.name} value={p.name}>
                   {p.name}
@@ -97,9 +97,9 @@ export function MidiPanel() {
               className="btn small"
               disabled={!preset}
               onClick={() => midi.applyPreset(preset)}
-              title="Substitui todos os mapeamentos atuais por este"
+              title="Replaces every current mapping with this one"
             >
-              Aplicar
+              Apply
             </button>
           </span>
         </div>
@@ -109,9 +109,9 @@ export function MidiPanel() {
           <table>
             <thead>
               <tr>
-                <th>Função</th>
-                <th className="c-type">Tipo</th>
-                <th className="c-ctl">Controle</th>
+                <th>Function</th>
+                <th className="c-type">Type</th>
+                <th className="c-ctl">Control</th>
                 <th className="c-act">
                   <button
                     className={'lib-sort mp-chain' + (chain ? ' on' : '')}
@@ -122,9 +122,9 @@ export function MidiPanel() {
                         midi.learn(null)
                       } else setChain(true)
                     }}
-                    title="Aprende uma por uma as funções deste grupo que ainda não têm controle"
+                    title="Learns, one by one, the functions of this group that have no control yet"
                   >
-                    {chain ? 'Parar sequência' : 'Aprender em sequência'}
+                    {chain ? 'Stop sequence' : 'Learn in sequence'}
                   </button>
                 </th>
               </tr>
@@ -139,7 +139,7 @@ export function MidiPanel() {
                     <td>{a.label}</td>
                     <td className="c-type">{TYPE_HINT[a.type]}</td>
                     <td className="c-ctl" title={keys.map(describeKey).join('\n') || undefined}>
-                      {learning ? 'mexa no controle ou aperte uma tecla…' : key ? keys.map(describeKey).join(' · ') : '—'}
+                      {learning ? 'move the control or press a key…' : key ? keys.map(describeKey).join(' · ') : '—'}
                     </td>
                     <td className="c-act">
                       <button
@@ -149,13 +149,13 @@ export function MidiPanel() {
                           midi.learn(a.id)
                         }}
                       >
-                        {learning ? 'Cancelar' : key ? 'Mudar' : 'Aprender'}
+                        {learning ? 'Cancel' : key ? 'Mudar' : 'Learn'}
                       </button>
                       <button
                         className="row-btn show x"
                         disabled={!key}
                         onClick={() => midi.unmap(a.id)}
-                        aria-label={'Apagar mapeamento de ' + a.label}
+                        aria-label={'Delete mapping of ' + a.label}
                       >
                         ×
                       </button>

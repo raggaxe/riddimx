@@ -21,8 +21,8 @@ export function TransitionRoute() {
       disabled={!!mv.running}
       title={
         mv.direction === 'auto'
-          ? 'Transições em automático: sai o deck que se ouve, entra o outro. Clique para fixar A → B'
-          : 'Transições fixas. Clique para ' + (mv.direction === 'AB' ? 'B → A' : 'voltar ao automático')
+          ? 'Automatic transitions: the deck on air goes out, the other comes in. Click to fix A → B'
+          : 'Fixed transitions. Click to ' + (mv.direction === 'AB' ? 'B → A' : 'go back to automatic')
       }
     >
       <b className={way ? way.from.name.toLowerCase() : ''}>{way?.from.name ?? '—'}</b>
@@ -30,7 +30,7 @@ export function TransitionRoute() {
         <path d="M1 4h9M7 1l3 3-3 3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <b className={way ? way.to.name.toLowerCase() : ''}>{way?.to.name ?? '—'}</b>
-      <span>{mv.direction === 'auto' ? 'AUTO' : 'FIXO'}</span>
+      <span>{mv.direction === 'auto' ? 'AUTO' : 'FIXED'}</span>
     </button>
   )
 }
@@ -43,13 +43,13 @@ export function TransitionTiming() {
       <select
         className="mx-tr-beats"
         value={mv.beats}
-        aria-label="Duração das transições longas"
-        title="Duração da troca de grave e do varredura, em batidas"
+        aria-label="Length of the long transitions"
+        title="Length of the bass swap and the sweep, in beats"
         onChange={(e) => moves.settings({ beats: Number(e.target.value) as 4 | 8 | 16 })}
       >
         {[4, 8, 16].map((n) => (
           <option key={n} value={n}>
-            {n} batidas
+            {n} beats
           </option>
         ))}
       </select>
@@ -58,11 +58,11 @@ export function TransitionTiming() {
         onClick={() => moves.settings({ quant: mv.quant === 'bar' ? 'beat' : 'bar' })}
         title={
           mv.quant === 'bar'
-            ? 'As transições começam no próximo compasso (no um). Clique para começar na próxima batida'
-            : 'As transições começam na próxima batida. Clique para esperar pelo compasso'
+            ? 'Transitions start on the next bar (on the one). Click to start on the next beat'
+            : 'Transitions start on the next beat. Click to wait for the bar'
         }
       >
-        {mv.quant === 'bar' ? 'COMPASSO' : 'BATIDA'}
+        {mv.quant === 'bar' ? 'BAR' : 'BEAT'}
       </button>
     </>
   )
@@ -89,14 +89,14 @@ export function TransitionMoves() {
     return () => cancelAnimationFrame(raf)
   }, [mv.running, mv.startedAt, mv.length])
   return (
-    <div className="mx-tr-moves" ref={bar} role="group" aria-label="Transições">
+    <div className="mx-tr-moves" ref={bar} role="group" aria-label="Transitions">
       {(Object.keys(MOVES) as Move[]).map((m) => (
         <button
           key={m}
           className={(mv.running === m ? 'on' : '') + (mv.running === m && mv.waiting ? ' armed' : '')}
           disabled={!way || (!!mv.running && mv.running !== m)}
           onClick={() => moves.run(m)}
-          title={mv.running === m ? 'Clique para cancelar e restaurar tudo' : MOVES[m].hint}
+          title={mv.running === m ? 'Click to cancel and restore everything' : MOVES[m].hint}
         >
           {MOVES[m].label}
           <i aria-hidden="true" />

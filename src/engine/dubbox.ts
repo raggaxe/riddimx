@@ -2,6 +2,7 @@ import { Store, clamp } from '../store'
 import { mixer } from './mixer'
 import { decks } from './deck'
 import { sampler } from './sampler'
+import { choke } from './choke'
 import { sfx, sfxLabel } from './soundsystem'
 
 /**
@@ -97,10 +98,22 @@ const base: Patch = {
   start: 0,
 }
 
+/** Factory sounds were renamed when the interface went English: saved choices keep working. */
+const OLD_NAMES: Record<string, string> = {
+  'Sirene clássica': 'Classic siren',
+  Alarme: 'Alarm',
+  Polícia: 'Police',
+  Trovão: 'Thunder',
+  Vento: 'Wind',
+  'Tom pew': 'Pew tom',
+  Mola: 'Spring',
+}
+const renamed = (name: string): string => OLD_NAMES[name] ?? name
+
 export const FACTORY: { name: string; patch: Patch }[] = [
-  { name: 'Sirene clássica', patch: base },
+  { name: 'Classic siren', patch: base },
   {
-    name: 'Alarme',
+    name: 'Alarm',
     patch: { ...base, pitch: 700, lfoShape: 'square', lfoRate: 4, lfoDepth: 5, tone: 4000, echo: 0.35, echoBeats: 0.5 },
   },
   {
@@ -120,7 +133,7 @@ export const FACTORY: { name: string; patch: Patch }[] = [
     },
   },
   {
-    name: 'Polícia',
+    name: 'Police',
     patch: { ...base, wave: 'triangle', pitch: 620, lfoShape: 'sine', lfoRate: 0.35, lfoDepth: 12, tone: 4000, echo: 0.3 },
   },
   {
@@ -128,7 +141,7 @@ export const FACTORY: { name: string; patch: Patch }[] = [
     patch: { ...base, pitch: 220, lfoShape: 'sawtooth', lfoRate: 6, lfoDepth: 12, echo: 0.55, feedback: 0.65 },
   },
   {
-    name: 'Trovão',
+    name: 'Thunder',
     patch: {
       ...base,
       voice: 'noise',
@@ -166,7 +179,7 @@ export const FACTORY: { name: string; patch: Patch }[] = [
     },
   },
   {
-    name: 'Vento',
+    name: 'Wind',
     patch: {
       ...base,
       voice: 'noise',
@@ -185,7 +198,7 @@ export const FACTORY: { name: string; patch: Patch }[] = [
   },
   {
     // The classic dub "pew": a synth drum whose pitch falls fast, thrown into the echo.
-    name: 'Tom pew',
+    name: 'Pew tom',
     patch: {
       ...base,
       wave: 'sine',
@@ -222,7 +235,7 @@ export const FACTORY: { name: string; patch: Patch }[] = [
     },
   },
   {
-    name: 'Mola',
+    name: 'Spring',
     patch: {
       ...base,
       voice: 'spring',
@@ -270,7 +283,7 @@ function restore(): DubBoxState {
     mode: 'hold',
     followKey: false,
     sampler: false,
-    slots: ['Sirene clássica', 'Laser', 'Whoosh', 'Mola'].map((name) => ({ name, patch: FACTORY.find((f) => f.name === name)!.patch })),
+    slots: ['Classic siren', 'Laser', 'Whoosh', 'Spring'].map((name) => ({ name, patch: FACTORY.find((f) => f.name === name)!.patch })),
     slotPlaying: null,
     rehearse: false,
     basePreset: FACTORY[0].name,
@@ -280,8 +293,10 @@ function restore(): DubBoxState {
   try {
     const saved = JSON.parse(localStorage.getItem(LS) || '{}')
     const slots = Array.isArray(saved.slots)
-      ? saved.slots.slice(0, 4).map((x: { name: string; patch: Patch } | null) => x && { name: x.name, patch: { ...base, ...x.patch } })
+      ? saved.slots.slice(0, 4).map((x: { name: string; patch: Patch } | null) => x && { name: renamed(x.name), patch: { ...base, ...x.patch } })
       : fresh.slots
+    if (typeof saved.preset === 'string') saved.preset = renamed(saved.preset)
+    if (typeof saved.basePreset === 'string') saved.basePreset = renamed(saved.basePreset)
     return {
       ...fresh,
       ...saved,
@@ -561,6 +576,13 @@ class DubBox extends Store<DubBoxState> {
     this.voice = null
     if (v) v.stop(this.ctx.currentTime)
     if (this.state.playing || this.state.slotPlaying !== null) this.set({ playing: false, slotPlaying: null })
+  }
+
+  /** PANIC: the sound stops, THROW let go, the echo stops repeating. */
+  panic(): void {
+    this.release()
+    if (this.state.throwing) this.throw(false)
+    choke(this.feedbackGain.gain, this.ctx)
   }
 
   /** Throw: everything goes into the echo while held. */
@@ -980,7 +1002,7 @@ class DubBox extends Store<DubBoxState> {
   /** Quick button: keep the current sound on it. */
   assignSlot(index: number, from?: { name: string; patch: Patch }): void {
     const slots = [...this.state.slots]
-    const name = from?.name ?? this.state.preset ?? (this.state.patch.voice === 'sample' ? this.state.patch.sampleName : 'O meu som')
+    const name = from?.name ?? this.state.preset ?? (this.state.patch.voice === 'sample' ? this.state.patch.sampleName : 'My sound')
     slots[index] = { name, patch: from?.patch ?? this.state.patch }
     this.set({ slots })
     this.save()
@@ -988,7 +1010,7 @@ class DubBox extends Store<DubBoxState> {
 
   /** Quick button gets a preset by name (dragged onto it). */
   assignSlotPreset(index: number, name: string): void {
-    const found = [...FACTORY, ...this.state.user].find((x) => x.name === name)
+    const found = [...FACTORY, ...this.state.user].find((x) => x.name === renamed(name))
     if (found) this.assignSlot(index, found)
   }
 

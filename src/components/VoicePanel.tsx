@@ -22,7 +22,7 @@ export function VoicePanel() {
   }
   return (
     <div className="echo-desk voice-desk">
-      <MixSection title={m.error ? 'Mic · sem acesso' : m.talk ? 'Mic · no ar' : 'Mic'} className="voice-air">
+      <MixSection title={m.error ? 'Mic · no access' : m.talk ? 'Mic · on air' : 'Mic'} className="voice-air">
         <button
           className={'mx-talk' + (m.talk ? ' on' : '') + (m.speaking ? ' speaking' : '') + (m.error ? ' err' : '')}
           aria-pressed={m.talk}
@@ -30,23 +30,23 @@ export function VoicePanel() {
             if (m.error && /Privacidade/.test(m.error)) mic.openSettings()
             mic.setTalk(!m.talk)
           }}
-          title={m.error ?? (m.talk ? 'Fechar o microfone' : 'Abrir o microfone para a pista')}
+          title={m.error ?? (m.talk ? 'Close the mic' : 'Open the mic to the floor')}
         >
           <i aria-hidden="true" />
-          {m.talk ? 'NO AR' : m.error ? 'SEM MIC' : 'FALAR'}
+          {m.talk ? 'ON AIR' : m.error ? 'NO MIC' : 'TALK'}
         </button>
-        <Knob label="NÍVEL" value={m.level} min={0} max={1.5} reset={1} format={pct} onChange={(v) => mic.update({ level: v })} />
+        <Knob label="LEVEL" value={m.level} min={0} max={1.5} reset={1} format={pct} onChange={(v) => mic.update({ level: v })} />
         <Knob
-          label="BAIXAR"
+          label="DUCK"
           value={m.duck}
           min={0}
           max={1}
           reset={0.5}
-          format={(v) => (v < 0.02 ? 'nunca' : '−' + Math.round(-20 * Math.log10(1 - v * 0.75)) + ' dB')}
+          format={(v) => (v < 0.02 ? 'never' : '−' + Math.round(-20 * Math.log10(1 - v * 0.75)) + ' dB')}
           onChange={(v) => mic.update({ duck: v })}
         />
       </MixSection>
-      <MixSection title="Voz pronta" className="voice-presets">
+      <MixSection title="Mic presets" className="voice-presets">
         <div className="voice-preset-grid">
           {VOICE_PRESETS.map((p) => (
             <button
@@ -60,15 +60,15 @@ export function VoicePanel() {
           ))}
         </div>
       </MixSection>
-      <MixSection title="Cor" className="voice-colour">
+      <MixSection title="Colour" className="voice-colour">
         <Knob
-          label="FILTRO"
+          label="FILTER"
           value={m.filter}
           min={-1}
           max={1}
           reset={0}
           format={(v) =>
-            Math.abs(v) < 0.02 ? 'aberto' : v < 0 ? 'escuro ' + Math.round(-v * 100) + '%' : 'rádio ' + Math.round(v * 100) + '%'
+            Math.abs(v) < 0.02 ? 'open' : v < 0 ? 'dark ' + Math.round(-v * 100) + '%' : 'radio ' + Math.round(v * 100) + '%'
           }
           onChange={(v) => mic.update({ filter: v })}
         />
@@ -78,48 +78,48 @@ export function VoicePanel() {
           min={0}
           max={1}
           reset={0}
-          format={(v) => (v < 0.02 ? 'limpo' : v > 0.7 ? 'megafone' : pct(v))}
+          format={(v) => (v < 0.02 ? 'clean' : v > 0.7 ? 'megaphone' : pct(v))}
           onChange={(v) => mic.update({ drive: v })}
         />
       </MixSection>
-      <MixSection title="Eco da voz" className="voice-echo">
+      <MixSection title="Mic echo" className="voice-echo">
         <button
           className={'ru-throw voice-throw' + (m.throwing ? ' on' : '')}
           {...hold}
-          title="Segure: a voz entra toda no eco (abre o mic). Solte e as repetições continuam"
+          title="Hold: the voice goes fully into the echo (opens the mic). Let go and the repeats carry on"
         >
-          THROW VOZ
+          MIC THROW
         </button>
         <select
           className="ru-select"
           value={m.time}
-          aria-label="Tempo do eco da voz"
-          title="Tempo do eco da voz: igual ao Eco fita, ou uma divisão da batida só para a voz"
+          aria-label="Mic echo time"
+          title="Mic echo time: same as the tape echo, or a beat division for the mic only"
           onChange={(e) => mic.update({ time: e.target.value as VoiceTime })}
         >
           {VOICE_TIMES.map((t) => (
             <option key={t} value={t}>
-              {t === 'rack' ? 'igual ao Eco fita' : t}
+              {t === 'rack' ? 'same as tape echo' : t}
             </option>
           ))}
         </select>
-        <Knob label="ENVIO" value={m.echo} min={0} max={1} reset={0.4} format={pct} onChange={(v) => mic.update({ echo: v })} />
-        <Knob label="REPETIR" value={m.repeats} min={0} max={0.95} reset={0.5} format={pct} onChange={(v) => mic.update({ repeats: v })} />
+        <Knob label="SEND" value={m.echo} min={0} max={1} reset={0.4} format={pct} onChange={(v) => mic.update({ echo: v })} />
+        <Knob label="FEEDBACK" value={m.repeats} min={0} max={0.95} reset={0.5} format={pct} onChange={(v) => mic.update({ repeats: v })} />
         <Knob
-          label="TOM"
+          label="TONE"
           value={m.tone}
           min={0}
           max={1}
           reset={0.5}
-          format={(v) => (v < 0.35 ? 'escuro' : v > 0.7 ? 'claro' : 'fita')}
+          format={(v) => (v < 0.35 ? 'dark' : v > 0.7 ? 'bright' : 'tape')}
           onChange={(v) => mic.update({ tone: v })}
         />
       </MixSection>
-      <MixSection title="Mola" className="voice-spring">
-        <Knob label="MOLA" value={m.spring} min={0} max={1} reset={0.25} format={pct} onChange={(v) => mic.update({ spring: v })} />
+      <MixSection title="Spring" className="voice-spring">
+        <Knob label="SPRING" value={m.spring} min={0} max={1} reset={0.25} format={pct} onChange={(v) => mic.update({ spring: v })} />
       </MixSection>
-      <MixSection title="Saída" className="voice-out">
-        <Knob label="EFEITOS" value={m.fx} min={0} max={1.5} reset={1} format={pct} onChange={(v) => mic.update({ fx: v })} />
+      <MixSection title="Output" className="voice-out">
+        <Knob label="EFFECTS" value={m.fx} min={0} max={1.5} reset={1} format={pct} onChange={(v) => mic.update({ fx: v })} />
       </MixSection>
     </div>
   )

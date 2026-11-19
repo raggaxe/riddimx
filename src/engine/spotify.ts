@@ -74,7 +74,7 @@ class SpotifyService extends Store<SpotifyState> {
   async login(): Promise<void> {
     const { clientId } = this.state
     if (!clientId) {
-      this.set({ error: 'Falta o Client ID' })
+      this.set({ error: 'Client ID missing' })
       return
     }
     const verifier = base64url(crypto.getRandomValues(new Uint8Array(64)))
@@ -99,7 +99,7 @@ class SpotifyService extends Store<SpotifyState> {
     if (!code && !error) return
     history.replaceState({}, '', location.pathname)
     if (error || !code) {
-      this.set({ error: 'Login Spotify recusado: ' + error })
+      this.set({ error: 'Spotify login refused: ' + error })
       return
     }
     try {
@@ -145,7 +145,7 @@ class SpotifyService extends Store<SpotifyState> {
   }
 
   async getToken(): Promise<string> {
-    if (!this.token) throw new Error('Conecte a conta Spotify primeiro (Ajustes › Contas)')
+    if (!this.token) throw new Error('Connect the Spotify account first (Settings › Accounts)')
     if (Date.now() > this.token.expires_at - 60_000) {
       await this.requestToken({
         grant_type: 'refresh_token',
@@ -200,7 +200,7 @@ class SpotifyService extends Store<SpotifyState> {
           player.addListener('not_ready', () => this.set({ ready: false }))
           player.addListener('initialization_error', (e: any) => fail('Spotify: ' + e.message))
           player.addListener('authentication_error', (e: any) => fail('Spotify auth: ' + e.message))
-          player.addListener('account_error', () => fail('Spotify Premium necessário'))
+          player.addListener('account_error', () => fail('Spotify Premium required'))
           player.addListener('player_state_changed', (s: any) => this.owner?.onSpotifyState(s))
           this.player = player
           void player.connect()
@@ -209,7 +209,7 @@ class SpotifyService extends Store<SpotifyState> {
         w.onSpotifyWebPlaybackSDKReady = create
         const script = document.createElement('script')
         script.src = 'https://sdk.scdn.co/spotify-player.js'
-        script.onerror = () => fail('Não foi possível carregar o SDK do Spotify')
+        script.onerror = () => fail('Couldn\'t load the Spotify SDK')
         document.head.appendChild(script)
       })
     }

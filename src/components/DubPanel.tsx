@@ -7,12 +7,12 @@ const hz = (v: number): string => (v >= 1000 ? (v / 1000).toFixed(1) + ' kHz' : 
 const pct = (v: number): string => Math.round(v * 100) + '%'
 
 const SLIDERS: { key: Numeric; label: string; hint: string; step: number; show: (v: number) => string }[] = [
-  { key: 'feedback', label: 'Repetições', hint: 'Quanto de cada eco volta; mais alto = cauda mais longa', step: 0.01, show: pct },
-  { key: 'level', label: 'Volume do eco', hint: 'Volume das repetições', step: 0.01, show: pct },
-  { key: 'lowCut', label: 'Cortar graves', hint: 'Graves tirados antes do eco, para não embolar o baixo', step: 10, show: hz },
-  { key: 'tone', label: 'Brilho', hint: 'Cada repetição fica mais escura a partir deste ponto, como fita gasta', step: 50, show: hz },
-  { key: 'space', label: 'Mola', hint: 'Reverb de mola sobre as repetições', step: 0.01, show: pct },
-  { key: 'drift', label: 'Fita', hint: 'Oscilação da fita: o tom do eco dobra um pouco', step: 0.01, show: pct },
+  { key: 'feedback', label: 'Feedback', hint: 'How much of each echo comes back; higher = longer tail', step: 0.01, show: pct },
+  { key: 'level', label: 'Echo level', hint: 'Level of the repeats', step: 0.01, show: pct },
+  { key: 'lowCut', label: 'Low cut', hint: 'Bass removed before the echo, so it doesn\'t muddy the low end', step: 10, show: hz },
+  { key: 'tone', label: 'Tone', hint: 'Each repeat gets darker from this point, like worn tape', step: 50, show: hz },
+  { key: 'space', label: 'Spring', hint: 'Spring reverb on the repeats', step: 0.01, show: pct },
+  { key: 'drift', label: 'Tape', hint: 'Tape wobble: the echo\'s pitch bends a little', step: 0.01, show: pct },
 ]
 
 type Choice<K extends keyof DubSettings> = { key: K; label: string; options: { value: DubSettings[K]; label: string }[] }
@@ -20,26 +20,26 @@ type Choice<K extends keyof DubSettings> = { key: K; label: string; options: { v
 const CHOICES: [Choice<'dry'>, Choice<'release'>, Choice<'mode'>] = [
   {
     key: 'dry',
-    label: 'Música',
+    label: 'Music',
     options: [
-      { value: 'keep', label: 'Continua tocando' },
-      { value: 'cut', label: 'Some, só eco' },
+      { value: 'keep', label: 'Keeps playing' },
+      { value: 'cut', label: 'Drops out, echo only' },
     ],
   },
   {
     key: 'release',
-    label: 'Ao soltar',
+    label: 'On release',
     options: [
-      { value: 'ring', label: 'Continua' },
-      { value: 'fade', label: 'Morre rápido' },
+      { value: 'ring', label: 'Keeps going' },
+      { value: 'fade', label: 'Dies fast' },
     ],
   },
   {
     key: 'mode',
-    label: 'Botão',
+    label: 'Button',
     options: [
-      { value: 'hold', label: 'Segurar' },
-      { value: 'latch', label: 'Liga / desliga' },
+      { value: 'hold', label: 'Hold' },
+      { value: 'latch', label: 'Latch (on / off)' },
     ],
   },
 ]
@@ -68,7 +68,7 @@ export function DubPanel() {
       </header>
       <div className="rw-grid">
         <label className="pick">
-          <span>Tempo do eco</span>
+          <span>Echo time</span>
           <select value={d.beats} onChange={(e) => dubSettings.update({ beats: Number(e.target.value) })}>
             {DUB_BEATS.map((b) => (
               <option key={b.value} value={b.value}>
@@ -105,8 +105,7 @@ export function DubPanel() {
         ))}
       </div>
       <p className="hint">
-        Vale para o botão DUB dos dois decks e para a controladora. Os ajustes mudam também um eco que já está soando. Sem BPM, o tempo do
-        eco conta como 120 BPM.
+        Applies to the DUB button of both decks and to the controller. Changes also reach an echo that is already ringing. With no BPM, the echo time counts as 120 BPM.
       </p>
     </section>
   )

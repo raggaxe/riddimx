@@ -7,6 +7,12 @@ import { desktop } from './ytremote'
  * song's artist and title are sent); for files it does not know, transcribed on this Mac by
  * whisper.cpp from the vocal stem. Results are remembered per track.
  */
+/**
+ * Lyrics are switched off for now: the timing was not reliable enough on real tracks. Everything is
+ * kept (catalogue lookup, transcription, alignment) so turning this back on is one change. Roadmap.
+ */
+export const LYRICS_ON = false
+
 export interface LyricLine {
   time: number // seconds
   text: string
@@ -31,20 +37,23 @@ interface LyricsState {
   offset: Record<string, number>
   /** key → how the timing was set: 'auto' (lined up with the voice) or 'hand' (the DJ's nudges win) */
   fit: Record<string, 'auto' | 'hand'>
+  /** key → each line's start after lining up with the voice (same count as the lines), when found */
+  warp: Record<string, number[]>
 }
 
 export type LyricsLang = 'pt' | 'en' | 'es' | 'auto'
 export const LYRICS_LANGS: { id: LyricsLang; label: string }[] = [
-  { id: 'pt', label: 'Português' },
-  { id: 'en', label: 'Inglês / patois' },
-  { id: 'es', label: 'Espanhol' },
-  { id: 'auto', label: 'Detetar' },
+  { id: 'pt', label: 'Portuguese' },
+  { id: 'en', label: 'English / patois' },
+  { id: 'es', label: 'Spanish' },
+  { id: 'auto', label: 'Detect' },
 ]
 const LS_LANG = 'vx_lyrics_lang'
 const SRC = 'vx_lyr_src:'
 
 const KEY = 'vx_lyr:'
 const OFF = 'vx_lyr_off:' // { offset, fit }
+const WARP = 'vx_lyr_warp:' // number[]: each line's start, lined up with the voice
 
 function parseLrc(lrc: string): LyricLine[] {
   const out: LyricLine[] = []
@@ -77,6 +86,7 @@ class Lyrics extends Store<LyricsState> {
       modelError: null,
       offset: {},
       fit: {},
+      warp: {},
     })
     void this.checkModel()
   }
@@ -128,13 +138,38 @@ class Lyrics extends Store<LyricsState> {
 
   /** First sung line: where the voice comes in. */
   vocalIn(key: string): number | null {
-    const first = this.state.lines[key]?.[0]
-    return first ? first.time + this.offsetOf(key) : null
+    const lines = this.state.lines[key]
+    if (!lines?.length) return null
+    return this.startsOf(key, lines)[0] + this.offsetOf(key)
+  }
+
+  /** Line starts lined up with the voice when that was done, else as the source gave them. */
+  private startsOf(key: string, lines: LyricLine[]): number[] {
+    if (!(key in this.state.warp)) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(WARP + key) || 'null') as number[] | null
+        this.state.warp[key] = Array.isArray(saved) ? saved : []
+      } catch {
+        this.state.warp[key] = []
+      }
+    }
+    const warp = this.state.warp[key]
+    return warp.length === lines.length ? warp : lines.map((l) => l.time)
+  }
+
+  private setWarp(key: string, times: number[]): void {
+    this.set({ warp: { ...this.state.warp, [key]: times } })
+    try {
+      if (times.length) localStorage.setItem(WARP + key, JSON.stringify(times.map((t) => Math.round(t * 100) / 100)))
+      else localStorage.removeItem(WARP + key)
+    } catch {
+      /* not remembered */
+    }
   }
 
   // ───────────── timing: lines moved to where the voice really sings them ─────────────
 
-  private shifted = new Map<string, { from: LyricLine[]; by: number; lines: LyricLine[] }>()
+  private shifted = new Map<string, { from: LyricLine[]; by: number; starts: number[]; lines: LyricLine[] }>()
 
   offsetOf(key: string): number {
     if (!(key in this.state.offset)) {
@@ -177,6 +212,7 @@ class Lyrics extends Store<LyricsState> {
     } catch {
       /* fine */
     }
+    this.setWarp(key, [])
   }
 
   /**
@@ -191,11 +227,14 @@ class Lyrics extends Store<LyricsState> {
     const lines = this.state.lines[key]
     if (!lines || lines.length < 4) return
     const env = await voiceActivity(voice, clean)
-    const shift = bestShift(
+    const times = fitLines(
       env,
       lines.map((l) => l.time),
     )
-    if (shift !== null) this.setOffset(key, shift, 'auto')
+    if (!times) return
+    // The whole fit lives in the line starts now; the offset is left for the DJ's nudges.
+    this.setWarp(key, times)
+    this.setOffset(key, 0, 'auto')
   }
 
   private keep(key: string, lines: LyricLine[], source: 'catalogue' | 'mac'): void {
@@ -263,11 +302,11 @@ class Lyrics extends Store<LyricsState> {
       const known = this.state.lines[key]
       if (known) {
         const by = this.offsetOf(key)
-        if (!by) return known
+        const starts = this.startsOf(key, known)
         const memo = this.shifted.get(key)
-        if (memo && memo.from === known && memo.by === by) return memo.lines
-        const lines = known.map((l) => ({ time: l.time + by, text: l.text }))
-        this.shifted.set(key, { from: known, by, lines })
+        if (memo && memo.from === known && memo.by === by && memo.starts === starts) return memo.lines
+        const lines = known.map((l, i) => ({ time: starts[i] + by, text: l.text }))
+        this.shifted.set(key, { from: known, by, starts, lines })
         return lines
       }
       if (!this.asked.has(key) && title) void this.lookupOnce(key, title, artist, duration)
@@ -350,10 +389,15 @@ async function voiceActivity(buffer: AudioBuffer, clean: boolean): Promise<Float
 }
 
 /**
- * The shift (seconds, ±25) that best puts the line starts on voice coming in: voice just after each start,
- * less just before it. Null when no shift stands out (no clear voice, or the lines fit already).
+ * Lines up every line with the singing, in three steps:
+ * 1. one shift and a small speed difference for the whole song (the catalogue's lines may come from
+ *    another edit, or a version a touch faster or slower), searched together;
+ * 2. each line then moves on its own, up to 1.5 s, to where a voice really comes in near it;
+ * 3. those moves are smoothed over the neighbouring lines and kept in order, so one wrong guess
+ *    does not throw a line out of place.
+ * Null when the voice gives nothing clear to line up with.
  */
-function bestShift(act: Float32Array, starts: number[]): number | null {
+export function fitLines(act: Float32Array, starts: number[]): number[] | null {
   const n = act.length
   const sum = new Float64Array(n + 1)
   for (let i = 0; i < n; i++) sum[i + 1] = sum[i] + act[i]
@@ -363,28 +407,50 @@ function bestShift(act: Float32Array, starts: number[]): number | null {
     return y > x ? (sum[y] - sum[x]) / (y - x) : 0
   }
   const W = Math.round(0.5 / FRAME)
-  const score = (shift: number): number => {
-    let s = 0
-    for (const t of starts) {
-      const f = Math.round((t + shift) / FRAME)
-      s += mean(f, f + W) - mean(f - W, f)
+  const onset = (t: number): number => {
+    const f = Math.round(t / FRAME)
+    return mean(f, f + W) - mean(f - W, f)
+  }
+  // 1. Global: speed 0.96..1.04 around the first line, with a shift of ±25 s.
+  const t0 = starts[0]
+  let best = { score: -Infinity, scale: 1, shift: 0 }
+  let still = -Infinity // score with the lines left as they are
+  for (let scale = 0.96; scale <= 1.0401; scale += 0.0025) {
+    for (let k = -Math.round(25 / FRAME); k <= Math.round(25 / FRAME); k++) {
+      const shift = k * FRAME
+      let sc = 0
+      for (const t of starts) sc += onset(t0 + (t - t0) * scale + shift)
+      sc /= starts.length
+      if (Math.abs(scale - 1) < 1e-6 && k === 0) still = sc
+      if (sc > best.score) best = { score: sc, scale, shift }
     }
-    return s / starts.length
   }
-  const range = Math.round(25 / FRAME)
-  const scores = new Float64Array(2 * range + 1)
-  let best = 0
-  for (let k = -range; k <= range; k++) {
-    scores[k + range] = score(k * FRAME)
-    if (scores[k + range] > scores[best]) best = k + range
-  }
-  const sorted = Float64Array.from(scores).sort()
-  const median = sorted[range]
-  const spread = sorted[Math.floor(sorted.length * 0.9)] - median
-  const top = scores[best]
-  // Must stand clear of the crowd, and beat leaving the lines where they are by a margin.
-  if (top <= 0 || top - median < 3 * Math.max(spread, 0.01) || top - scores[range] < 0.04) return null
-  return (best - range) * FRAME
+  if (best.score <= 0.02) return null
+  // A global move must clearly beat leaving the lines alone; otherwise only the per-line step runs.
+  const global = best.score - still > 0.04 ? best : { score: still, scale: 1, shift: 0 }
+  const placed = starts.map((t) => t0 + (t - t0) * global.scale + global.shift)
+  // 2. Each line on its own, ±1.5 s, only where a clearly better voice entry is found.
+  const R = Math.round(1.5 / FRAME)
+  const moves = placed.map((t) => {
+    const here = onset(t)
+    let top = here
+    let at = 0
+    for (let k = -R; k <= R; k++) {
+      const sc = onset(t + k * FRAME) - Math.abs(k) * 0.0004 // closer is a little better
+      if (sc > top) {
+        top = sc
+        at = k * FRAME
+      }
+    }
+    return top - here > 0.05 ? at : 0
+  })
+  // 3. Median of five neighbouring moves, then strictly in order.
+  const out = placed.map((t, i) => {
+    const near = moves.slice(Math.max(0, i - 2), i + 3).sort((a, b) => a - b)
+    return t + near[Math.floor(near.length / 2)]
+  })
+  for (let i = 1; i < out.length; i++) if (out[i] <= out[i - 1] + 0.2) out[i] = out[i - 1] + 0.2
+  return out
 }
 
 /** What whisper reads: one channel at 16 kHz. */

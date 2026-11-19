@@ -9,10 +9,10 @@ import { useStore } from './store'
 import { DeckView } from './components/DeckView'
 import { MixerView } from './components/MixerView'
 import { LibraryPanel } from './components/LibraryPanel'
+import { PluginPanel } from './components/PluginPanel'
 import { MasterPanel } from './components/MasterPanel'
 import { EchoUnit, Rack } from './components/Rack'
 import { SettingsModal } from './components/SettingsModal'
-import { PitchColumn } from './components/PitchColumn'
 import { SpotifyPanel } from './components/SpotifyPanel'
 import { Splitter } from './components/Splitter'
 import { DubBoxPanel } from './components/DubBoxPanel'
@@ -66,23 +66,22 @@ export function App() {
     <div className="app" style={{ '--track-h': layout.track + 'px', '--bottom-h': layout.bottom + 'px' } as React.CSSProperties}>
       <TopBar />
       <TrackView />
-      <Splitter part="track" sign={1} label="Altura das ondas" />
+      <Splitter part="track" sign={1} label="Waveform height" />
       <Rack />
       <main className="stage">
         <DeckView deck={deckA} other={deckB} />
-        <PitchColumn deck={deckA} />
         <MixerView />
-        <PitchColumn deck={deckB} />
         <DeckView deck={deckB} other={deckA} />
       </main>
-      <Splitter part="bottom" sign={-1} label="Altura da biblioteca" />
+      <Splitter part="bottom" sign={-1} label="Library height" />
       <section className="bottom">
         <nav className="tabs">
-          {tabButton('library', 'Biblioteca')}
+          {tabButton('library', 'Library')}
           {tabButton('sampler', 'Sampler')}
           {tabButton('dubbox', 'Dub Box')}
-          {tabButton('echo', 'Eco fita')}
-          {tabButton('voice', 'Voz')}
+          {tabButton('echo', 'Tape echo')}
+          {tabButton('voice', 'Mic')}
+          {tabButton('plugin', 'Plugin')}
           {tabButton('master', 'Master')}
           {tabButton('spotify', 'Spotify', sp.loggedIn)}
           {/* The open tab's own tools (search, add files…) sit here, on the tab row, not on a row of their own. */}
@@ -102,6 +101,7 @@ export function App() {
               <VoicePanel />
             </div>
           )}
+          {tab === 'plugin' && <PluginPanel />}
           {tab === 'master' && <MasterPanel />}
           {tab === 'spotify' && <SpotifyPanel />}
         </div>

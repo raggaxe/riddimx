@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { settings } from '../settings'
+import { integratedLufs, matchDb } from './loudness'
 import { Store, clamp } from '../store'
 import { mixer } from './mixer'
 import { computeDetail, computePeaks, detectBeatAnchor, detectBpm, detectDownbeat } from './analyze'
@@ -16,7 +17,7 @@ import { findCover } from './lookup'
 import { Tape } from './tape'
 import { dubSettings } from './dub'
 import { rewindSettings } from './rewind'
-import { lyrics } from './lyrics'
+import { LYRICS_ON, lyrics } from './lyrics'
 import { sampler } from './sampler'
 import { spotify, type SpotifyOwner } from './spotify'
 import { bpmStore } from './bpm'
@@ -58,6 +59,7 @@ export interface DeckState {
   processed: boolean // desktop app: YouTube sound runs through this deck's EQ, filter and stems
   pfl: boolean // pre-listen: this deck is sent to the headphones, whatever its fader says
   gain: number // channel trim, -1..1 (= -12..+12 dB)
+  lufs: number | null // integrated loudness of the loaded file (null: not measured, links)
   fx: FxType
   fxOn: boolean
   fxAmount: number // 0..1
@@ -87,6 +89,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   private stemsNode: AudioWorkletNode | null = null
   private pflSend: GainNode // post-effect, pre-fader tap to the headphone bus
   private fxUnit: FxUnit
+  private throwCut!: GainNode
   private srcBus: GainNode // file playback enters here; routed straight on, or through the pitch shifter
   private pitchNode: AudioWorkletNode | null = null
   private liveKey: LiveChroma | null = null // notes of the YouTube clip as it plays
@@ -122,6 +125,14 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   private stemBuffers: Record<AiPart, AudioBuffer> | null = null
   private aiIn!: Record<AiPart, GainNode> // where each AI stem source plugs in
   private aiOut!: Record<Stem, GainNode> // one level per stem pad
+  // Each stem alone, as heard (pads applied), for the Plugin tab's AUX sends: from the AI stems when the
+  // track has them, else from the filter splitter. Sends go through auxPost, which follows the fader.
+  private tapAi!: Record<Stem, GainNode>
+  private tapDsp!: Record<Stem, GainNode>
+  /** Send level of each stem into each AUX (0..1): the Plugin tab sets them. */
+  readonly auxSend: Record<Stem, GainNode>[] = []
+  /** What this deck sends into each AUX, after its channel fader and the crossfader. */
+  readonly auxPost: GainNode[] = []
   private fileId: string | null = null
   private anchorTime = 0
   private anchorOffset = 0
@@ -172,6 +183,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       processed: false,
       pfl: false,
       gain: 0,
+      lufs: null,
       fx: 'echo',
       fxOn: false,
       fxAmount: 0.5,
@@ -215,7 +227,10 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       .catch(() => undefined)
     this.fxUnit = new FxUnit(ctx)
     this.filterNode.connect(this.fxUnit.input)
-    this.fxUnit.output.connect(this.vol)
+    // The THROW cut sits after the echo sends: the music drops out of the mix, the echo still gets it.
+    this.throwCut = ctx.createGain()
+    this.fxUnit.output.connect(this.throwCut)
+    this.throwCut.connect(this.vol)
     this.tape = new Tape(ctx, this.fxUnit.output)
     this.pflSend = ctx.createGain()
     this.pflSend.gain.value = 0
@@ -229,11 +244,14 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
         this.stemsNode = node
         this.input.disconnect()
         this.input.connect(node)
-        node.connect(this.eq.low)
+        node.connect(this.eq.low, 0)
+        STEMS.forEach((stem, k) => node.connect(this.tapDsp[stem], k + 1))
         this.pushStems()
       })
       .catch(() => undefined)
     mixer.register(this)
+    // Loudness match switched on or off on the master: this deck's trim follows.
+    mixer.subscribe(() => this.applyTrim())
     bpmStore.onResult((ref, bpm) => this.onAnalysed(ref, bpm))
     this.applyOutput()
     window.setInterval(() => this.tick(), 50)
@@ -296,8 +314,10 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       stems: { ...ALL_STEMS },
       aiStems: 'off',
       aiProgress: 0,
+      lufs: null,
     })
     this.pushStems()
+    this.applyTrim()
   }
 
   private fail(token: number, e: unknown): void {
@@ -342,9 +362,15 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
         anchor,
         barAt: bpm && anchor !== null ? detectDownbeat(buffer, bpm, anchor) : null,
       })
+      // Loudness, a moment later so the deck is ready first; the match fades in.
+      window.setTimeout(() => {
+        if (token !== this.token) return
+        this.set({ lufs: integratedLufs(buffer) })
+        this.applyTrim()
+      }, 50)
       void this.loadAiStems(token, fingerprint).finally(() => this.autoLyrics(token, fingerprint))
     } catch {
-      this.fail(token, new Error('Formato de áudio não suportado'))
+      this.fail(token, new Error('Audio format not supported'))
     }
   }
 
@@ -378,7 +404,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
         if (this.ytReady) this.yt.cueVideoById(videoId)
         return // not ready yet: onReady cues ytWanted
       }
-      if (!this.ytHost) throw new Error('Player do YouTube indisponível')
+      if (!this.ytHost) throw new Error('YouTube player unavailable')
       const el = document.createElement('div')
       this.ytHost.appendChild(el)
       const events = {
@@ -488,7 +514,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       loading: false,
       playing: false,
       blocked,
-      error: blocked ? 'O dono deste vídeo bloqueou a reprodução fora do youtube.com.' : 'Erro do YouTube (' + code + ')',
+      error: blocked ? 'The owner of this video blocked playback outside youtube.com.' : 'YouTube error (' + code + ')',
     })
   }
 
@@ -640,6 +666,26 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     return { wait: wait < 0.02 ? wait + beat / (s.rate || 1) : wait, beat: beat / (s.rate || 1) }
   }
 
+  /** Seconds (as heard) to the head of the next bar, and one beat's length; null with no grid or stopped. */
+  nextBar(): { wait: number; beat: number } | null {
+    const s = this.state
+    if (!s.bpm || s.anchor === null || !s.playing) return null
+    const beat = 60 / s.bpm
+    const bar = 4 * beat
+    const one = s.barAt ?? s.anchor
+    const since = (this.getPosition() - one) / bar
+    const rate = s.rate || 1
+    const wait = ((Math.ceil(since) - since) * bar) / rate
+    return { wait: wait < 0.05 ? wait + bar / rate : wait, beat: beat / rate }
+  }
+
+  /** THROW to the bar: the music out of the mix (the echo sends still get it), or back in. */
+  throwMute(out: boolean, at = mixer.ctx.currentTime): void {
+    const g = this.throwCut.gain
+    g.cancelScheduledValues(at)
+    g.setTargetAtTime(out ? 0 : 1, at, out ? 0.004 : 0.003)
+  }
+
   /** Freeze the current position as the new time anchor (before any tempo/loop change). */
   private reanchor(): void {
     if (!this.src) return
@@ -749,6 +795,19 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     }
   }
 
+  /**
+   * Cue point picked on the waveform. Stopped: the track moves there too, ready to play from it.
+   * Playing: only the cue point moves (CUE then jumps back to it). The head of a bar pulls a little.
+   */
+  cueAt(t: number): void {
+    const s = this.state
+    if (s.kind === 'none') return
+    const cue = this.magnet(Math.max(0, Math.min(s.duration || t, t)))
+    this.set({ cue })
+    if (!s.playing) this.seek(cue)
+    if (s.anchor === null && s.ref) this.setAnchor(cue)
+  }
+
   private cueHold: { timer: number; previewing: boolean } | null = null
 
   /**
@@ -817,7 +876,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       if (same) return
     }
     if (!s.bpm) {
-      this.set({ error: 'Sem BPM: marca o tempo com TAP' })
+      this.set({ error: 'No BPM: tap the tempo with TAP' })
       return
     }
     const start = this.getPosition()
@@ -861,6 +920,18 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     this.setLoop(s.loopIn, out, beats)
   }
 
+  /** A message on the deck (e.g. the library saying a track is not ready); cleared by the next load. */
+  notice(error: string): void {
+    this.set({ error })
+  }
+
+  /** Sets the running loop to this many beats, keeping where it begins (no loop running: nothing). */
+  resizeLoop(beats: number): void {
+    const s = this.state
+    if (!s.loop || !s.bpm) return
+    this.setLoop(s.loop.in, s.loop.in + (beats * 60) / s.bpm, beats)
+  }
+
   /** Halve or double the running loop, keeping where it begins. */
   loopScale(factor: number): void {
     const loop = this.state.loop
@@ -875,6 +946,12 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     const s = this.state
     this.set({ dubbing: held && this.canFx })
     this.fxUnit.dub(held && this.canFx, s.bpm ? 60 / (s.bpm * s.rate) : null)
+  }
+
+  /** PANIC: DUB let go and its echo tails cut. */
+  panic(): void {
+    if (this.state.dubbing) this.dub(false)
+    this.fxUnit.flush()
   }
 
   /** The DUB button itself: works while held, or toggles on each press, as set in dubSettings. */
@@ -1191,11 +1268,11 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       return
     }
     if (!this.state.bpm || !other.get().bpm) {
-      this.set({ error: 'SYNC precisa de BPM nos dois decks (use TAP)' })
+      this.set({ error: 'SYNC needs BPM on both decks (use TAP)' })
       return
     }
     if (!this.canPitch) {
-      this.set({ error: 'Spotify não permite alterar o tempo' })
+      this.set({ error: 'Spotify doesn\'t allow changing the tempo' })
       return
     }
     if (other.get().syncOn) other.syncOff() // two decks cannot follow each other
@@ -1547,7 +1624,21 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   setGain(v: number): void {
     const gain = clamp(v, -1, 1)
     this.set({ gain })
-    this.input.gain.setTargetAtTime(Math.pow(10, (gain * 12) / 20), mixer.ctx.currentTime, 0.01)
+    this.applyTrim()
+  }
+
+  /** dB the loudness match is adding to this deck now (0 when off or not measured). */
+  get matchDb(): number {
+    return mixer.get().loudMatch ? matchDb(this.state.lufs) : 0
+  }
+
+  private trimShown = NaN
+  /** The trim stage: the DJ's GAIN plus the loudness match. */
+  private applyTrim(): void {
+    const db = this.state.gain * 12 + this.matchDb
+    if (db === this.trimShown) return
+    this.trimShown = db
+    this.input.gain.setTargetAtTime(Math.pow(10, db / 20), mixer.ctx.currentTime, 0.05)
   }
 
   // ───────────────────────── effects ─────────────────────────
@@ -1614,6 +1705,11 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     if (this.stemsNode) setStems(this.stemsNode, ai ? ALL_STEMS : this.state.stems)
     const now = mixer.ctx.currentTime
     for (const stem of STEMS) this.aiOut[stem].gain.setTargetAtTime(!ai || this.state.stems[stem] ? 1 : 0, now, 0.008)
+    // AUX taps: the AI stems when there are some (the splitter only sees their sum then), else the splitter.
+    for (const stem of STEMS) {
+      this.tapAi[stem].gain.setTargetAtTime(ai ? 1 : 0, now, 0.01)
+      this.tapDsp[stem].gain.setTargetAtTime(ai ? 0 : 1, now, 0.01)
+    }
   }
 
   // ───────────────────────── AI stems (desktop app, files) ─────────────────────────
@@ -1641,6 +1737,31 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     this.aiIn.drums.connect(lo1).connect(lo2).connect(this.aiOut.kick)
     this.aiIn.drums.connect(hi1).connect(hi2).connect(this.aiOut.hat)
     for (const out of Object.values(this.aiOut)) out.connect(this.srcBus)
+    // AUX taps and sends (two AUX buses).
+    const tap = {} as Record<Stem, GainNode>
+    this.tapAi = {} as Record<Stem, GainNode>
+    this.tapDsp = {} as Record<Stem, GainNode>
+    for (const stem of STEMS) {
+      tap[stem] = gain()
+      this.tapAi[stem] = gain()
+      this.tapDsp[stem] = gain()
+      this.aiOut[stem].connect(this.tapAi[stem])
+      this.tapAi[stem].connect(tap[stem])
+      this.tapDsp[stem].connect(tap[stem])
+      this.tapAi[stem].gain.value = 0
+    }
+    for (let aux = 0; aux < 2; aux++) {
+      const post = gain()
+      const sends = {} as Record<Stem, GainNode>
+      for (const stem of STEMS) {
+        sends[stem] = gain()
+        sends[stem].gain.value = 0
+        tap[stem].connect(sends[stem])
+        sends[stem].connect(post)
+      }
+      this.auxSend.push(sends)
+      this.auxPost.push(post)
+    }
   }
 
   /**
@@ -1648,7 +1769,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
    * when there is one (much clearer than the whole mix).
    */
   private async autoLyrics(token: number, fingerprint: Promise<ArrayBuffer>): Promise<void> {
-    if (token !== this.token || !this.buffer) return
+    if (!LYRICS_ON || token !== this.token || !this.buffer) return
     const id = [...new Uint8Array(await fingerprint)].map((b) => b.toString(16).padStart(2, '0')).join('')
     if (token !== this.token) return
     const s = this.state
@@ -1719,6 +1840,8 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   applyOutput(): void {
     const side = mixer.sideGain(this.side)
     this.xfade.gain.setTargetAtTime(side, mixer.ctx.currentTime, 0.01)
+    // AUX sends are post-fader: a deck pulled down sends nothing to the effects.
+    for (const post of this.auxPost) post.gain.setTargetAtTime(this.state.volume * side, mixer.ctx.currentTime, 0.01)
     const external = this.state.volume * side * mixer.get().master
     if (this.state.kind === 'youtube' && this.ytReady) {
       // Processed YouTube audio is mixed by the deck's own gains (and the master bus), like a file.
