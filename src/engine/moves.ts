@@ -62,7 +62,7 @@ interface Snapshot {
 }
 
 export const MOVES: Record<Move, { label: string; hint: string; long: boolean }> = {
-  cut: { label: 'NO UM', hint: 'Corte seco no primeiro tempo: a outra entra do cue e esta pára', long: false },
+  cut: { label: 'NO UM', hint: 'Corte seco no primeiro tempo: a outra entra do cue e esta para', long: false },
   echoOut: { label: 'ECO OUT', hint: 'A que sai vai para o eco de fita e fecha; a outra entra no compasso seguinte', long: false },
   bassSwap: {
     label: 'TROCA GRAVE',

@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RiddimX">
+<meta name="theme-color" content="#0f1115">
+<title>RiddimX Controle</title>
+<style>
+:root {
+  --bg: #0f1115; --panel: #171a21; --raise: #20242d; --line: #2c313c; --text: #e9ecf1; --dim: #8a93a3;
+  --a: #f2c230; --b: #35c46a; --c: var(--a); --red: #e5484d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overscroll-behavior: none; }
+body {
+  font: 12px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  display: flex; flex-direction: column;
+}
+button { font: inherit; color: inherit; touch-action: manipulation; }
+.top { display: flex; gap: 4px; padding: 6px 8px; align-items: center; border-bottom: 1px solid var(--line); background: var(--panel); }
+.tab { flex: 1; height: 34px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-weight: 700; letter-spacing: .06em; }
+.tab.now { background: var(--c); color: #111; border-color: var(--c); }
+.tab[data-p="A"] { --c: var(--a); } .tab[data-p="B"] { --c: var(--b); } .tab[data-p="mix"], .tab[data-p="dub"], .tab[data-p="fx"] { --c: #cfd5df; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); flex: none; margin: 0 4px; }
+.dot.on { background: #35c46a; }
+.fs { width: 34px; height: 34px; flex: none; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; }
+.fs svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+.page { display: none; padding: 8px; gap: 8px; }
+.page.now { display: grid; }
+.off { position: fixed; inset: 0; display: none; place-items: center; text-align: center; background: rgba(15,17,21,.92); z-index: 9; padding: 24px; font-size: 14px; color: var(--dim); }
+.off.show { display: grid; }
+.off b { display: block; color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+/* deck */
+.deck { --c: var(--a); }
+.deck.B { --c: var(--b); }
+.info { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px; background: var(--panel); border-left: 3px solid var(--c); }
+.info .t { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.info .r { color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.info .bpm { grid-row: span 2; text-align: right; font: 700 22px/1 ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+.info .bpm small { display: block; font-size: 10px; color: var(--dim); font-weight: 500; margin-top: 3px; }
+.prog { grid-column: 1 / -1; height: 3px; background: var(--raise); margin-top: 4px; }
+.prog i { display: block; height: 100%; width: 0; background: var(--c); }
+.time { color: var(--dim); font-variant-numeric: tabular-nums; }
+
+.knobs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.knob { display: grid; justify-items: center; gap: 2px; padding: 4px 0; background: var(--panel); touch-action: none; }
+.knob svg { width: 44px; height: 44px; }
+.knob .trk { stroke: var(--raise); }
+.knob .val { stroke: var(--c); }
+.knob .cap { fill: var(--raise); stroke: var(--line); }
+.knob .ptr { stroke: var(--text); stroke-width: 2; stroke-linecap: square; }
+.knob span { font-size: 9px; letter-spacing: .08em; color: var(--dim); }
+.knob.drag .cap { fill: #2a2f3a; }
+
+.jogrow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; }
+.bend { height: 64px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-size: 20px; }
+.bend.on { background: var(--c); color: #111; }
+.jog { width: min(58vw, 34vh, 260px); aspect-ratio: 1; border-radius: 50%; position: relative; touch-action: none;
+  background: radial-gradient(circle, #1b1e25 0 18%, #0b0c0f 19% 22%, #16181e 23% 100%);
+  box-shadow: inset 0 0 0 2px var(--line), inset 0 0 0 6px #0b0c0f; }
+.jog::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: repeating-radial-gradient(circle, transparent 0 3px, rgba(255,255,255,.035) 3px 4px); }
+.jog .mk { position: absolute; left: 50%; top: 6%; width: 4px; height: 18%; margin-left: -2px; background: var(--c); transform-origin: 50% 245%; }
+.jog .lbl { position: absolute; inset: 36%; border-radius: 50%; background: var(--c); opacity: .9; display: grid; place-items: center; color: #111; font-weight: 800; font-size: 10px; letter-spacing: .1em; }
+.jog.held { box-shadow: inset 0 0 0 2px var(--c), inset 0 0 0 6px #0b0c0f; }
+
+.fader { display: grid; grid-template-columns: 54px 1fr 54px; align-items: center; gap: 6px; }
+.fader > span { font-size: 9px; letter-spacing: .08em; color: var(--dim); }
+.fader > b { text-align: right; font: 600 11px ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+.slider { position: relative; height: 40px; background: var(--panel); touch-action: none; }
+.slider::before { content: ""; position: absolute; left: 12px; right: 12px; top: 50%; height: 2px; margin-top: -1px; background: var(--raise); }
+.slider .mid { position: absolute; left: 50%; top: 8px; bottom: 8px; width: 1px; background: var(--line); }
+.slider .th { position: absolute; top: 4px; bottom: 4px; width: 24px; margin-left: -12px; background: var(--raise); border: 1px solid var(--line); border-radius: 2px; }
+.slider .th::after { content: ""; position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: var(--c); }
+.slider.drag .th { border-color: var(--c); }
+.vslider { height: 160px; width: 100%; }
+.vslider::before { left: 50%; right: auto; top: 12px; bottom: 12px; width: 2px; height: auto; margin: 0 0 0 -1px; }
+.vslider .th { left: 4px !important; right: 4px; width: auto; height: 22px; margin: -11px 0 0; top: auto; bottom: auto; }
+.vslider .th::after { left: 4px; right: 4px; top: 50%; bottom: auto; width: auto; height: 2px; margin: -1px 0 0; }
+
+.modes { display: grid; grid-template-columns: repeat(4, 1fr) 54px; gap: 4px; }
+.mode, .shift { height: 30px; border: 1px solid var(--line); background: var(--panel); border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--dim); }
+.mode.now { color: var(--c); border-color: var(--c); }
+.shift.on { background: var(--text); color: #111; }
+.pads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.pad { height: 58px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-weight: 700; font-size: 11px; letter-spacing: .04em; color: var(--dim); }
+.pad.lit { border-color: var(--c); color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
+.pad.down, .btn.down { background: var(--c); color: #111; }
+.trans { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.btn { height: 54px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-weight: 800; font-size: 12px; letter-spacing: .06em; }
+.btn.lit { color: var(--c); border-color: var(--c); }
+.btn.play.lit { background: var(--c); color: #111; }
+.btn svg { width: 18px; height: 18px; fill: currentColor; vertical-align: middle; }
+
+/* mixer */
+.mix { grid-template-columns: 1fr 1fr; }
+.strip { display: grid; gap: 6px; padding: 6px; background: var(--panel); border-top: 3px solid var(--c); }
+.strip.A { --c: var(--a); } .strip.B { --c: var(--b); }
+.strip .knobs { grid-template-columns: repeat(2, 1fr); }
+.strip .knob { background: var(--bg); }
+.wide { grid-column: 1 / -1; }
+.xf { --c: #cfd5df; display: grid; gap: 6px; padding: 8px; background: var(--panel); }
+.xf .slider { height: 52px; }
+.xf .slider .th { width: 34px; margin-left: -17px; }
+.row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+.lbl2 { font-size: 9px; letter-spacing: .08em; color: var(--dim); }
+
+/* dub */
+.dub { --c: #ff8a3d; }
+.big { height: 92px; font-size: 18px; }
+.preset { display: grid; grid-template-columns: 54px 1fr 54px; gap: 4px; align-items: center; }
+.preset b { text-align: center; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sampler { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.sampler .pad { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
+.moves { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.moves .btn { height: 44px; font-size: 10px; }
+
+/* panels */
+.fxp { grid-template-columns: 1fr; }
+.slot { display: none; }
+.sec { --c: #ff8a3d; display: grid; gap: 8px; padding: 8px; background: var(--panel); }
+.fxp .sec, .mix .sec { --c: #7fdcff; }
+.perf { position: sticky; top: -8px; z-index: 3; margin: -8px -8px 0; padding: 8px; background: var(--bg);
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; border-bottom: 1px solid var(--line); }
+.perf .big { height: 76px; font-size: 15px; display: grid; place-content: center; gap: 2px; line-height: 1; }
+.perf .big small { font-size: 10px; opacity: .7; }
+.perf .da { --c: var(--a); } .perf .db { --c: var(--b); }
+.perf .btn.lit { background: var(--c); color: #111; }
+.hold { touch-action: none; }
+.sec-h { all: unset; display: flex; align-items: baseline; gap: 8px; cursor: pointer; padding: 2px 0; touch-action: manipulation; }
+.sec-h b { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+.sec-h small { color: var(--dim); font-size: 11px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sec-h i { margin-left: auto; width: 8px; height: 8px; border-right: 2px solid var(--dim); border-bottom: 2px solid var(--dim); transform: rotate(45deg) translate(-2px, -2px); flex: none; }
+.sec.closed .sec-h i { transform: rotate(-45deg); }
+.sec.closed .sec-b { display: none; }
+.sec-b { display: grid; gap: 8px; }
+.opts.wrap { grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); }
+.opts.wrap .opt { height: 40px; font-size: 10.5px; white-space: normal; line-height: 1.1; }
+.flip.do { color: var(--text); border-style: dashed; }
+.sec h4 { margin: 0; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; display: flex; gap: 8px; align-items: baseline; }
+.sec h4 small { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--dim); font-size: 11px; }
+.pk { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.pk .knob { background: var(--bg); }
+.knob em { font-style: normal; font: 600 9px ui-monospace, Menlo, monospace; color: var(--text); font-variant-numeric: tabular-nums; min-height: 11px; }
+.pr { display: grid; gap: 6px; }
+.choice { display: grid; gap: 3px; }
+.opts { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
+.opt { height: 32px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-size: 9.5px; font-weight: 700; letter-spacing: .03em; color: var(--dim); padding: 0 3px; overflow: hidden; white-space: normal; line-height: 1.1; }
+.opt.now { color: #111; background: var(--c); border-color: var(--c); }
+.pf { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.flip { height: 36px; border: 1px solid var(--line); background: var(--raise); border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--dim); }
+.flip.on { color: var(--c); border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
+.pf .btn { height: 44px; font-size: 11px; }
+
+@media (orientation: landscape) and (min-width: 600px) {
+  .pk { grid-template-columns: repeat(8, 1fr); }
+  .opts.wrap { grid-template-columns: repeat(6, 1fr); }
+  .perf .big { height: 56px; }
+  .fxp.now { grid-template-columns: 1fr 1fr; }
+  .page { gap: 6px; padding: 6px; }
+  .deck.now { grid-template-columns: minmax(260px, 38%) 1fr; grid-template-rows: auto auto auto auto 1fr;
+    grid-template-areas: "jog info" "jog knobs" "jog faders" "trans modes" "trans pads"; }
+  .deck .info { grid-area: info; padding: 6px 8px; } .deck .jogrow { grid-area: jog; } .deck .knobs { grid-area: knobs; }
+  .deck .faders { grid-area: faders; } .deck .modes { grid-area: modes; } .deck .pads { grid-area: pads; }
+  .deck .trans { grid-area: trans; align-self: end; }
+  .jog { width: min(calc(100vh - 160px), 210px); }
+  .bend { height: 48px; }
+  .knob svg { width: 36px; height: 36px; }
+  .slider { height: 30px; }
+  .pad { height: 44px; }
+  .btn { height: 46px; }
+  .mode, .shift { height: 26px; }
+  .mix.now { grid-template-columns: 1fr 1fr 1.4fr; }
+  .mix .wide { grid-column: auto; }
+  .mix .sec, .dub .sec { grid-column: 1 / -1; }
+  .vslider { height: 110px; }
+}
+</style>
+</head>
+<body>
+<div class="top">
+  <button class="tab now" data-p="A">A</button>
+  <button class="tab" data-p="B">B</button>
+  <button class="tab" data-p="mix">MIXER</button>
+  <button class="tab" data-p="dub">DUB</button>
+  <button class="tab" data-p="fx">FX</button>
+  <i class="dot" id="dot" title="Conexão"></i>
+  <button class="fs" id="fs" aria-label="Tela cheia"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg></button>
+</div>
+<main id="main"></main>
+<div class="off show" id="off"><div><b>Conectando ao RiddimX…</b>O celular precisa estar no mesmo Wi-Fi do Mac, com o app aberto e o Celular ligado em Ajustes.</div></div>
+
+<script>
+'use strict'
+const KEY = new URLSearchParams(location.search).get('k') || ''
+let S = null // last state from the app
+let ws = null
+const holdUntil = new Map() // control id → time until which the app's value is ignored (the finger is on it)
+const updaters = []
+
+// ───────── connection ─────────
+let retry = 500
+function connect() {
+  ws = new WebSocket('ws://' + location.host + '/ws?k=' + encodeURIComponent(KEY))
+  ws.onopen = () => { retry = 500; dot.classList.add('on'); off.classList.remove('show'); ws.send(JSON.stringify({ t: 'hello' })) }
+  ws.onmessage = (e) => {
+    let m
+    try { m = JSON.parse(e.data) } catch { return }
+    if (m.t !== 's') return
+    if (m.moves && !moves.childElementCount) buildMoves(m.moves)
+    if (m.panels && !panelsBuilt) buildPanels(m.panels)
+    S = m
+    if (m.colors) { document.documentElement.style.setProperty('--a', m.colors.A); document.documentElement.style.setProperty('--b', m.colors.B) }
+    for (const u of updaters) u(S)
+  }
+  ws.onclose = () => {
+    dot.classList.remove('on'); off.classList.add('show')
+    setTimeout(connect, retry); retry = Math.min(4000, retry * 1.6)
+  }
+}
+const send = (o) => ws && ws.readyState === 1 && ws.send(JSON.stringify(o))
+// Continuous controls: at most one message per frame per control.
+const pending = new Map()
+let flushing = false
+function sendValue(id, v) {
+  pending.set(id, v)
+  holdUntil.set(id, Infinity)
+  if (flushing) return
+  flushing = true
+  requestAnimationFrame(() => { flushing = false; for (const [id, v] of pending) send(id.startsWith('p:') ? { t: 'p', k: id.slice(2), v } : { t: 'a', id, v }); pending.clear() })
+}
+const release = (id) => holdUntil.set(id, performance.now() + 500)
+const held = (id) => (holdUntil.get(id) || 0) > performance.now()
+const buzz = () => navigator.vibrate && navigator.vibrate(8)
+
+// ───────── little builders ─────────
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e }
+const get = (path) => path.split('.').reduce((o, k) => (o == null ? o : o[k]), S)
+
+/** A button: "button" sends 1 on press; "hold" 1 on press and 0 on release. lit(state) lights it. */
+function button(label, id, { cls = 'btn', hold = false, lit } = {}) {
+  const b = el('button', cls + (hold ? ' hold' : ''), label)
+  const ids = () => (typeof id === 'function' ? id() : id)
+  let down = false
+  b.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); b.setPointerCapture(e.pointerId); down = true; b.classList.add('down'); buzz()
+    send({ t: 'a', id: ids(), v: 1 })
+  })
+  const up = () => { if (!down) return; down = false; b.classList.remove('down'); if (hold) send({ t: 'a', id: ids(), v: 0 }) }
+  b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up)
+  b.addEventListener('contextmenu', (e) => e.preventDefault())
+  if (lit) updaters.push((s) => b.classList.toggle('lit', !!lit(s)))
+  return b
+}
+
+/** A knob: drag up / down. center: -1..1 with a detent (double tap: back to 0); else 0..1. */
+function knob(label, id, path, center = true, read = null, readout = null) {
+  const k = el('div', 'knob')
+  k.innerHTML = '<svg viewBox="0 0 44 44"><path class="trk" d="" fill="none" stroke-width="4"/><path class="val" d="" fill="none" stroke-width="4"/>' +
+    '<circle class="cap" cx="22" cy="22" r="13"/><line class="ptr" x1="22" y1="22" x2="22" y2="11"/></svg><span>' + label + '</span>' + (readout ? '<em></em>' : '')
+  const [trk, val] = k.querySelectorAll('path'); const ptr = k.querySelector('line')
+  const arc = (a0, a1) => {
+    const p = (a) => [22 + 18 * Math.sin(a), 22 - 18 * Math.cos(a)]
+    const [x0, y0] = p(a0), [x1, y1] = p(a1)
+    return 'M' + x0 + ' ' + y0 + 'A18 18 0 ' + (Math.abs(a1 - a0) > Math.PI ? 1 : 0) + ' ' + (a1 > a0 ? 1 : 0) + ' ' + x1 + ' ' + y1
+  }
+  const SPAN = 2.4
+  trk.setAttribute('d', arc(-SPAN, SPAN))
+  let v = center ? 0 : 0.5
+  const draw = () => {
+    const unit = center ? (v + 1) / 2 : v
+    const a = -SPAN + unit * 2 * SPAN
+    const from = center ? 0 : -SPAN
+    val.setAttribute('d', Math.abs(a - from) < 0.01 ? '' : arc(Math.min(from, a), Math.max(from, a)))
+    ptr.setAttribute('transform', 'rotate(' + (a * 180 / Math.PI) + ' 22 22)')
+  }
+  draw()
+  let y0 = 0, v0 = 0, lastTap = 0
+  k.addEventListener('pointerdown', (e) => {
+    k.setPointerCapture(e.pointerId); k.classList.add('drag'); y0 = e.clientY; v0 = v
+    const now = performance.now()
+    if (center && now - lastTap < 300) { v = 0; draw(); sendValue(id(), 0) }
+    lastTap = now
+  })
+  k.addEventListener('pointermove', (e) => {
+    if (!k.hasPointerCapture(e.pointerId)) return
+    const range = center ? 2 : 1
+    let next = Math.max(center ? -1 : 0, Math.min(1, v0 + ((y0 - e.clientY) / 160) * range))
+    if (center && Math.abs(next) < 0.04) next = 0 // detent
+    if (next !== v) { v = next; draw(); sendValue(id(), v) }
+  })
+  const up = () => { k.classList.remove('drag'); release(id()) }
+  k.addEventListener('pointerup', up); k.addEventListener('pointercancel', up)
+  const em = k.querySelector('em')
+  updaters.push((s) => {
+    if (em) em.textContent = readout(s) || ''
+    if (held(id())) return
+    const x = read ? read(s) : get(path())
+    if (typeof x === 'number' && x !== v) { v = x; draw() }
+  })
+  return k
+}
+
+/** A fader. center: -1..1 (pitch); vertical for channel volumes. show(v) is the readout. */
+function slider(id, path, { center = false, vertical = false, show } = {}) {
+  const s = el('div', 'slider' + (vertical ? ' vslider' : ''))
+  if (center) s.append(el('i', 'mid'))
+  const th = el('i', 'th'); s.append(th)
+  let v = center ? 0 : 0.5
+  let out = null
+  const unit = () => (center ? (v + 1) / 2 : v)
+  const draw = () => {
+    const u = unit()
+    if (vertical) th.style.top = 12 + (1 - u) * (s.clientHeight - 24) + 'px'
+    else th.style.left = 12 + u * (s.clientWidth - 24) + 'px'
+    if (out && show) out.textContent = show(v)
+  }
+  const at = (e) => {
+    const r = s.getBoundingClientRect()
+    const u = vertical ? 1 - (e.clientY - r.top - 12) / (r.height - 24) : (e.clientX - r.left - 12) / (r.width - 24)
+    let x = Math.max(0, Math.min(1, u))
+    x = center ? x * 2 - 1 : x
+    if (center && Math.abs(x) < 0.03) x = 0
+    return x
+  }
+  // Grab the thumb anywhere: it moves relative to the finger, so touching never makes it jump.
+  let start = null
+  s.addEventListener('pointerdown', (e) => { s.setPointerCapture(e.pointerId); s.classList.add('drag'); start = { p: at(e), v } })
+  s.addEventListener('pointermove', (e) => {
+    if (!start) return
+    const lo = center ? -1 : 0
+    let next = Math.max(lo, Math.min(1, start.v + at(e) - start.p))
+    if (center && Math.abs(next) < 0.02) next = 0
+    if (next !== v) { v = next; draw(); sendValue(id(), v) }
+  })
+  const up = () => { start = null; s.classList.remove('drag'); release(id()) }
+  s.addEventListener('pointerup', up); s.addEventListener('pointercancel', up)
+  s.addEventListener('dblclick', () => { if (center) { v = 0; draw(); sendValue(id(), 0); release(id()) } })
+  updaters.push(() => { if (held(id())) return; const x = get(path()); if (typeof x === 'number') { v = x; draw() } })
+  new ResizeObserver(draw).observe(s)
+  return { el: s, out: (o) => { out = o; draw() } }
+}
+
+function faderRow(label, id, path, opts) {
+  const row = el('div', 'fader')
+  const f = slider(id, path, opts)
+  const b = el('b')
+  row.append(el('span', '', label), f.el, b)
+  f.out(b)
+  return row
+}
+
+const fmt = (t) => { t = Math.max(0, t); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0') }
+const ICON = {
+  play: '<svg viewBox="0 0 16 16"><path d="M4 2l10 6-10 6z"/></svg>',
+  pause: '<svg viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>',
+}
+const MODES = [['cue', 'CUE'], ['loop', 'LOOP'], ['stems', 'STEMS'], ['riddim', 'RIDDIM']]
+const PAD_LABELS = {
+  cue: [['1', '2', '3', '4'], ['×1', '×2', '×3', '×4']],
+  loop: [['4', '8', 'IN', 'OUT'], ['½', '×2', '1', '16']],
+  stems: [['VOZ', 'INSTR', 'BAIXO', 'BUMBO'], ['SÓ VOZ', 'SÓ INSTR', 'SÓ BAIXO', 'SÓ BUMBO']],
+  riddim: [['VERSION', 'ACAP', 'D&B', 'TUDO'], ['VERSION', 'ACAP', 'D&B', 'TUDO']],
+}
+const RIDDIM = [[0, 1, 1, 1, 1], [1, 0, 0, 0, 0], [0, 0, 1, 1, 1], [1, 1, 1, 1, 1]] // vocal instr bass kick hat
+
+// ───────── deck page ─────────
+function deckPage(name) {
+  const d = name
+  const p = el('section', 'page deck ' + d)
+  p.dataset.p = d
+  const at = (k) => () => d + '.' + k
+  const act = (k) => () => 'deck' + d + '.' + k
+
+  const info = el('div', 'info')
+  const title = el('div', 't', '—'), artist = el('div', 'r', 'Carregue uma música no app')
+  const bpm = el('div', 'bpm', '—<small>BPM</small>')
+  const prog = el('div', 'prog'); const bar = el('i'); prog.append(bar)
+  info.append(title, bpm, artist, prog)
+  updaters.push((s) => {
+    const x = s[d]
+    title.textContent = x.kind === 'none' ? 'Deck ' + d + ' vazio' : x.title || '—'
+    artist.textContent = x.kind === 'none' ? 'Carregue uma música no app' : [x.artist, x.dur ? '-' + fmt(x.dur - x.pos) : '', x.key || ''].filter(Boolean).join(' · ')
+    bpm.innerHTML = (x.bpm ? x.bpm.toFixed(1) : '—') + '<small>' + (x.rate ? (x.rate > 0 ? '+' : '') + x.rate.toFixed(1) + '%' : 'BPM') + '</small>'
+    bar.style.width = (x.dur ? (100 * x.pos) / x.dur : 0) + '%'
+  })
+
+  const knobs = el('div', 'knobs')
+  knobs.append(knob('GANHO', act('gain'), at('gain')), knob('AGUDO', act('high'), at('high')), knob('MÉDIO', act('mid'), at('mid')),
+    knob('GRAVE', act('low'), at('low')), knob('FILTRO', act('filter'), at('filter')), knob('FX', act('fxAmount'), at('fxAmount'), false))
+
+  // The platter: hand on it holds the record (scratch); turning it moves the music like the screen's platter.
+  const jogrow = el('div', 'jogrow')
+  const jog = el('div', 'jog'); const mk = el('i', 'mk'); jog.append(mk, el('i', 'lbl', 'RIDDIM'))
+  let last = null, turned = 0, spin = 0
+  const angle = (e) => { const r = jog.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI }
+  let acc = 0, accFlush = false
+  jog.addEventListener('pointerdown', (e) => { jog.setPointerCapture(e.pointerId); last = angle(e); jog.classList.add('held'); send({ t: 'touch', d, on: true }); buzz() })
+  jog.addEventListener('pointermove', (e) => {
+    if (last === null) return
+    const now = angle(e); let delta = now - last
+    if (delta > 180) delta -= 360; if (delta < -180) delta += 360
+    last = now; turned += delta; acc += delta
+    mk.style.transform = 'rotate(' + (spin + turned) + 'deg)'
+    if (!accFlush) { accFlush = true; requestAnimationFrame(() => { accFlush = false; if (acc) send({ t: 'turn', d, deg: acc, held: true }); acc = 0 }) }
+  })
+  const letGo = () => { if (last === null) return; last = null; jog.classList.remove('held'); send({ t: 'touch', d, on: false }) }
+  jog.addEventListener('pointerup', letGo); jog.addEventListener('pointercancel', letGo); jog.addEventListener('lostpointercapture', letGo)
+  // The mark turns with the music (33⅓ rpm look) while the deck plays.
+  let lastT = performance.now()
+  const turn = (t) => {
+    const dt = (t - lastT) / 1000; lastT = t
+    if (S && S[d].playing && last === null) { spin += dt * 200 * (1 + S[d].rate / 100); mk.style.transform = 'rotate(' + (spin + turned) + 'deg)' }
+    requestAnimationFrame(turn)
+  }
+  requestAnimationFrame(turn)
+  jogrow.append(button('‹', act('bendDown'), { cls: 'bend', hold: true }), jog, button('›', act('bendUp'), { cls: 'bend', hold: true }))
+
+  const faders = el('div', 'faders')
+  faders.style.display = 'grid'; faders.style.gap = '4px'
+  faders.append(
+    faderRow('PITCH', act('pitch'), at('pitch'), { center: true, show: () => (S ? (S[d].rate > 0 ? '+' : '') + S[d].rate.toFixed(1) + '%' : '') }),
+    faderRow('VOLUME', act('volume'), at('volume'), { show: (v) => Math.round(v * 100) + '%' }),
+  )
+
+  // Pads follow the deck's mode, as on the app; SHIFT sends the second function.
+  let shift = false
+  const modes = el('div', 'modes')
+  for (const [m, label] of MODES) {
+    const b = button(label, () => 'deck' + d + '.padMode' + m[0].toUpperCase() + m.slice(1), { cls: 'mode' })
+    updaters.push((s) => b.classList.toggle('now', s[d].mode === m))
+    modes.append(b)
+  }
+  const sh = el('button', 'shift', 'SHIFT')
+  sh.addEventListener('click', () => { shift = !shift; sh.classList.toggle('on', shift); for (const u of padText) u() })
+  modes.append(sh)
+  const pads = el('div', 'pads')
+  const padText = []
+  for (let i = 0; i < 4; i++) {
+    const b = button('', () => 'deck' + d + '.' + (shift ? 'padAlt' : 'pad') + (i + 1), {
+      cls: 'pad',
+      lit: (s) => {
+        const x = s[d]
+        if (x.mode === 'cue') return x.hot[i]
+        if (x.mode === 'loop') return i < 2 && x.loop === [4, 8][i]
+        if (x.mode === 'stems') return x.stems[[0, 1, 2, 3][i]]
+        return RIDDIM[i].every((on, j) => !!x.stems[j] === !!on)
+      },
+    })
+    const write = () => { b.textContent = PAD_LABELS[(S && S[d].mode) || 'cue'][shift ? 1 : 0][i] }
+    padText.push(write)
+    updaters.push(write)
+    pads.append(b)
+  }
+
+  const trans = el('div', 'trans')
+  const play = button(ICON.play, act('play'), { cls: 'btn play', lit: (s) => s[d].playing })
+  updaters.push((s) => { const html = s[d].playing ? ICON.pause : ICON.play; if (play.innerHTML !== html) play.innerHTML = html })
+  trans.append(
+    button('◀◀', act('rewind')),
+    button('DUB', act('dub'), { hold: true, lit: (s) => s[d].dub }),
+    button('CUE', act('cue')),
+    play,
+    button('SYNC', act('sync'), { lit: (s) => s[d].sync }),
+  )
+  p.append(info, knobs, jogrow, faders, modes, pads, trans)
+  return p
+}
+
+// ───────── mixer page ─────────
+function mixPage() {
+  const p = el('section', 'page mix'); p.dataset.p = 'mix'
+  for (const d of ['A', 'B']) {
+    const s = el('div', 'strip ' + d)
+    const act = (k) => () => 'deck' + d + '.' + k
+    const at = (k) => () => d + '.' + k
+    const knobs = el('div', 'knobs')
+    knobs.append(knob('AGUDO', act('high'), at('high')), knob('MÉDIO', act('mid'), at('mid')), knob('GRAVE', act('low'), at('low')), knob('FILTRO', act('filter'), at('filter')))
+    const vol = slider(act('volume'), at('volume'), { vertical: true })
+    s.append(el('div', 'lbl2', 'DECK ' + d), knobs, vol.el, button('CUE 🎧', act('pfl'), { lit: (x) => x[d].pfl }))
+    p.append(s)
+  }
+  const xf = el('div', 'xf wide')
+  const cross = slider(() => 'mixer.crossfader', () => 'mixer.crossfader')
+  const auto = el('div', 'row')
+  auto.append(button('◀ A', 'mixer.fadeA', { lit: (s) => s.mixer.fading === 0 }), button('BEATMATCH', 'mixer.beatmatch'), button('B ▶', 'mixer.fadeB', { lit: (s) => s.mixer.fading === 1 }))
+  xf.append(el('div', 'lbl2', 'CROSSFADER'), cross.el, auto, faderRow('MASTER', () => 'mixer.master', () => 'mixer.master', { show: (v) => Math.round(v * 100) + '%' }),
+    button('● GRAVAR', 'mixer.rec', { lit: (s) => s.mixer.rec }))
+  p.append(xf)
+  return p
+}
+
+// ───────── dub page ─────────
+let moves = null
+function buildMoves(list) {
+  for (const m of list) moves.append(button(m.label, m.id))
+}
+function dubPage() {
+  const p = el('section', 'page dub'); p.dataset.p = 'dub'
+  // Always at hand while the knobs below scroll: hold to play, let go to stop.
+  const top = el('div', 'perf')
+  top.append(
+    button('DUB<small>A</small>', 'deckA.dub', { cls: 'btn big da', hold: true, lit: (s) => s.A.dub }),
+    button('DUB<small>B</small>', 'deckB.dub', { cls: 'btn big db', hold: true, lit: (s) => s.B.dub }),
+    button('FIRE', 'dubbox.fire', { cls: 'btn big', hold: true, lit: (s) => s.dub.playing }),
+    button('THROW', 'dubbox.throw', { cls: 'btn big', hold: true, lit: (s) => s.dub.throwing }),
+  )
+  const preset = el('div', 'preset')
+  const name = el('b', '', '—')
+  updaters.push((s) => { name.textContent = s.dub.preset || '—' })
+  preset.append(button('‹', 'dubbox.prev'), name, button('›', 'dubbox.next'))
+  const slots = el('div', 'pads')
+  for (let i = 0; i < 4; i++) {
+    const b = button(String(i + 1), 'dubbox.slot' + (i + 1), { cls: 'pad', hold: true, lit: (s) => s.dub.slot === i })
+    updaters.push((s) => { b.textContent = s.dub.slots[i] || String(i + 1) })
+    slots.append(b)
+  }
+  const sampler = el('div', 'sampler')
+  for (let i = 0; i < 8; i++) {
+    const b = button(String(i + 1), 'sampler.pad' + (i + 1), { cls: 'pad', lit: (s) => s.sampler[i] && s.sampler[i].on })
+    updaters.push((s) => { b.textContent = (s.sampler[i] && s.sampler[i].name) || String(i + 1) })
+    sampler.append(b)
+  }
+  moves = el('div', 'moves')
+  p.append(top, preset, el('div', 'slot'), el('div', 'lbl2', 'BOTÕES RÁPIDOS'), slots,
+    faderRow('VOLUME', () => 'dubbox.level', () => 'dub.level', { show: (v) => Math.round(v * 100) + '%' }),
+    el('div', 'lbl2', 'SAMPLER'), sampler, el('div', 'lbl2', 'TRANSIÇÕES'), moves)
+  return p
+}
+
+// ───────── sound-shaping panels (sent by the app: Dub Box, DUB, echo, isolator, compressor…) ─────────
+function fxPage() { const p = el('section', 'page fxp'); p.dataset.p = 'fx'; return p }
+let panelsBuilt = false
+const pv = (s, k) => s.panel && s.panel.v[k]
+function buildPanels(panels) {
+  panelsBuilt = true
+  for (const [page, sections] of Object.entries(panels)) {
+    const host = main.querySelector('.page[data-p="' + page + '"]')
+    if (!host) continue
+    for (const sec of sections) {
+      const box = el('div', 'sec wide')
+      const head = el('button', 'sec-h', '<b>' + sec.title + '</b>' + (sec.hint ? '<small>' + sec.hint + '</small>' : '') + '<i></i>')
+      const memo = 'rx_open_' + sec.title
+      let open = !!sec.open
+      try { const m = localStorage.getItem(memo); if (m) open = m === '1' } catch {}
+      box.classList.toggle('closed', !open)
+      head.addEventListener('click', () => {
+        open = !open
+        box.classList.toggle('closed', !open)
+        try { localStorage.setItem(memo, open ? '1' : '0') } catch {}
+      })
+      box.append(head)
+      const body = el('div', 'sec-b')
+      const knobs = el('div', 'pk'), rows = el('div', 'pr'), flips = el('div', 'pf'), btns = el('div', 'pf')
+      for (const c of sec.controls) {
+        if (c.kind === 'knob') {
+          knobs.append(knob(c.label, () => 'p:' + c.k, null, c.center, (s) => pv(s, c.k), (s) => s.panel && s.panel.r[c.k]))
+        } else if (c.kind === 'choice') {
+          const row = el('div', 'choice')
+          if (c.label) row.append(el('span', 'lbl2', c.label))
+          const opts = el('div', 'opts' + (c.wrap ? ' wrap' : ''))
+          for (const o of c.options) {
+            const b = el('button', 'opt', o.label)
+            b.addEventListener('click', () => { send({ t: 'p', k: c.k, v: o.v }); buzz() })
+            updaters.push((s) => b.classList.toggle('now', pv(s, c.k) === o.v))
+            opts.append(b)
+          }
+          row.append(opts)
+          rows.append(row)
+        } else if (c.kind === 'switch') {
+          const b = el('button', 'flip', c.label)
+          b.addEventListener('click', () => { send({ t: 'p', k: c.k, v: !pv(S, c.k) }); buzz() })
+          updaters.push((s) => b.classList.toggle('on', !!pv(s, c.k)))
+          flips.append(b)
+        } else if (c.kind === 'do') {
+          const b = el('button', 'flip do', c.label)
+          b.addEventListener('click', () => { send({ t: 'p', k: c.k, v: true }); buzz() })
+          flips.append(b)
+        } else if (c.kind === 'button') {
+          btns.append(button(c.label, c.id, { hold: !!c.hold, lit: c.lit ? (s) => pv(s, c.lit) : undefined }))
+        }
+      }
+      for (const part of [btns, rows, knobs, flips]) if (part.childElementCount) body.append(part)
+      box.append(body)
+      const slot = host.querySelector('.slot')
+      if (slot) host.insertBefore(box, slot)
+      else host.append(box)
+    }
+  }
+  for (const u of updaters) S && u(S)
+}
+
+// ───────── pages ─────────
+const main = document.getElementById('main'), dot = document.getElementById('dot'), off = document.getElementById('off')
+main.append(deckPage('A'), deckPage('B'), mixPage(), dubPage(), fxPage())
+const tabs = document.querySelectorAll('.tab')
+function show(id) {
+  for (const t of tabs) t.classList.toggle('now', t.dataset.p === id)
+  for (const pg of main.children) pg.classList.toggle('now', pg.dataset.p === id)
+  try { localStorage.setItem('rx_page', id) } catch {}
+}
+for (const t of tabs) t.addEventListener('click', () => show(t.dataset.p))
+let first = 'A'
+try { first = localStorage.getItem('rx_page') || 'A' } catch {}
+show(first)
+document.getElementById('fs').addEventListener('click', () => {
+  const de = document.documentElement
+  if (document.fullscreenElement) document.exitFullscreen()
+  else if (de.requestFullscreen) de.requestFullscreen().catch(() => {})
+  else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen()
+})
+document.addEventListener('gesturestart', (e) => e.preventDefault()) // no pinch zoom on iOS
+connect()
+</script>
+</body>
+</html>

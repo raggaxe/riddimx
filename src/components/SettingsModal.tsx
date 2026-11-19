@@ -9,12 +9,15 @@ import { RewindPanel } from './RewindPanel'
 import { SpotifyAccount } from './SpotifyPanel'
 import { MidiPanel } from './MidiPanel'
 import { SettingsPanel } from './SettingsPanel'
+import { PhonePanel } from './PhonePanel'
+import { remote } from '../remote'
 
 const PAGES: { id: SettingsPage; label: string; hint: string }[] = [
   { id: 'geral', label: 'Geral', hint: 'Tamanho, cores, jog e pista' },
   { id: 'decks', label: 'Decks', hint: 'Botões DUB e ◀◀ Rewind' },
   { id: 'audio', label: 'Placa de áudio', hint: 'Output master, headphone, input do mic' },
   { id: 'midi', label: 'Controles', hint: 'Controladora MIDI, comando e teclado' },
+  { id: 'celular', label: 'Celular', hint: 'O celular vira controladora sem fio' },
   { id: 'contas', label: 'Contas', hint: 'Spotify' },
   { id: 'ia', label: 'Letras e IA', hint: 'Idioma das letras, modelo, stems' },
 ]
@@ -26,6 +29,7 @@ const PAGES: { id: SettingsPage; label: string; hint: string }[] = [
 export function SettingsModal() {
   const page = useStore(ui).settings
   const m = useStore(midi)
+  const phone = useStore(remote)
   const box = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -60,6 +64,7 @@ export function SettingsModal() {
               <b>
                 {p.label}
                 {p.id === 'midi' && <i className={'dot' + (m.inputs.length ? ' on' : '')} />}
+                {p.id === 'celular' && phone.on && <i className={'dot' + (phone.clients ? ' on' : '')} />}
               </b>
               <small>{p.hint}</small>
             </button>
@@ -84,6 +89,7 @@ export function SettingsModal() {
                 <RewindPanel />
               </div>
             )}
+            {page === 'celular' && <PhonePanel />}
             {page === 'contas' && <SpotifyAccount />}
             {page === 'ia' && <AiPanel />}
           </div>

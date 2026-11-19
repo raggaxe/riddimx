@@ -3,6 +3,7 @@ import { mixer } from './engine/mixer'
 import { deckA, deckB } from './engine/deck'
 import { spotify } from './engine/spotify'
 import './midi' // MIDI, gamepad and keyboard shortcuts start with the app
+import './remote' // the phone controller's server comes back on if it was left on
 import { library } from './library'
 import { useStore } from './store'
 import { DeckView } from './components/DeckView'

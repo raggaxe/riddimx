@@ -27,6 +27,23 @@ contextBridge.exposeInMainWorld('vxDesktop', {
     ipcRenderer.on('vx:update', listener)
     return () => ipcRenderer.removeListener('vx:update', listener)
   },
+  // Phone as a controller over the Wi-Fi: turn the server on / off, its address, and the phone's messages.
+  remoteStart: () => ipcRenderer.invoke('vx:remote-start'),
+  remoteStop: () => ipcRenderer.invoke('vx:remote-stop'),
+  remoteInfo: () => ipcRenderer.invoke('vx:remote-info'),
+  remoteRenew: () => ipcRenderer.invoke('vx:remote-renew'),
+  remoteState: (text) => ipcRenderer.send('vx:remote-state', text),
+  remoteReply: (client, text) => ipcRenderer.send('vx:remote-reply', client, text),
+  onRemote: (callback) => {
+    const listener = (_event, msg, client) => callback(msg, client)
+    ipcRenderer.on('vx:remote', listener)
+    return () => ipcRenderer.removeListener('vx:remote', listener)
+  },
+  onRemoteClients: (callback) => {
+    const listener = (_event, n) => callback(n)
+    ipcRenderer.on('vx:remote-clients', listener)
+    return () => ipcRenderer.removeListener('vx:remote-clients', listener)
+  },
   onZoomKey: (callback) => {
     const listener = (_event, step) => callback(step)
     ipcRenderer.on('vx:zoom-key', listener)

@@ -434,6 +434,33 @@ export const actions: Action[] = [
 const actionById = new Map(actions.map((a) => [a.id, a]))
 
 /**
+ * One control of the phone controller (src/remote.ts): the action by its id, with a value in the action's own
+ * range (button / hold: pressed > 0; fader 0..1; center -1..1; jog: ticks). Unknown ids do nothing.
+ */
+export function runAction(id: string, value: number): Action | null {
+  const action = actionById.get(id)
+  if (!action || !Number.isFinite(value)) return null
+  switch (action.type) {
+    case 'button':
+      if (value > 0) action.run(1)
+      break
+    case 'hold':
+      action.run(value > 0 ? 1 : 0)
+      break
+    case 'fader':
+      action.run(Math.min(1, Math.max(0, value)))
+      break
+    case 'center':
+      action.run(Math.min(1, Math.max(-1, value)))
+      break
+    case 'jog':
+      action.run(Math.min(200, Math.max(-200, value)))
+      break
+  }
+  return action
+}
+
+/**
  * Factory mapping for Hercules DJControl Inpulse 200/300 (codes taken from the Mixxx mappings).
  * Deck A = MIDI channel 2, deck B = channel 3, pads on channels 7/8, crossfader on channel 1.
  * The Inpulse 200 has no mid EQ knob; that entry is simply never triggered there.
@@ -954,6 +981,11 @@ class Midi extends Store<MidiState> {
         }
       }
     }
+  }
+
+  /** What the last control did, for the status line (the phone controller reports here too). */
+  say(last: string | null): void {
+    this.set({ last })
   }
 
   learn(actionId: string | null): void {

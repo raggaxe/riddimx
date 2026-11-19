@@ -3,7 +3,7 @@ import { Store, clamp } from './store'
 export type Tab = 'library' | 'sampler' | 'dubbox' | 'echo' | 'voice' | 'master' | 'spotify'
 
 /** Pages of the Ajustes window (a modal over the app). */
-export type SettingsPage = 'geral' | 'decks' | 'audio' | 'midi' | 'contas' | 'ia'
+export type SettingsPage = 'geral' | 'decks' | 'audio' | 'midi' | 'contas' | 'celular' | 'ia'
 
 /** Heights of the resizable parts of the window (the decks and mixer take what is left). */
 export interface Layout {

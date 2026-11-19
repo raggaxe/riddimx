@@ -13,6 +13,7 @@ const fs = require('node:fs')
 const http = require('node:http')
 const path = require('node:path')
 const { setupUpdater } = require('./updater.cjs')
+const { createRemote } = require('./remote.cjs')
 
 const ORIGIN = 'http://127.0.0.1:5173'
 const DECK_PAGE = ORIGIN + '/ytdeck.html'
@@ -309,6 +310,21 @@ app.whenReady().then(async () => {
   ipcMain.handle('vx:update-check', (event) => event.sender === win.webContents && updater.check(true))
   ipcMain.handle('vx:update-install', (event) => event.sender === win.webContents && updater.installNow())
   updater.start()
+  // Phone as a controller (Ajustes › Celular): a server on the local Wi-Fi, off until the DJ turns it on.
+  const remote = createRemote({
+    dataDir: app.getPath('userData'),
+    onMessage: (msg, client) => !win.isDestroyed() && win.webContents.send('vx:remote', msg, client),
+    onClients: (n) => !win.isDestroyed() && win.webContents.send('vx:remote-clients', n),
+  })
+  const mine = (event) => event.sender === win.webContents
+  ipcMain.handle('vx:remote-start', (event) => (mine(event) ? remote.start() : null))
+  ipcMain.handle('vx:remote-stop', (event) => (mine(event) ? remote.stop() : null))
+  ipcMain.handle('vx:remote-info', (event) => (mine(event) ? remote.info() : null))
+  ipcMain.handle('vx:remote-renew', (event) => (mine(event) ? remote.renew() : null))
+  ipcMain.on('vx:remote-state', (event, text) => mine(event) && typeof text === 'string' && remote.broadcast(text))
+  ipcMain.on('vx:remote-reply', (event, client, text) => mine(event) && typeof text === 'string' && remote.send(client, text))
+  app.on('will-quit', () => remote.stop())
+
   ipcMain.handle('vx:set-zoom', (event, factor) => {
     if (event.sender !== win.webContents || typeof factor !== 'number' || !(factor >= 0.5 && factor <= 2)) return
     win.webContents.setZoomFactor(factor)

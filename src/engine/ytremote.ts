@@ -20,6 +20,15 @@ export interface UpdateState {
   checkedAt?: number
 }
 
+/** The phone controller's server (electron/remote.cjs). */
+export interface RemoteInfo {
+  on: boolean
+  port: number
+  clients: number
+  urls: string[] // one per address of this Mac on the network (Wi-Fi first)
+  error?: string
+}
+
 interface DesktopBridge {
   capture(webContentsId: number): Promise<boolean>
   pathOf(file: File): string | null
@@ -31,6 +40,14 @@ interface DesktopBridge {
   updateCheck?(): Promise<void>
   updateInstall?(): Promise<void>
   onUpdate?(callback: (state: UpdateState) => void): () => void
+  remoteStart?(): Promise<RemoteInfo>
+  remoteStop?(): Promise<RemoteInfo>
+  remoteInfo?(): Promise<RemoteInfo>
+  remoteRenew?(): Promise<RemoteInfo>
+  remoteState?(text: string): void
+  remoteReply?(client: number, text: string): void
+  onRemote?(callback: (msg: Record<string, unknown>, client: number) => void): () => void
+  onRemoteClients?(callback: (n: number) => void): () => void
   onZoomKey?(callback: (step: number) => void): () => void // ⌘+ (1) / ⌘− (−1) / ⌘0 (0)
   stemsCached(id: string): Promise<StemFiles | null>
   stemsSave(id: string, stems: Record<StemPart, Float32Array>, rate: number): Promise<StemFiles | null>

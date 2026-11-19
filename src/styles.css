@@ -15066,3 +15066,60 @@ button.ru-ear:disabled {
       'b pb';
   }
 }
+
+/* ───────── Ajustes › Celular (phone controller) ───────── */
+.ph-pair {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  gap: 8px 14px;
+  padding: 8px 10px 10px;
+  align-items: start;
+}
+.ph-qr {
+  width: 168px;
+  height: 168px;
+  display: block;
+  shape-rendering: crispEdges;
+}
+.ph-steps {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--text-2, #b9c0cc);
+}
+.ph-steps b {
+  color: var(--text, #e9ecf1);
+  font-weight: 600;
+}
+.ph-url {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+.ph-url code {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2, #b9c0cc);
+  user-select: all;
+}
+.ph-note {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-2, #b9c0cc);
+}
+@media (max-width: 560px) {
+  .ph-pair {
+    grid-template-columns: 1fr;
+  }
+}
