@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { settings } from '../settings'
+import { uiScale } from '../ui'
 import { decks, type Deck } from '../engine/deck'
 import { LYRICS_ON, lyrics } from '../engine/lyrics'
 import { useStore } from '../store'
 
-const HOTCUE_COLORS = ['#e5484d', '#4aa8ff', '#c77dff', '#ff8a3d']
+const HOTCUE_COLORS = ['#e5484d', '#4aa8ff', '#c77dff', '#ff8a3d', '#3dd68c', '#f2c230', '#2fd3d3', '#ff6fb1']
 /** Screen pixels per second of real time. Both lanes share it, so synced decks show their beats lined up. */
 const ZOOM_DEFAULT = 90
 const ZOOM_MIN = 3 // about a whole track across the window
@@ -57,7 +58,8 @@ export function TrackView() {
       raf = requestAnimationFrame(draw)
       const c = canvas.current
       if (!c) return
-      const dpr = window.devicePixelRatio || 1
+      // Canvas pixels per CSS pixel; in a browser the app's own zoom counts too, so it stays sharp.
+      const dpr = (window.devicePixelRatio || 1) * uiScale()
       const w = Math.round(c.clientWidth * dpr)
       const h = Math.round(c.clientHeight * dpr)
       if (c.width !== w || c.height !== h) {
@@ -329,7 +331,7 @@ export function TrackView() {
           if (d.deck.get().kind !== 'local' && now - d.sent < 80) return
           d.sent = now
           const s = d.deck.get()
-          const t = d.pos - ((e.clientX - d.x) / zoom.current) * (s.rate || 1)
+          const t = d.pos - ((e.clientX - d.x) / uiScale() / zoom.current) * (s.rate || 1)
           const to = Math.max(0, Math.min(s.duration, t))
           // Stopped: the head of a bar pulls a little, so cueing on the one is easy.
           d.deck.seek(s.playing ? to : d.deck.magnet(to))
@@ -349,7 +351,7 @@ export function TrackView() {
           // A click: the CUE goes where the waveform was clicked (same scale the lane is drawn at).
           const rect = e.currentTarget.getBoundingClientRect()
           const s = d.deck.get()
-          d.deck.cueAt(d.deck.getPosition() + ((e.clientX - rect.left - rect.width / 2) / zoom.current) * (s.rate || 1))
+          d.deck.cueAt(d.deck.getPosition() + ((e.clientX - rect.left - rect.width / 2) / uiScale() / zoom.current) * (s.rate || 1))
         }}
         onPointerCancel={() => (drag.current = null)}
       />

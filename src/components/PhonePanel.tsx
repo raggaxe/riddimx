@@ -9,6 +9,9 @@ export function PhonePanel() {
   const [which, setWhich] = useState(0)
   const url = r.urls[Math.min(which, r.urls.length - 1)] ?? ''
   const qr = useMemo(() => (url ? qrPath(url) : null), [url])
+  const isName = (u: string | undefined) => !!u && /^http:\/\/[^/]+\.local:/.test(u)
+  const byName = isName(url)
+  const nextByName = isName(r.urls[(which + 1) % Math.max(1, r.urls.length)])
 
   if (!r.available)
     return (
@@ -65,19 +68,29 @@ export function PhonePanel() {
                 <li>Open the phone's camera and point it at the QR code.</li>
                 <li>Tap the link: the controller opens in the browser.</li>
                 <li>
-                  If the browser asks about <b>nearby devices</b> ou <b>rede local</b>, tap Allow: that's how it reaches the Mac. If you denied it before, open the link in Chrome.
+                  If the browser asks about <b>nearby devices</b> or the <b>local network</b>, tap Allow: that's how it reaches the Mac. If you denied it before, open the link in Chrome.
                 </li>
                 <li>
                   To make it an app: <b>Share › Add to Home Screen</b> (iPhone) or <b>⋮ › Add to Home screen</b>{' '}
                   (Android).
                 </li>
                 <li>Keep the phone from auto-locking while you play.</li>
+                {byName && (
+                  <li>
+                    This link uses the Mac's name, so it keeps working when the router gives the Mac a new address. If
+                    the phone can't open it, tap <b>BY NUMBER</b> and scan again.
+                  </li>
+                )}
               </ol>
               <div className="ph-url">
                 <code>{url}</code>
                 {r.urls.length > 1 && (
-                  <button className="ap2-btn" onClick={() => setWhich((which + 1) % r.urls.length)} title="Another address of this Mac">
-                    OTHER NETWORK
+                  <button
+                    className="ap2-btn"
+                    onClick={() => setWhich((which + 1) % r.urls.length)}
+                    title={byName ? "The Mac's number on this network (changes if the router gives it a new one)" : "The Mac's name (stays the same)"}
+                  >
+                    {byName ? 'BY NUMBER' : nextByName ? 'BY NAME' : 'OTHER ADDRESS'}
                   </button>
                 )}
               </div>

@@ -70,10 +70,9 @@ class SettingsStore extends Store<Settings> {
     const root = document.documentElement.style
     root.setProperty('--a', this.state.colorA)
     root.setProperty('--b', this.state.colorB)
-    if (desktop?.setZoom) {
-      void desktop.setZoom(this.state.zoom)
-      root.removeProperty('zoom')
-    } else root.setProperty('zoom', String(this.state.zoom))
+    // Desktop: the window scales the page (fit to the window × this size). In a browser the app
+    // applies the same product itself as a CSS zoom (see uiScale in ui.ts).
+    if (desktop?.setZoom) void desktop.setZoom(this.state.zoom)
   }
 }
 

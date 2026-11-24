@@ -50,6 +50,7 @@ export function Knob({ label, value, min = -1, max = 1, reset = 0, format, onCha
         role="slider"
         tabIndex={0}
         aria-label={label}
+        title={label}
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={Number(value.toFixed(2))}

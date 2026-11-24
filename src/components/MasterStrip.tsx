@@ -300,7 +300,7 @@ const pct = (v: number) => Math.round(v * 100) + '%'
 export function MicSection() {
   const m = useStore(mic)
   return (
-    <MixSection title="Mic input" className="mx-mic" more={() => ui.open('voice')} moreLabel="All mic effects (Mic tab)">
+    <MixSection title={m.source === 'phone' ? 'Mic input · phone' : 'Mic input'} className="mx-mic" more={() => ui.open('voice')} moreLabel="All mic effects (Mic tab)">
       <button
         className={'mx-talk' + (m.talk ? ' on' : '') + (m.speaking ? ' speaking' : '') + (m.error ? ' err' : '')}
         aria-pressed={m.talk}

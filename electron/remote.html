@@ -25,9 +25,10 @@ body {
 }
 button { font: inherit; color: inherit; touch-action: manipulation; }
 .top { display: flex; gap: 4px; padding: 6px 8px; align-items: center; border-bottom: 1px solid var(--line); background: var(--panel); }
-.tab { flex: 1; height: 34px; border: 1px solid var(--line); background: var(--raise); border-radius: 0; font-weight: 700; letter-spacing: .06em; }
+.tab { flex: 1 1 0; min-width: 0; height: 34px; padding: 0 2px; border: 1px solid var(--line); background: var(--raise); border-radius: 0; font-weight: 700; font-size: 11px; letter-spacing: .03em; overflow: hidden; }
+html, body { max-width: 100%; overflow-x: hidden; }
 .tab.now { background: var(--c); color: #111; border-color: var(--c); }
-.tab[data-p="A"] { --c: var(--a); } .tab[data-p="B"] { --c: var(--b); } .tab[data-p="mix"], .tab[data-p="dub"], .tab[data-p="fx"] { --c: #cfd5df; }
+.tab[data-p="A"] { --c: var(--a); } .tab[data-p="B"] { --c: var(--b); } .tab[data-p="mix"], .tab[data-p="dub"], .tab[data-p="fx"], .tab[data-p="mic"] { --c: #cfd5df; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); flex: none; margin: 0 4px; }
 .dot.on { background: #35c46a; }
 .fs { width: 34px; height: 34px; flex: none; border: 1px solid var(--line); background: var(--raise); border-radius: 0; }
@@ -92,6 +93,10 @@ main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling
 .mode.now { color: var(--c); border-color: var(--c); }
 .shift.on { background: var(--text); color: #111; }
 .pads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.pads .pad.hat { display: none; }
+.pads.five { grid-template-columns: repeat(5, 1fr); }
+.pads.five .pad.hat { display: block; }
+.pads.five .pad { font-size: 10px; padding: 0 2px; line-height: 1.15; white-space: normal; overflow-wrap: anywhere; }
 .pad { height: 58px; border: 1px solid var(--line); background: var(--raise); border-radius: 0; font-weight: 700; font-size: 11px; letter-spacing: .04em; color: var(--dim); }
 .pad.lit { border-color: var(--c); color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
 .pad.down, .btn.down { background: var(--c); color: #111; }
@@ -113,6 +118,41 @@ main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling
 .xf .slider .th { width: 34px; margin-left: -17px; }
 .row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
 .lbl2 { font-size: 9px; letter-spacing: .08em; color: var(--dim); }
+.micp .sec { --c: #6fdc95; }
+.btn.play.queued { animation: queued 0.8s steps(2) infinite; }
+@keyframes queued { 50% { background: var(--c); color: #111; } }
+@media (prefers-reduced-motion: reduce) { .btn.play.queued { animation: none; background: var(--c); color: #111; } }
+.info { position: relative; }
+.libbtn { position: absolute; right: 6px; bottom: 6px; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--raise); color: var(--text); }
+.libbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.info .bpm { margin-bottom: 44px; }
+.libsheet { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; gap: 8px; padding: 10px; background: var(--bg, #0b0a08); }
+.libsheet[hidden] { display: none; }
+.libhead { display: flex; align-items: center; gap: 8px; padding-bottom: 4px; border-bottom: 2px solid var(--c); }
+.libhead b { flex: 1; font-size: 16px; }
+.libx { width: 44px; height: 44px; border: 1px solid var(--line); background: var(--raise); color: var(--text); font-size: 24px; line-height: 1; }
+.libq { height: 44px; padding: 0 12px; border: 1px solid var(--line); background: #0d0c0a; color: var(--text); font: inherit; font-size: 16px; }
+.libmsg { font-size: 13px; color: var(--dim); min-height: 0; }
+.libmsg:empty { display: none; }
+.libmsg.err { color: #ff8a7a; }
+.liblist { flex: 1; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 4px; }
+.librow { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 10px; border: 1px solid var(--line); background: var(--panel); color: var(--text); text-align: left; font: inherit; }
+.librow.wait { opacity: .5; }
+.librow .lt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.librow .lt b, .librow .lt small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.librow .lt b { font-size: 14px; }
+.librow .lt small, .librow .lm small { font-size: 12px; color: var(--dim); }
+.librow .lm { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-variant-numeric: tabular-nums; }
+.librow .lm b { font-size: 15px; }
+.librow i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 5px; background: var(--raise); color: var(--dim); }
+.librow i.on { background: var(--c); color: #0b0a08; }
+.phonemic { gap: 10px; }
+.pm-status { font-size: 13px; line-height: 1.35; color: var(--text); padding: 8px 10px; border: 1px solid var(--line); background: #0d0c0a; }
+.pm-status.live { background: #10291a; }
+.pm-go { height: 56px; font-size: 14px; letter-spacing: .1em; }
+.pm-go.on { background: #8a2b20; color: #fff; }
+.pm-secure p { margin: 0 0 8px; font-size: 13px; line-height: 1.4; color: var(--text); }
+.pm-link { display: grid; place-items: center; height: 48px; text-decoration: none; color: var(--text); background: #1f3a24; }
 
 /* dub */
 .dub { --c: #ff8a3d; }
@@ -193,6 +233,7 @@ main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling
   <button class="tab" data-p="mix">MIXER</button>
   <button class="tab" data-p="dub">DUB</button>
   <button class="tab" data-p="fx">FX</button>
+  <button class="tab" data-p="mic">MIC</button>
   <i class="dot" id="dot" title="Connection"></i>
   <button class="fs" id="fs" aria-label="Full screen"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg></button>
 </div>
@@ -210,11 +251,14 @@ const updaters = []
 // ───────── connection ─────────
 let retry = 500
 function connect() {
-  ws = new WebSocket('ws://' + location.host + '/ws?k=' + encodeURIComponent(KEY))
+  ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?k=' + encodeURIComponent(KEY))
   ws.onopen = () => { retry = 500; dot.classList.add('on'); off.classList.remove('show'); ws.send(JSON.stringify({ t: 'hello' })) }
   ws.onmessage = (e) => {
     let m
     try { m = JSON.parse(e.data) } catch { return }
+    if (m.t === 'rtc' || m.t === 'rtc-fail') return phoneMicAnswer(m)
+    if (m.t === 'lib') return showLibrary(m.items || [])
+    if (m.t === 'load') return loaded(m)
     if (m.t !== 's') return
     if (m.moves && !moves.childElementCount) buildMoves(m.moves)
     if (m.panels && !panelsBuilt) buildPanels(m.panels)
@@ -224,6 +268,7 @@ function connect() {
   }
   ws.onclose = () => {
     dot.classList.remove('on'); off.classList.add('show')
+    if (micPc) phoneMicStop(true, 'The connection to the Mac dropped. Tap USE THIS PHONE AS MIC again.')
     setTimeout(connect, retry); retry = Math.min(4000, retry * 1.6)
   }
 }
@@ -385,11 +430,14 @@ function deckPage(name) {
   const title = el('div', 't', '—'), artist = el('div', 'r', 'Load a track in the app')
   const bpm = el('div', 'bpm', '—<small>BPM</small>')
   const prog = el('div', 'prog'); const bar = el('i'); prog.append(bar)
-  info.append(title, bpm, artist, prog)
+  const libBtn = el('button', 'libbtn', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16M8 4v16M12 5l4 15M16 4h4v16h-4z"/></svg>')
+  libBtn.setAttribute('aria-label', 'Load a track on deck ' + d)
+  libBtn.addEventListener('click', () => { openLibrary(d); buzz() })
+  info.append(title, bpm, artist, prog, libBtn)
   updaters.push((s) => {
     const x = s[d]
-    title.textContent = x.kind === 'none' ? 'Deck ' + d + ' vazio' : x.title || '—'
-    artist.textContent = x.kind === 'none' ? 'Load a track in the app' : [x.artist, x.dur ? '-' + fmt(x.dur - x.pos) : '', x.key || ''].filter(Boolean).join(' · ')
+    title.textContent = (x.loading ? 'Loading… ' : '') + (x.kind === 'none' && !x.loading ? 'Deck ' + d + ' empty' : x.title || '—')
+    artist.textContent = x.kind === 'none' ? 'Tap the library icon to load a track' : [x.artist, x.dur ? '-' + fmt(x.dur - x.pos) : '', x.key || ''].filter(Boolean).join(' · ')
     bpm.innerHTML = (x.bpm ? x.bpm.toFixed(1) : '—') + '<small>' + (x.rate ? (x.rate > 0 ? '+' : '') + x.rate.toFixed(1) + '%' : 'BPM') + '</small>'
     bar.style.width = (x.dur ? (100 * x.pos) / x.dur : 0) + '%'
   })
@@ -461,9 +509,17 @@ function deckPage(name) {
     updaters.push(write)
     pads.append(b)
   }
+  // HAT: the fifth stem, only in STEMS mode (the other modes have four pads).
+  const hat = button('HAT', () => 'deck' + d + '.' + (shift ? 'stemSolo.hat' : 'stem.hat'), { cls: 'pad hat', lit: (s) => s[d].stems[4] })
+  const hatText = () => { hat.textContent = shift ? 'HAT ONLY' : 'HAT' }
+  padText.push(hatText)
+  updaters.push(hatText)
+  updaters.push((s) => pads.classList.toggle('five', s[d].mode === 'stems'))
+  pads.append(hat)
 
   const trans = el('div', 'trans')
   const play = button(ICON.play, act('play'), { cls: 'btn play', lit: (s) => s[d].playing })
+  updaters.push((s) => play.classList.toggle('queued', !!s[d].queued))
   updaters.push((s) => { const html = s[d].playing ? ICON.pause : ICON.play; if (play.innerHTML !== html) play.innerHTML = html })
   trans.append(
     button('◀◀', act('rewind')),
@@ -599,9 +655,145 @@ function buildPanels(panels) {
   for (const u of updaters) S && u(S)
 }
 
+// ───────── the library: pick a track for a deck ─────────
+const lib = { deck: 'A', items: [], q: '', timer: 0 }
+const libSheet = el('div', 'libsheet')
+libSheet.hidden = true
+libSheet.setAttribute('role', 'dialog')
+libSheet.setAttribute('aria-label', 'Library')
+const libHead = el('div', 'libhead')
+const libTitle = el('b', '', 'Load on deck A')
+const libClose = el('button', 'libx', '×')
+libClose.setAttribute('aria-label', 'Close the library')
+libHead.append(libTitle, libClose)
+const libSearch = el('input', 'libq')
+libSearch.type = 'search'
+libSearch.placeholder = 'Search title or artist'
+libSearch.setAttribute('aria-label', 'Search the library')
+const libMsg = el('div', 'libmsg')
+const libList = el('div', 'liblist')
+libSheet.append(libHead, libSearch, libMsg, libList)
+document.body.append(libSheet)
+libClose.addEventListener('click', () => { libSheet.hidden = true })
+libSearch.addEventListener('input', () => {
+  clearTimeout(lib.timer)
+  lib.timer = setTimeout(() => send({ t: 'lib', q: libSearch.value }), 180)
+})
+function openLibrary(d) {
+  lib.deck = d
+  libTitle.textContent = 'Load on deck ' + d
+  libSheet.style.setProperty('--c', d === 'A' ? 'var(--a)' : 'var(--b)')
+  libMsg.textContent = 'Loading the library…'
+  libMsg.className = 'libmsg'
+  libList.innerHTML = ''
+  libSheet.hidden = false
+  send({ t: 'lib', q: libSearch.value })
+}
+const mmss = (s) => (s == null ? '' : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'))
+function showLibrary(items) {
+  libList.innerHTML = ''
+  libMsg.className = 'libmsg'
+  libMsg.textContent = items.length ? '' : libSearch.value ? 'Nothing found.' : 'The library is empty: add tracks in the app.'
+  for (const it of items) {
+    const row = el('button', 'librow' + (it.ready ? '' : ' wait'))
+    const tag = it.on.length ? '<i class="on">' + it.on.join(' ') + '</i>' : it.ready ? '' : '<i>wait</i>'
+    row.innerHTML = '<span class="lt"><b></b><small></small></span><span class="lm"><b>' + (it.bpm ? it.bpm.toFixed(1) : '—') + '</b><small>' + [it.key || '', mmss(it.dur)].filter(Boolean).join(' · ') + '</small></span>' + tag
+    row.querySelector('.lt b').textContent = it.title
+    row.querySelector('.lt small').textContent = it.artist || (it.kind === 'youtube' ? 'YouTube' : it.kind === 'spotify' ? 'Spotify' : '')
+    row.addEventListener('click', () => { send({ t: 'load', d: lib.deck, id: it.id }); buzz(); libMsg.textContent = 'Loading on deck ' + lib.deck + '…' })
+    libList.append(row)
+  }
+}
+function loaded(m) {
+  if (m.ok) { libSheet.hidden = true; show(lib.deck); return }
+  libMsg.className = 'libmsg err'
+  libMsg.textContent = m.error || 'That track could not be loaded.'
+}
+
+// ───────── the phone as the MC's microphone ─────────
+// A browser lets a page use the microphone only when the page is secure (https). The Mac serves an
+// https twin of this page with its own certificate: the first visit shows a warning to accept once.
+// The voice then goes to the Mac as a WebRTC call, set up over this page's socket.
+let micPc = null, micStream = null, micLock = null
+const micUi = {}
+function micPage() {
+  const p = el('section', 'page fxp micp'); p.dataset.p = 'mic'
+  const box = el('div', 'sec wide phonemic')
+  box.append(el('div', 'sec-h', '<b>This phone as the mic</b><small>its microphone into the Mac, over Wi-Fi</small>'))
+  micUi.status = el('div', 'pm-status', 'The Mac uses its own input now.')
+  micUi.go = el('button', 'btn big pm-go', 'USE THIS PHONE AS MIC')
+  micUi.go.addEventListener('click', () => (micPc ? phoneMicStop(false) : phoneMicStart()))
+  micUi.secure = el('div', 'pm-secure')
+  micUi.secure.hidden = true
+  micUi.secure.append(
+    el('p', '', 'The phone only lets a <b>secure page</b> use its microphone. Open the secure page below: the browser will warn that the connection is not private (the certificate is your Mac\'s own). Tap <b>Advanced › Proceed</b>, then tap <b>USE THIS PHONE AS MIC</b> there.'),
+  )
+  micUi.link = el('a', 'btn big pm-link', 'OPEN SECURE PAGE')
+  micUi.secure.append(micUi.link)
+  box.append(micUi.status, micUi.go, micUi.secure)
+  p.append(box, el('div', 'slot'))
+  updaters.push((s) => {
+    const v = (k) => s.panel && s.panel.v[k]
+    if (!micPc) micUi.status.textContent = v('mic.phone') ? 'Another phone is the mic now.' : v('mic.on') ? 'The Mac\'s own input is on.' : 'The Mac uses its own input now.'
+    micUi.status.classList.toggle('live', !!(micPc && v('mic.phone') && v('mic.speaking')))
+    if (v('mic.error') && !micPc) micUi.status.textContent = v('mic.error')
+  })
+  return p
+}
+function micStatus(text) { micUi.status.textContent = text }
+async function phoneMicStart() {
+  if (location.protocol !== 'https:') {
+    let port = 0
+    try { port = (await (await fetch('/info?k=' + encodeURIComponent(KEY))).json()).securePort } catch {}
+    if (!port) return micStatus('The Mac could not make a secure page. Restart RiddimX and try again.')
+    micUi.link.href = 'https://' + location.hostname + ':' + port + '/?k=' + encodeURIComponent(KEY) + '&p=mic'
+    micUi.secure.hidden = false
+    return micStatus('One more step: open the secure page.')
+  }
+  if (!navigator.mediaDevices || !window.RTCPeerConnection) return micStatus('This browser cannot send its microphone. Use Chrome.')
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } })
+  } catch (e) {
+    return micStatus(e && e.name === 'NotAllowedError' ? 'The microphone was not allowed. Allow it in the browser\'s site settings and try again.' : 'No microphone on this phone could be opened.')
+  }
+  micPc = new RTCPeerConnection({ iceServers: [] })
+  for (const t of micStream.getAudioTracks()) micPc.addTrack(t, micStream)
+  micPc.addEventListener('connectionstatechange', () => {
+    const st = micPc && micPc.connectionState
+    if (st === 'connected') { micStatus('On air path ready: this phone is the mic. TALK puts it on the speakers.'); buzz() }
+    if (st === 'failed') phoneMicStop(true, 'The phone could not reach the Mac for audio. Check both are on the same network.')
+  })
+  micUi.go.textContent = 'STOP PHONE MIC'
+  micUi.go.classList.add('on')
+  micStatus('Connecting the microphone…')
+  try { micLock = await navigator.wakeLock.request('screen') } catch {}
+  await micPc.setLocalDescription(await micPc.createOffer())
+  await new Promise((done) => {
+    if (micPc.iceGatheringState === 'complete') return done()
+    const t = setTimeout(done, 1000)
+    micPc.addEventListener('icegatheringstatechange', () => { if (micPc && micPc.iceGatheringState === 'complete') { clearTimeout(t); done() } })
+  })
+  if (micPc) send({ t: 'rtc', sdp: micPc.localDescription.sdp })
+}
+function phoneMicAnswer(m) {
+  if (!micPc) return
+  if (m.t === 'rtc-fail' || !m.sdp) return phoneMicStop(true, 'The Mac did not take the call. Try again.')
+  micPc.setRemoteDescription({ type: 'answer', sdp: m.sdp }).catch(() => phoneMicStop(true, 'The Mac did not take the call. Try again.'))
+}
+function phoneMicStop(quiet, why) {
+  if (!quiet) send({ t: 'rtc-stop' })
+  if (micPc) micPc.close()
+  if (micStream) micStream.getTracks().forEach((t) => t.stop())
+  if (micLock) micLock.release().catch(() => {})
+  micPc = null; micStream = null; micLock = null
+  micUi.go.textContent = 'USE THIS PHONE AS MIC'
+  micUi.go.classList.remove('on')
+  micStatus(why || 'Phone mic off: the Mac uses its own input again.')
+}
+
 // ───────── pages ─────────
 const main = document.getElementById('main'), dot = document.getElementById('dot'), off = document.getElementById('off')
-main.append(deckPage('A'), deckPage('B'), mixPage(), dubPage(), fxPage())
+main.append(deckPage('A'), deckPage('B'), mixPage(), dubPage(), fxPage(), micPage())
 const tabs = document.querySelectorAll('.tab')
 function show(id) {
   for (const t of tabs) t.classList.toggle('now', t.dataset.p === id)
@@ -609,8 +801,9 @@ function show(id) {
   try { localStorage.setItem('rx_page', id) } catch {}
 }
 for (const t of tabs) t.addEventListener('click', () => show(t.dataset.p))
-let first = 'A'
-try { first = localStorage.getItem('rx_page') || 'A' } catch {}
+let first = new URLSearchParams(location.search).get('p') || ''
+try { if (!first) first = localStorage.getItem('rx_page') || 'A' } catch {}
+if (!main.querySelector('.page[data-p="' + first + '"]')) first = 'A'
 show(first)
 document.getElementById('fs').addEventListener('click', () => {
   const de = document.documentElement

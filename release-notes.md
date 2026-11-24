@@ -1,24 +1,20 @@
-RiddimX 0.3.0 — English interface, PANIC, loudness match and a cleaner deck
+RiddimX 0.4.0 — Simple mode, MIXER / DUB / FX pages, and a phone that plays, loads and talks
 
 Interface
-- The whole app is in English now, with the usual DJ terms (Hold, Latch, Send, Feedback, Talk, Throw, Mic).
-- Square corners everywhere; an active button, tab or list item lights its background, never a coloured border.
-- Each deck has its own FX strip across the bottom (DUB, its echo knobs, the effect, THROW). The transport row is just CUE, PLAY, SYNC and rewind.
-- The pitch fader sits inside the deck, with clean marks and readout.
+- SIMPLE / PRO switch in the top bar. Simple (the new default) shows decks, a basic mixer, DUB and FIRE; Pro shows every unit. Nothing is lost: Pro brings it all back.
+- The centre of the screen has three pages: MIXER, DUB and FX. The master output and the crossfader stay in sight on every page.
+- DUB page: the Dub Box with a big DROP, FIRE and FX, its knobs, and the sound pads or sampler pads.
+- FX page: each deck's effect and THROW, the tape echo, and every setting of the deck DUB button (presets, time, feedback, tone, low cut, spring, level, hold / latch, music keeps / cuts).
+- The whole interface scales with the window, like a DJ skin: a big monitor shows it bigger, a laptop keeps it readable. The Size setting still fine-tunes it.
+- Every label fits its button; COMP and LIM have room to breathe.
+- Eight hot cue colours.
 
-New
-- PANIC button (top bar): stops every echo tail and stuck sound and reopens the sound card on the same outputs. The music keeps its place.
-- Loudness match: every file is measured (LUFS) as it loads and brought to the same loudness. Master tab.
-- Compressor AUTO gain: switching from Soft to Radio no longer jumps in volume.
-- Plugin tab: two AUX effects (reverb, flanger, delay, phaser) fed by each stem of each deck, after the fader.
-- THROW to the bar (tape echo): one press drops the music out, its last beat rings, the music is back on the one of the next bar.
-- Pioneer DDJ-400 and DDJ-FLX4 are recognised and mapped as soon as they are plugged in.
-- My drops: drops are saved in the app with a name, can be renamed, and go on any pad from a menu.
+Phone controller
+- Use your phone's microphone as the DJ mic (MIC tab): talk, mic throw, colour and echo, all from the phone.
+- Library on the phone: tap the library icon on a deck, search and load a track.
+- PLAY pressed while a track is still loading waits for it and starts by itself (the button blinks meanwhile).
+- HAT pad in STEMS mode (SHIFT: hats only).
+- The QR code uses the Mac's name, so the phone still finds it when the Mac gets a new IP address.
 
-Better
-- Loop: IN and OUT side by side, a bar loop (1, 2, 4 or 8 bars) and an auto loop size from 1/16 beat to 8 bars.
-- Click the waveform at the top to set the CUE there; − / + zoom from the whole track down to a single beat.
-- Library: a pasted YouTube link only goes into the library, never onto a deck. Videos whose owner blocks playback outside YouTube are not added. Tracks go on a deck only once they are analysed and split into stems.
-- Dub Box: compact sound pads, a bigger FIRE; its throw button is called FX again.
-
-Parked for now: lyrics on the waveform and auto dub in the top row.
+Fixed
+- Loading a second YouTube track on the same deck could leave it stuck on "Loading" and PLAY never started.

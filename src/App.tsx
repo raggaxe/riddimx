@@ -11,7 +11,7 @@ import { MixerView } from './components/MixerView'
 import { LibraryPanel } from './components/LibraryPanel'
 import { PluginPanel } from './components/PluginPanel'
 import { MasterPanel } from './components/MasterPanel'
-import { EchoUnit, Rack } from './components/Rack'
+import { EchoUnit } from './components/Rack'
 import { SettingsModal } from './components/SettingsModal'
 import { SpotifyPanel } from './components/SpotifyPanel'
 import { Splitter } from './components/Splitter'
@@ -21,16 +21,24 @@ import { TrackView } from './components/TrackView'
 import { TopBar } from './components/TopBar'
 import { VoicePanel } from './components/VoicePanel'
 
-import { ui, type Tab } from './ui'
+import { SIMPLE_TABS, ui, type Tab } from './ui'
+import { padModes } from './padmode'
 
 export function App() {
-  const { tab, layout } = useStore(ui)
+  const { tab, layout, mode } = useStore(ui)
+  const simple = mode === 'simple'
+  // Simple mode shows the hot cue pads only.
+  useEffect(() => {
+    if (!simple) return
+    padModes.setMode('A', 'cue')
+    padModes.setMode('B', 'cue')
+  }, [simple])
   const setTab = (t: Tab) => ui.open(t)
   const sp = useStore(spotify)
 
-  // A smaller window shrinks the browser first, so the decks and mixer always fit.
+  // A resized window keeps its proportions: the library keeps its share, the decks what they need.
   useEffect(() => {
-    const fit = () => ui.resize({})
+    const fit = () => ui.refit()
     fit()
     window.addEventListener('resize', fit)
     return () => window.removeEventListener('resize', fit)
@@ -55,7 +63,8 @@ export function App() {
     }
   }, [])
 
-  const tabButton = (id: Tab, label: string, on?: boolean) => (
+  const tabButton = (id: Tab, label: string, on?: boolean) =>
+    (!simple || SIMPLE_TABS.includes(id)) && (
     <button className={'tab' + (tab === id ? ' active' : '')} onClick={() => setTab(id)}>
       {label}
       {on !== undefined && <i className={'dot' + (on ? ' on' : '')} />}
@@ -63,11 +72,10 @@ export function App() {
   )
 
   return (
-    <div className="app" style={{ '--track-h': layout.track + 'px', '--bottom-h': layout.bottom + 'px' } as React.CSSProperties}>
+    <div className={'app mode-' + mode} style={{ '--track-h': layout.track + 'px', '--bottom-h': layout.bottom + 'px' } as React.CSSProperties}>
       <TopBar />
       <TrackView />
       <Splitter part="track" sign={1} label="Waveform height" />
-      <Rack />
       <main className="stage">
         <DeckView deck={deckA} other={deckB} />
         <MixerView />

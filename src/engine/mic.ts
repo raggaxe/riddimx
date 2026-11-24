@@ -36,6 +36,10 @@ export interface MicState {
   throwing: boolean // THROW: the voice sent full into its echo, while held
   error: string | null
   speaking: boolean // voice detected now
+  /** Where the voice comes from: the Mac's input, or a phone sending its microphone over Wi-Fi. */
+  source: 'mac' | 'phone'
+  /** A phone is sending its microphone right now. */
+  phone: boolean
 }
 
 type Settings = Pick<MicState, 'level' | 'echo' | 'spring' | 'duck' | 'filter' | 'drive' | 'time' | 'repeats' | 'tone' | 'fx'>
@@ -89,6 +93,9 @@ class Mic extends Store<MicState> {
   private tape: WaveShaperNode
   private chain: AudioNode
   private stream: MediaStream | null = null
+  private phoneStream: MediaStream | null = null
+  // Chrome only lets a call's audio into Web Audio while some element is playing it (muted here).
+  private phoneTap: HTMLAudioElement | null = null
   private source: MediaStreamAudioSourceNode | null = null
   private analyser: AnalyserNode
   private timer = 0
@@ -119,6 +126,8 @@ class Mic extends Store<MicState> {
       throwing: false,
       error: null,
       speaking: false,
+      source: 'mac',
+      phone: false,
     })
     const ctx = mixer.ctx
     this.duck = ctx.createGain()
@@ -295,9 +304,42 @@ class Mic extends Store<MicState> {
     this.apply()
   }
 
+  /**
+   * A phone's microphone arrived over Wi-Fi (or stopped: null). It becomes the voice's input at once,
+   * on air if TALK was on; when it stops, the voice goes back to the Mac's input, off air.
+   */
+  usePhone(stream: MediaStream | null): void {
+    const talk = this.state.talk
+    if (this.state.on) this.close()
+    this.phoneTap?.pause()
+    this.phoneTap = null
+    this.phoneStream = stream
+    if (stream) {
+      const tap = new Audio()
+      tap.muted = true
+      tap.srcObject = stream
+      void tap.play().catch(() => undefined)
+      this.phoneTap = tap
+      stream.getAudioTracks()[0]?.addEventListener('ended', () => this.phoneStream === stream && this.usePhone(null))
+      this.set({ source: 'phone', phone: true, error: null })
+      void this.open().then((ok) => ok && talk && this.setTalk(true))
+    } else {
+      this.set({ source: 'mac', phone: false })
+    }
+  }
+
   /** Opens the microphone (asks for permission the first time). */
   async open(): Promise<boolean> {
     if (this.state.on) return true
+    if (this.phoneStream) {
+      mixer.resume()
+      this.source = mixer.ctx.createMediaStreamSource(this.phoneStream)
+      this.source.connect(this.chain)
+      this.set({ on: true, error: null })
+      this.apply()
+      this.timer = window.setInterval(() => this.watch(), 40)
+      return true
+    }
     try {
       mixer.resume()
       // On the Mac the system has to say yes first (it asks the user once).
@@ -348,7 +390,7 @@ class Mic extends Store<MicState> {
   close(): void {
     window.clearInterval(this.timer)
     this.source?.disconnect()
-    this.stream?.getTracks().forEach((t) => t.stop())
+    this.stream?.getTracks().forEach((t) => t.stop()) // the Mac's input only: a phone's stream is the phone's to stop
     this.source = null
     this.stream = null
     this.set({ on: false, talk: false, speaking: false, throwing: false })

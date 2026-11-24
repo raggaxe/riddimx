@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { settings } from '../settings'
+import { uiScale } from '../ui'
 import type { Deck } from '../engine/deck'
 
-const HOTCUE_COLORS = ['#e5484d', '#4aa8ff', '#c77dff', '#ff8a3d']
+const HOTCUE_COLORS = ['#e5484d', '#4aa8ff', '#c77dff', '#ff8a3d', '#3dd68c', '#f2c230', '#2fd3d3', '#ff6fb1']
 /** Seconds of play left at which the remaining time turns red. */
 const END_WARNING = 30
 
@@ -26,7 +27,8 @@ export function Waveform({ deck, children, info }: { deck: Deck; children?: Reac
       raf = requestAnimationFrame(draw)
       const c = canvas.current
       if (!c) return
-      const dpr = window.devicePixelRatio || 1
+      // Canvas pixels per CSS pixel; in a browser the app's own zoom counts too, so it stays sharp.
+      const dpr = (window.devicePixelRatio || 1) * uiScale()
       const w = Math.round(c.clientWidth * dpr)
       const h = Math.round(c.clientHeight * dpr)
       if (c.width !== w || c.height !== h) {

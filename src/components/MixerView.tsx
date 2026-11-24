@@ -6,7 +6,8 @@ import { Knob } from './Knob'
 import { DB_MARKS, FADER_MARKS, Meter, Scale } from './Meter'
 import { DUB_PRESET_DRAG, PATCH_LIMITS, dubBox } from '../engine/dubbox'
 import { sampler } from '../engine/sampler'
-import { ui } from '../ui'
+import { ui, type Centre } from '../ui'
+import { DubPage, FxPage } from './CentrePages'
 import { DubSoundMenu } from './DubSoundMenu'
 import { useState } from 'react'
 import logo from '../assets/riddimx-x.svg'
@@ -197,7 +198,7 @@ function Crossfader() {
 }
 
 /** The sampler's pads, four at a time, playable from the mixer in place of the noise slots. */
-function SoundPads({ page, setPage }: { page: number; setPage(p: number): void }) {
+export function SoundPads({ page, setPage }: { page: number; setPage(p: number): void }) {
   const s = useStore(sampler)
   const pages = Math.ceil(s.pads.length / 4)
   return (
@@ -449,13 +450,42 @@ export function DubBoxStrip() {
   )
 }
 
+const PAGES: { id: Centre; label: string; hint: string }[] = [
+  { id: 'mixer', label: 'MIXER', hint: 'Channels, EQ and filters (in Pro also isolator, sound system, mic, transitions)' },
+  { id: 'dub', label: 'DUB', hint: 'Dub Box: FIRE, its sounds, DROP' },
+  { id: 'fx', label: 'FX', hint: "Each deck's effect, the DUB echo, the tape echo" },
+]
+
+/**
+ * The centre of the stage: one page at a time (MIXER, DUB, FX). The master output and the
+ * crossfader stay on every page.
+ */
 export function MixerView() {
   const m = useStore(mixer)
+  const centre = useStore(ui).centre
+  const onMixer = centre === 'mixer'
   return (
-    <section className="mixer" aria-label="Mixer">
-      <div className="strip-wrap a">
-        <Strip deck={deckA} />
-      </div>
+    <section className={'mixer centre-' + centre} aria-label="Centre">
+      <nav className="ctr-tabs" role="tablist" aria-label="Centre pages">
+        {PAGES.map((p) => (
+          <button
+            key={p.id}
+            role="tab"
+            aria-selected={centre === p.id}
+            className={centre === p.id ? 'on' : ''}
+            onClick={() => ui.setCentre(p.id)}
+            title={p.hint}
+          >
+            {p.label}
+          </button>
+        ))}
+      </nav>
+      {onMixer && (
+        <div className="strip-wrap a">
+          <Strip deck={deckA} />
+        </div>
+      )}
+      {!onMixer && <div className="ctr-page">{centre === 'dub' ? <DubPage /> : <FxPage />}</div>}
       <div className="mx-master">
         <section className="mx-sec mx-out" aria-label="Master output">
           <span className="ch-tag mx-brand">
@@ -495,15 +525,19 @@ export function MixerView() {
             />
           </div>
         </section>
-        <div className="mx-master-side">
-          <MasterIsolator />
-          <SoundSystem />
-          <MicSection />
+        {onMixer && (
+          <div className="mx-master-side">
+            <MasterIsolator />
+            <SoundSystem />
+            <MicSection />
+          </div>
+        )}
+      </div>
+      {onMixer && (
+        <div className="strip-wrap b">
+          <Strip deck={deckB} />
         </div>
-      </div>
-      <div className="strip-wrap b">
-        <Strip deck={deckB} />
-      </div>
+      )}
       <div className="mx-bottom">
         <div className="mx-xrow">
           <div className="mx-xrow-side">
@@ -515,7 +549,7 @@ export function MixerView() {
             <TransitionTiming />
           </div>
         </div>
-        <TransitionMoves />
+        {onMixer && <TransitionMoves />}
       </div>
     </section>
   )

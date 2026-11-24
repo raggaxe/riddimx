@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { defaultLayout, ui, type Layout } from '../ui'
+import { defaultLayout, ui, uiScale, type Layout } from '../ui'
 
 /**
  * Horizontal divider between two parts of the window; drag to give one more room.
@@ -21,7 +21,8 @@ export function Splitter({ part, sign, label }: { part: keyof Layout; sign: 1 | 
       }}
       onPointerMove={(e) => {
         if (!start.current) return
-        ui.resize({ [part]: start.current.size + sign * (e.clientY - start.current.y) })
+        // The pointer moves in screen pixels; the layout is in base pixels, before the global scale.
+        ui.resize({ [part]: start.current.size + (sign * (e.clientY - start.current.y)) / uiScale() })
       }}
       onPointerUp={() => (start.current = null)}
       onPointerCancel={() => (start.current = null)}

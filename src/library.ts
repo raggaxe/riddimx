@@ -537,6 +537,7 @@ class Library extends Store<LibraryState> {
       played: this.state.played.includes(entry.id) ? this.state.played : [...this.state.played, entry.id],
     })
     if (entry.kind !== 'local') this.recordLength(entry, deck)
+    deck.prepare(entry.title) // loading from now on: a PLAY pressed meanwhile waits for this track
     const onMeta = (title: string, artist: string) => this.rename(entry.id, title, artist)
     if (entry.kind === 'local' && !entry.file && entry.path) void this.reopen(entry, deck)
     else if (entry.kind === 'local' && entry.file) void deck.loadFile(entry.file)

@@ -11,12 +11,16 @@
 const crypto = require('node:crypto')
 const fs = require('node:fs')
 const http = require('node:http')
+const https = require('node:https')
+const { execFileSync } = require('node:child_process')
 const os = require('node:os')
 const path = require('node:path')
 
 const PORT = 7373
+/** The same page over HTTPS: a phone's browser only lets a secure page use its microphone. */
+const SECURE_PORT = 7374
 const MAX_CLIENTS = 4
-const MAX_FRAME = 8 * 1024
+const MAX_FRAME = 32 * 1024 // the phone microphone's call description is a few KB
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 const PAGE = path.join(__dirname, 'remote.html')
 
@@ -32,6 +36,49 @@ function addresses() {
     }
   }
   return out.sort((x, y) => x.rank - y.rank).map((a) => a.address)
+}
+
+/**
+ * This Mac's Bonjour name on the local network ("Mac-mini-de-Rafael.local"). Unlike the IP address,
+ * which the router may change, it stays the same, so a phone's saved link keeps working.
+ */
+function localName() {
+  const host = String(os.hostname() || '')
+    .replace(/\.local\.?$/i, '')
+    .replace(/[^A-Za-z0-9-]/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return host ? host + '.local' : null
+}
+
+/**
+ * A self-signed certificate for the HTTPS page, made once with macOS's own openssl and kept in the
+ * app's data folder. A phone shows a warning the first time (the certificate is this Mac's own);
+ * after that the page can use the phone's microphone. Null when it cannot be made.
+ */
+function certificate(dataDir) {
+  const dir = path.join(dataDir, 'remote-tls')
+  const key = path.join(dir, 'key.pem')
+  const cert = path.join(dir, 'cert.pem')
+  try {
+    if (fs.existsSync(key) && fs.existsSync(cert)) return { key: fs.readFileSync(key), cert: fs.readFileSync(cert) }
+    fs.mkdirSync(dir, { recursive: true, mode: 0o700 })
+    const names = [localName(), 'localhost'].filter(Boolean).map((n) => 'DNS:' + n)
+    const ips = ['127.0.0.1', ...addresses()].map((ip) => 'IP:' + ip)
+    const cfg = path.join(dir, 'openssl.cnf')
+    fs.writeFileSync(
+      cfg,
+      ['[req]', 'distinguished_name=dn', 'x509_extensions=v3', 'prompt=no', '[dn]', 'CN=RiddimX', '[v3]', 'subjectAltName=' + [...names, ...ips].join(','), 'basicConstraints=CA:FALSE', ''].join('\n'),
+    )
+    const openssl = fs.existsSync('/usr/bin/openssl') ? '/usr/bin/openssl' : 'openssl'
+    execFileSync(openssl, ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '3650', '-keyout', key, '-out', cert, '-config', cfg], {
+      stdio: 'ignore',
+      timeout: 20000,
+    })
+    fs.chmodSync(key, 0o600)
+    return { key: fs.readFileSync(key), cert: fs.readFileSync(cert) }
+  } catch {
+    return null
+  }
 }
 
 function same(a, b) {
@@ -62,6 +109,8 @@ function createRemote({ dataDir, onMessage, onClients }) {
   let code = null
   let server = null
   let port = 0
+  let secure = null // the HTTPS twin, for the phone's microphone
+  let securePort = 0
   const clients = new Map() // id → { socket, alive }
   let nextId = 1
   let pinger = null
@@ -93,7 +142,9 @@ function createRemote({ dataDir, onMessage, onClients }) {
       on: !!server,
       port,
       clients: clients.size,
-      urls: server ? ips.map((ip) => 'http://' + ip + ':' + port + '/?k=' + code) : [],
+      // The name first (it survives a new IP address), then each address (for phones that cannot look up .local names).
+      urls: server && ips.length ? [localName(), ...ips].filter(Boolean).map((h) => 'http://' + h + ':' + port + '/?k=' + code) : [],
+      securePort,
     }
   }
 
@@ -159,30 +210,59 @@ function createRemote({ dataDir, onMessage, onClients }) {
     socket.on('error', () => drop(id))
   }
 
+  /** The page, its little info endpoint, and nothing else; every request carries the pairing code. */
+  function serve(req, res) {
+    const url = new URL(req.url || '/', 'http://x')
+    if (!same(url.searchParams.get('k'), code) || (url.pathname !== '/' && url.pathname !== '/info')) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' })
+      return res.end('RiddimX: open it from the QR code in Settings › Phone.')
+    }
+    if (url.pathname === '/info') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+      return res.end(JSON.stringify({ securePort }))
+    }
+    fs.readFile(PAGE, (err, html) => {
+      if (err) {
+        res.writeHead(500)
+        return res.end()
+      }
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'Referrer-Policy': 'no-referrer',
+        'X-Content-Type-Options': 'nosniff',
+      })
+      res.end(html)
+    })
+  }
+
+  /** The HTTPS twin of the page (same code, same socket protocol), for the phone's microphone. */
+  function startSecure() {
+    const tls = certificate(dataDir)
+    if (!tls) return Promise.resolve()
+    return new Promise((resolve) => {
+      const s = https.createServer(tls, serve)
+      s.on('upgrade', accept)
+      const listen = (p) => {
+        s.once('error', (e) => {
+          if (e.code === 'EADDRINUSE' && p === SECURE_PORT) return listen(0)
+          resolve()
+        })
+        s.listen(p, '0.0.0.0', () => {
+          secure = s
+          securePort = s.address().port
+          resolve()
+        })
+      }
+      listen(SECURE_PORT)
+    })
+  }
+
   function start() {
     if (server) return Promise.resolve(info())
     code ??= loadCode()
     return new Promise((resolve) => {
-      const s = http.createServer((req, res) => {
-        const url = new URL(req.url || '/', 'http://x')
-        if (url.pathname !== '/' || !same(url.searchParams.get('k'), code)) {
-          res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' })
-          return res.end('RiddimX: abra pelo QR code em Ajustes › Celular.')
-        }
-        fs.readFile(PAGE, (err, html) => {
-          if (err) {
-            res.writeHead(500)
-            return res.end()
-          }
-          res.writeHead(200, {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-store',
-            'Referrer-Policy': 'no-referrer',
-            'X-Content-Type-Options': 'nosniff',
-          })
-          res.end(html)
-        })
-      })
+      const s = http.createServer(serve)
       s.on('upgrade', accept)
       const listen = (p) => {
         s.once('error', (e) => {
@@ -202,7 +282,7 @@ function createRemote({ dataDir, onMessage, onClients }) {
               }
             }
           }, 10000)
-          resolve(info())
+          void startSecure().then(() => resolve(info()))
         })
       }
       listen(PORT)
@@ -212,9 +292,14 @@ function createRemote({ dataDir, onMessage, onClients }) {
   function stop() {
     clearInterval(pinger)
     for (const id of [...clients.keys()]) drop(id)
-    server?.close()
+    for (const srv of [server, secure]) {
+      srv?.close()
+      srv?.closeAllConnections?.() // browsers keep the page's connection open: let it go too
+    }
     server = null
+    secure = null
     port = 0
+    securePort = 0
     return info()
   }
 
@@ -242,4 +327,4 @@ function createRemote({ dataDir, onMessage, onClients }) {
   }
 }
 
-module.exports = { createRemote, addresses }
+module.exports = { createRemote, addresses, localName }

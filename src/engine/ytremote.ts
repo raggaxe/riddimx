@@ -175,7 +175,10 @@ export class RemotePlayer {
     return { video_id: this.last.videoId, title: this.last.title, author: this.last.author }
   }
   cueVideoById(id: string): void {
-    this.last = { ...this.last, time: 0, duration: 0, videoId: '', title: '', author: '' }
+    // Forget the old clip's state: a stopped clip already reads "cued", and the new clip's "cued" must
+    // still count as a change, or the deck waits for it forever (stuck loading, PLAY never starts).
+    this.ignoreBefore = wall() + 15
+    this.last = { ...this.last, state: -1, time: 0, at: wall(), duration: 0, videoId: '', title: '', author: '' }
     this.send({ cmd: 'cue', id })
   }
   stopVideo(): void {

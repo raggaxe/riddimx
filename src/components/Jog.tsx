@@ -5,7 +5,7 @@ import { useStore } from '../store'
 
 /** Degrees the platter turns per second of music (33⅓ rpm, like a record). */
 const DEG_PER_SEC = 200
-const HOTCUE_COLORS = ['#e5484d', '#4aa8ff', '#c77dff', '#ff8a3d']
+const HOTCUE_COLORS = ['#e5484d', '#4aa8ff', '#c77dff', '#ff8a3d', '#3dd68c', '#f2c230', '#2fd3d3', '#ff6fb1']
 /** Seconds of play left at which the ring turns red. */
 const END_WARNING = 30
 const R = 48 // ring radius in the 100×100 viewBox

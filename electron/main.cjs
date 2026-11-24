@@ -325,9 +325,22 @@ app.whenReady().then(async () => {
   ipcMain.on('vx:remote-reply', (event, client, text) => mine(event) && typeof text === 'string' && remote.send(client, text))
   app.on('will-quit', () => remote.stop())
 
+  // One scale for the whole interface, like a DJ skin: the layout is drawn for a 1440×900 window and a
+  // bigger window enlarges it as one piece (never below 1, so a laptop keeps text at 10 px and up).
+  // The DJ's own Size setting (Settings) multiplies it.
+  let userZoom = 1
+  const fitZoom = () => {
+    if (win.isDestroyed()) return
+    const [w, h] = win.getContentSize()
+    const factor = Math.max(1, Math.min(w / 1440, h / 900)) * userZoom
+    if (Math.abs(win.webContents.getZoomFactor() - factor) > 0.001) win.webContents.setZoomFactor(factor)
+  }
+  win.on('resize', fitZoom)
+  win.webContents.on('did-finish-load', fitZoom)
   ipcMain.handle('vx:set-zoom', (event, factor) => {
     if (event.sender !== win.webContents || typeof factor !== 'number' || !(factor >= 0.5 && factor <= 2)) return
-    win.webContents.setZoomFactor(factor)
+    userZoom = factor
+    fitZoom()
   })
   ipcMain.handle('vx:stems-has', (event, id) =>
     event.sender === win.webContents && /^[0-9a-f]{40}$/.test(id) ? stemsModel(stemsDir(id)) : null,

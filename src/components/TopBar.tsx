@@ -153,6 +153,7 @@ export function TopBar() {
   const open = useStore(ui).settings !== null
   const up = useStore(updates)
   const pan = useStore(panic)
+  const mode = useStore(ui).mode
   const [, tick] = useState(0)
 
   useEffect(() => {
@@ -208,6 +209,26 @@ export function TopBar() {
               : 'Version ' + up.version + (up.status === 'downloading' ? ' · ' + Math.round((up.progress ?? 0) * 100) + '%' : '')}
           </button>
         )}
+        <div className="tb-mode" role="radiogroup" aria-label="Interface">
+          <button
+            role="radio"
+            aria-checked={mode === 'simple'}
+            className={mode === 'simple' ? 'on' : ''}
+            onClick={() => ui.setMode('simple')}
+            title="Simple: decks, a basic mixer, DUB and FIRE. Everything else stays where it is, out of sight"
+          >
+            SIMPLE
+          </button>
+          <button
+            role="radio"
+            aria-checked={mode === 'pro'}
+            className={mode === 'pro' ? 'on' : ''}
+            onClick={() => ui.setMode('pro')}
+            title="Pro: every unit on screen (isolator, sound system, mic, transitions, all pad modes and FX)"
+          >
+            PRO
+          </button>
+        </div>
         <button
           className={'tb-panic' + (pan.busy ? ' busy' : '')}
           onClick={() => void panic.run()}

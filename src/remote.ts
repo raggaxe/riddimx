@@ -10,6 +10,10 @@ import { midi, runAction } from './midi'
 import { settings } from './settings'
 import { MOVES, type Move } from './engine/moves'
 import { panelLayout, panelValues, setPanel } from './remotePanels'
+import { library } from './library'
+import { bpmStore } from './engine/bpm'
+import { keyStore } from './engine/key'
+import { phoneHangUp, phoneOffer } from './phoneMic'
 
 /**
  * The phone as a controller (desktop app). The phone's page (electron/remote.html) sends the ids of the same
@@ -33,6 +37,7 @@ class Remote extends Store<RemoteState> {
     if (!desktop?.remoteStart) return
     const off1 = desktop.onRemote?.((msg, client) => this.message(msg, client))
     const off2 = desktop.onRemoteClients?.((clients) => {
+      if (!clients) phoneHangUp() // the last phone left: its microphone with it
       this.set({ clients })
       this.lastSent = '' // a new phone gets everything at once
       this.pump()
@@ -88,6 +93,30 @@ class Remote extends Store<RemoteState> {
       const deg = Math.max(-720, Math.min(720, msg.deg))
       return deck.get().playing && !msg.held ? deck.jog(deg / 6) : deck.scratch(deg / 6)
     }
+    // The phone's microphone: its call comes in over this socket, the answer goes back the same way.
+    if (t === 'rtc' && typeof msg.sdp === 'string' && msg.sdp.length < 30000) {
+      void phoneOffer(msg.sdp, client).then((sdp) => desktop?.remoteReply?.(client, JSON.stringify(sdp ? { t: 'rtc', sdp } : { t: 'rtc-fail' })))
+      return
+    }
+    if (t === 'rtc-stop') return phoneHangUp(client)
+    // The library, browsed from the phone: a search gives the tracks back, a tap loads one on a deck.
+    if (t === 'lib') {
+      desktop?.remoteReply?.(client, JSON.stringify({ t: 'lib', items: libraryItems(typeof msg.q === 'string' ? msg.q : '') }))
+      return
+    }
+    if (t === 'load' && deck && typeof msg.id === 'string') {
+      const entry = library.byId(msg.id)
+      if (!entry) return
+      if (deck.get().playing) {
+        desktop?.remoteReply?.(client, JSON.stringify({ t: 'load', ok: false, error: 'Deck ' + deck.name + ' is playing: stop it first.' }))
+        return
+      }
+      library.load(entry, deck)
+      const ok = library.playable(entry)
+      desktop?.remoteReply?.(client, JSON.stringify({ t: 'load', ok, error: ok ? '' : library.get().error ?? 'Not ready yet.' }))
+      if (ok) midi.say('Phone · ' + entry.title + ' → deck ' + deck.name)
+      return
+    }
     if (t === 'p' && typeof msg.k === 'string') {
       setPanel(msg.k, msg.v)
       return
@@ -114,6 +143,32 @@ class Remote extends Store<RemoteState> {
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 
+/** The library for the phone: newest first, filtered by every word of the search, 300 at most. */
+function libraryItems(q: string) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean)
+  const { entries, onDeck } = library.get()
+  const bpms = bpmStore.get().bpms
+  return [...entries]
+    .reverse()
+    .filter((e) => words.every((w) => (e.title + ' ' + e.artist).toLowerCase().includes(w)))
+    .slice(0, 300)
+    .map((e) => {
+      const ref = e.kind === 'local' ? null : e.kind + ':' + e.ref
+      const bpm = e.kind === 'local' ? (e.bpm ?? null) : ref ? (bpms[ref] ?? null) : null
+      return {
+        id: e.id,
+        title: e.title,
+        artist: e.artist,
+        bpm: bpm ? Math.round(bpm * 10) / 10 : null,
+        key: e.kind === 'local' ? (e.key ?? null) : ref ? keyStore.get(ref) : null,
+        dur: e.duration ? Math.round(e.duration) : null,
+        kind: e.kind,
+        ready: library.playable(e),
+        on: (['A', 'B'] as const).filter((n) => onDeck[n] === e.id),
+      }
+    })
+}
+
 /** The deck's pitch range on screen (±8, 16 or 50 %), as the pitch action uses it. */
 function pitchRange(name: string): number {
   try {
@@ -134,6 +189,8 @@ function snapshot() {
       title: s.title,
       artist: s.artist,
       playing: s.playing,
+      loading: s.loading,
+      queued: d.playQueued,
       bpm: s.bpm ? Math.round(s.bpm * s.rate * 10) / 10 : null,
       rate: r2((s.rate - 1) * 100),
       pitch: r2(Math.max(-1, Math.min(1, ((s.rate - 1) * 100) / pitchRange(d.name)))), // the fader, in the deck's range

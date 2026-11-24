@@ -176,7 +176,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       syncOn: false,
       blocked: false,
       cue: 0,
-      hotcues: [null, null, null, null],
+      hotcues: Array(8).fill(null),
       loop: null,
       peaks: null,
       stems: { ...ALL_STEMS },
@@ -260,6 +260,12 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   // ───────────────────────── loading ─────────────────────────
 
   private unload(): void {
+    // A PLAY waiting for a new track survives the old one being cleared away (eject cancels it).
+    const queued = this.wantPlay
+    this.wantPlay = false
+    queueMicrotask(() => {
+      if (queued && this.state.loading) this.wantPlay = true
+    })
     this.token++
     this.metaCb = null
     if (this.state.cover?.startsWith('blob:')) URL.revokeObjectURL(this.state.cover)
@@ -308,7 +314,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       syncOn: false,
       blocked: false,
       cue: 0,
-      hotcues: [null, null, null, null],
+      hotcues: Array(8).fill(null),
       loop: null,
       peaks: null,
       stems: { ...ALL_STEMS },
@@ -329,6 +335,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   eject(): void {
     if (this.state.playing || this.state.kind === 'none') return
     this.unload()
+    this.wantPlay = false
   }
 
   async loadFile(file: File): Promise<void> {
@@ -693,9 +700,42 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     this.anchorTime = mixer.ctx.currentTime
   }
 
+  /** PLAY pressed while a track is still loading: it starts by itself as soon as it is ready. */
+  private wantPlay = false
+
+  /** A PLAY is waiting for the track to finish loading. */
+  get playQueued(): boolean {
+    return this.wantPlay
+  }
+
+  /**
+   * A new track is on its way (the library is fetching it): the deck shows it is loading from this
+   * moment, so a PLAY pressed now waits for the new track instead of starting the old one.
+   */
+  prepare(title: string): void {
+    if (this.state.playing) return
+    this.wantPlay = false
+    this.set({ loading: true, title, artist: '', error: null })
+  }
+
+  protected set(patch: Partial<DeckState>): void {
+    const wasLoading = this.state.loading
+    super.set(patch)
+    if (patch.error) this.wantPlay = false
+    if (wasLoading && !this.state.loading && this.wantPlay) {
+      this.wantPlay = false
+      queueMicrotask(() => this.play())
+    }
+  }
+
   play(): void {
     const s = this.state
-    if (s.loading || s.kind === 'none') return
+    if (s.loading) {
+      this.wantPlay = true
+      this.set({}) // let the screen and the phone show the waiting PLAY
+      return
+    }
+    if (s.kind === 'none') return
     mixer.resume()
     if (s.kind === 'youtube' && !s.playing) this.useScanAnchor() // grid for where playback starts
     if (s.kind === 'local') {
@@ -753,6 +793,12 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   }
 
   toggle(): void {
+    // Pressed again while the PLAY is still waiting for the track: never mind.
+    if (this.state.loading && this.wantPlay) {
+      this.wantPlay = false
+      this.set({})
+      return
+    }
     if (this.state.playing) this.pause()
     else this.play()
   }

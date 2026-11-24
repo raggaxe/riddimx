@@ -286,7 +286,7 @@ input:disabled {
   gap: 2px;
 }
 .knob span {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   color: var(--dim);
 }
@@ -902,7 +902,7 @@ a.link {
   align-items: center;
   gap: 2px;
   font:
-    700 8.5px/1 -apple-system,
+    700 10px/1 -apple-system,
     system-ui,
     sans-serif;
   letter-spacing: 0.06em;
@@ -1032,7 +1032,7 @@ a.link {
 
 .dk-row label {
   color: var(--dim);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -1045,7 +1045,7 @@ a.link {
 }
 
 .deck .pad.stem {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.02em;
 }
 
@@ -1399,7 +1399,7 @@ a.link {
 
 .bpm button {
   padding: 0 5px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .deck .wave canvas {
@@ -1438,7 +1438,7 @@ a.link {
 }
 
 .dk-row label {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .deck .pad {
@@ -1479,7 +1479,7 @@ a.link {
 }
 
 .deck .pad.stem {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.06em;
 }
 
@@ -1571,7 +1571,7 @@ a.link {
 }
 
 .mixer .knob span {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.06em;
 }
 
@@ -1585,7 +1585,7 @@ a.link {
 }
 
 .ch-tag {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .pfl {
@@ -1719,7 +1719,7 @@ tr.fresh {
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -1794,7 +1794,7 @@ tr.fresh {
 
 .dk-fx .pad.fx-on {
   width: 30px;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.08em;
 }
 
@@ -1843,7 +1843,7 @@ tr.fresh {
 .deck .pad.keylock {
   width: 34px;
   height: 18px;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.08em;
 }
 
@@ -1939,7 +1939,7 @@ tr.fresh {
 }
 
 .deck .pad-set.n6 .pad {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .dk-fx {
@@ -1947,7 +1947,7 @@ tr.fresh {
 }
 
 .deck .pad.dub {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.08em;
 }
 
@@ -1960,7 +1960,7 @@ tr.fresh {
 }
 
 .deck .btn.rew {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: -0.1em;
 }
 
@@ -2211,7 +2211,7 @@ button.lib-list,
   border-radius: 0;
   background: var(--a);
   color: #111;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 11px;
   letter-spacing: 0.04em;
@@ -2242,7 +2242,7 @@ button.lib-list,
   margin-right: 6px;
   padding: 0 4px;
   border-radius: 0;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 14px;
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -2358,7 +2358,7 @@ button.lib-list,
 }
 
 .dbx-body .knob span {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .dbx-level {
@@ -2552,7 +2552,7 @@ button.lib-list,
 .dbx-slot i {
   flex: none;
   font-style: normal;
-  font-size: 8px;
+  font-size: 10px;
   color: var(--dim);
 }
 
@@ -2697,11 +2697,11 @@ button.lib-list,
 .dbx-head .dbx-slot {
   justify-content: center;
   padding: 0 3px;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .dbx-head .dbx-slot i {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 /* Long names end in "…" instead of being cut on both sides. */
@@ -2785,7 +2785,7 @@ button.lib-list,
   padding: calc(var(--cap) / 2) 0;
   width: 16px;
   color: #6f685d;
-  font-size: 8px;
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
   line-height: 1;
   user-select: none;
@@ -3033,7 +3033,7 @@ button.lib-list,
 .dbx-pop h5 {
   margin: 6px 6px 2px;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -3062,7 +3062,7 @@ button.lib-list,
 
 .dbx-pop button.on::before {
   content: '● ';
-  font-size: 8px;
+  font-size: 10px;
   vertical-align: 1px;
 }
 
@@ -3482,7 +3482,7 @@ body,
 }
 
 .library th {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .library td {
@@ -3530,7 +3530,7 @@ body,
 }
 
 .mixer .knob span {
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .eq-grid {
@@ -3694,7 +3694,7 @@ body,
   background: none;
   color: var(--dim);
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: inherit;
@@ -3801,7 +3801,7 @@ body,
   margin-right: 2px;
   border-radius: 0;
   font-style: normal;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   color: #0e0d0a;
 }
@@ -3814,7 +3814,7 @@ body,
 
 .kind {
   font-style: normal;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--dim);
   opacity: 0.8;
@@ -3949,7 +3949,7 @@ body,
   margin: 0;
   padding: 4px 8px 2px;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4512,7 +4512,7 @@ body,
   border: 1px solid var(--line);
   border-radius: 0;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -4714,7 +4714,7 @@ body,
   padding: 0 8px;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .mp-table td {
@@ -4848,7 +4848,7 @@ body,
 
 .mp-table thead th.c-ctl {
   font-family: inherit;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .audio-panel.ap {
@@ -4880,7 +4880,7 @@ body,
 .spot h5 {
   margin: 0 0 6px;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -5087,7 +5087,7 @@ body,
 .spot-results thead th {
   padding: 0 8px;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -5272,7 +5272,7 @@ body,
   background: none;
   color: var(--dim);
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
@@ -5408,13 +5408,13 @@ body,
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .dbx-head .dbx-slot em {
   flex: none;
   font-style: normal;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
 }
 
@@ -5585,7 +5585,7 @@ body,
 
 .pitch-read output small {
   margin-left: 1px;
-  font-size: 8px;
+  font-size: 10px;
   color: var(--dim);
 }
 
@@ -5604,7 +5604,7 @@ body,
 
 .pitch-read em {
   font-style: normal;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: var(--accent);
@@ -5633,7 +5633,7 @@ body,
   background: none;
   color: var(--dim);
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-align: left;
@@ -5701,7 +5701,7 @@ body,
   position: absolute;
   top: 4px;
   left: 6px;
-  font-size: 9px;
+  font-size: 10px;
   opacity: 0.75;
 }
 
@@ -5753,7 +5753,7 @@ body,
   top: 6px;
   right: 8px;
   font-style: normal;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
   font-variant-numeric: tabular-nums;
   transition: opacity 100ms ease;
@@ -5844,7 +5844,7 @@ body,
 .sp .sfx i {
   margin-left: 6px;
   font-style: normal;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
   font-variant-numeric: tabular-nums;
 }
@@ -5882,7 +5882,7 @@ body,
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-align: left;
@@ -5966,7 +5966,7 @@ body,
 
 .fx-amount output {
   width: 2.2ch;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -6090,7 +6090,7 @@ body,
   border-radius: 0;
   background: var(--accent);
   color: #111;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 13px;
   text-align: center;
@@ -6153,7 +6153,7 @@ body,
 .bpm-gap {
   padding: 1px 4px;
   border-radius: 0;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--dim);
   white-space: nowrap;
@@ -6227,7 +6227,7 @@ body,
   background: none;
   color: var(--dim);
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   line-height: 11px;
@@ -6313,7 +6313,7 @@ body,
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -6348,7 +6348,7 @@ body,
   background: none;
   color: var(--dim);
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -6378,11 +6378,11 @@ body,
 }
 
 .dbx-head .dbx-pad b {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .dbx-head .dbx-pad .dbx-slot-name {
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .dbx-page {
@@ -6431,7 +6431,7 @@ body,
   background: none;
   color: var(--dim);
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -6624,7 +6624,7 @@ body,
   grid-template-columns: auto minmax(0, 1fr) 3.5ch;
   align-items: center;
   gap: 6px;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
 }
 
@@ -7012,7 +7012,7 @@ body,
 
 .dr-mine h5 {
   margin: 2px 0 0;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--dim);
@@ -7092,7 +7092,7 @@ body,
   background: color-mix(in srgb, var(--ok) 14%, transparent);
   color: var(--ok);
   font-style: normal;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -7168,7 +7168,7 @@ body,
   -webkit-line-clamp: 2;
   white-space: normal;
   overflow: hidden;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 9.5px;
   text-overflow: clip;
   overflow-wrap: normal;
@@ -7206,7 +7206,7 @@ body,
 }
 
 .xf-curve span {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -7369,7 +7369,7 @@ body,
 .ru-ear span {
   writing-mode: vertical-rl;
   rotate: 180deg;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.14em;
   color: #8a8275;
@@ -7444,7 +7444,7 @@ body,
 .rack .dbx-view button {
   height: 14px;
   line-height: 14px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .rack .dbx-fire,
@@ -7487,7 +7487,7 @@ body,
 }
 
 .ru-master .knob > span {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .ru-block {
@@ -7510,7 +7510,7 @@ body,
 .ru-top .mf-power {
   height: 20px;
   padding: 0 7px 0 6px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .ru-top select {
@@ -7528,7 +7528,7 @@ body,
 
 .ru-master .mf-gr {
   gap: 4px;
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .ru-master .mf-gr span {
@@ -7537,7 +7537,7 @@ body,
 
 .ru-off {
   margin: 0;
-  font-size: 9px;
+  font-size: 10px;
   font-style: italic;
   color: var(--dim);
 }
@@ -7667,7 +7667,7 @@ button.ru-ear:focus-visible {
 /* Without its label, the reduction bar takes the row and the number sits at the end. */
 .ru-master .mf-gr {
   grid-template-columns: minmax(0, 1fr) 3.5ch;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 /* ═════════ Rack polish: menus open downwards over the decks, nothing is clipped ═════════ */
@@ -8010,7 +8010,7 @@ button.ru-ear:disabled {
 }
 
 .ru-row .knob > span {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .ru-col {
@@ -8020,7 +8020,7 @@ button.ru-ear:disabled {
 }
 
 .ru-read {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -8041,7 +8041,7 @@ button.ru-ear:disabled {
   background: none;
   color: var(--dim);
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -8072,7 +8072,7 @@ button.ru-ear:disabled {
   background: #171512;
   color: var(--dim);
   font: inherit;
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   touch-action: none;
@@ -8097,7 +8097,7 @@ button.ru-ear:disabled {
   background: linear-gradient(180deg, #24211c, #1a1814);
   color: var(--text);
   font: inherit;
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -8115,7 +8115,7 @@ button.ru-ear:disabled {
   grid-template-columns: auto auto;
   align-items: baseline;
   gap: 0 4px;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--dim);
@@ -8149,7 +8149,7 @@ button.ru-ear:disabled {
   background: linear-gradient(180deg, #24211c, #1a1814);
   color: var(--text);
   font: inherit;
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
   cursor: pointer;
@@ -8183,7 +8183,7 @@ button.ru-ear:disabled {
   background: #171512;
   color: var(--dim);
   font: inherit;
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   touch-action: none;
@@ -8234,7 +8234,7 @@ button.ru-ear:disabled {
 }
 
 .vu-txt {
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   fill: #3a2f1c;
   font-family: -apple-system, system-ui, sans-serif;
@@ -8315,7 +8315,7 @@ button.ru-ear:disabled {
 
 .ru-moves button {
   padding: 0 6px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 /* The first row's units share it out; later rows keep their natural size. */
@@ -8355,7 +8355,7 @@ button.ru-ear:disabled {
 }
 
 .ru-ear span {
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -8392,7 +8392,7 @@ button.ru-ear:disabled {
 
 .ru-route span {
   grid-column: 1 / -1;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
 }
@@ -8415,7 +8415,7 @@ button.ru-ear:disabled {
   background: none;
   color: var(--dim);
   font: inherit;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -8627,7 +8627,7 @@ button.ru-ear:disabled {
 }
 
 .mixer .knob > span {
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .strip-head .pfl,
@@ -8688,7 +8688,7 @@ button.ru-ear:disabled {
 }
 
 .rack .knob > span {
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .ru-moves button,
@@ -8728,7 +8728,7 @@ button.ru-ear:disabled {
   min-width: 0;
   padding: 0 2px;
   overflow: hidden;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -8753,7 +8753,7 @@ button.ru-ear:disabled {
   white-space: nowrap;
   min-height: 17px;
   padding: 0 3px;
-  font-size: clamp(8px, 5.5cqi, 11px);
+  font-size: clamp(10px, 5.5cqi, 11px);
   letter-spacing: 0.03em;
   line-height: 1;
   text-overflow: clip;
@@ -8823,7 +8823,7 @@ button.ru-ear:disabled {
 
 /* Four modes now: tighter letters so RIDDIM fits the mode column. */
 .pad-mode-btn {
-  font-size: 7.5px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   padding-left: 6px;
 }
@@ -8856,7 +8856,7 @@ button.ru-ear:disabled {
 }
 
 .dr-knobs .knob > span {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
@@ -9005,7 +9005,7 @@ button.ru-ear:disabled {
 
 .lib-riddims-head {
   margin: 12px 8px 4px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -9040,7 +9040,7 @@ button.ru-ear:disabled {
   background: color-mix(in srgb, #f5a524 10%, transparent);
   color: #f5a524;
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -9113,7 +9113,7 @@ button.ru-ear:disabled {
   background: color-mix(in srgb, #f5a524 12%, transparent);
   color: #f5a524;
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
@@ -9145,7 +9145,7 @@ button.ru-ear:disabled {
 }
 
 .ru-adub-go span {
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--dim);
@@ -9173,7 +9173,7 @@ button.ru-ear:disabled {
 .ru-autodub .ru-seg button {
   padding: 0 7px;
   height: 22px;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .ru-adub-screen {
@@ -9200,7 +9200,7 @@ button.ru-ear:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 9px;
+  font-size: 10px;
   color: #4d5f49;
 }
 
@@ -9225,7 +9225,7 @@ button.ru-ear:disabled {
 
 .ru-autodub .ru-seg button {
   padding: 0 5px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .ru-adub-go {
@@ -9239,7 +9239,7 @@ button.ru-ear:disabled {
 
 .ru-autodub .ru-seg button {
   padding: 0 4px;
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .ru-autodub {
@@ -9274,7 +9274,7 @@ button.ru-ear:disabled {
 .ru-band .ru-kill {
   width: 36px;
   height: 14px;
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .ru-reset {
@@ -9301,7 +9301,7 @@ button.ru-ear:disabled {
   background: #171512;
   color: var(--dim);
   font: inherit;
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -9360,7 +9360,7 @@ button.ru-ear:disabled {
 
 .ru-err {
   max-width: 160px;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.3;
   color: var(--hot);
 }
@@ -9498,7 +9498,7 @@ button.ru-ear:disabled {
   width: 28px;
   height: 26px;
   padding: 0;
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 /* Master: the compressor's reduction sits on the COMP row. */
@@ -9543,7 +9543,7 @@ button.ru-ear:disabled {
 }
 
 .dbp-knob .knob > span {
-  font-size: 8.5px;
+  font-size: 10px;
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
@@ -9565,7 +9565,7 @@ button.ru-ear:disabled {
 }
 
 .dbp .rw-grid .pick span {
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -9591,7 +9591,7 @@ button.ru-ear:disabled {
   background: none;
   color: #a39b8d;
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 10px;
   cursor: pointer;
@@ -9671,7 +9671,7 @@ button.ru-ear:disabled {
 }
 
 .ru-add span {
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -9794,7 +9794,7 @@ button.ru-ear:disabled {
   background: #15130f;
   color: var(--dim);
   font: inherit;
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -9906,7 +9906,7 @@ button.ru-ear:disabled {
 }
 
 .rack .ru-ear span {
-  font-size: 6px;
+  font-size: 10px;
 }
 
 .rack .ru-face {
@@ -9928,7 +9928,7 @@ button.ru-ear:disabled {
 }
 
 .rack .knob > span {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.04em;
 }
 
@@ -9940,7 +9940,7 @@ button.ru-ear:disabled {
 .rack .ru-remove {
   width: 10px;
   height: 10px;
-  font-size: 7px;
+  font-size: 10px;
   line-height: 9px;
 }
 
@@ -9957,7 +9957,7 @@ button.ru-ear:disabled {
 }
 
 .rack .dbx-head .dbx-slot .dbx-slot-name {
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .rack .dbx-fire,
@@ -9969,7 +9969,7 @@ button.ru-ear:disabled {
 .rack .dbx-view button {
   height: 12px;
   line-height: 12px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .rack .dbx-pick {
@@ -9986,7 +9986,7 @@ button.ru-ear:disabled {
 .rack .ru-block > select,
 .rack .ru-top select {
   height: 15px;
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .rack .ru-block {
@@ -10003,7 +10003,7 @@ button.ru-ear:disabled {
 .rack .ru-tap,
 .rack .ru-select {
   height: 16px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .rack .ru-throw {
@@ -10013,13 +10013,13 @@ button.ru-ear:disabled {
 .rack .ru-crash {
   height: 22px;
   padding: 0 6px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .rack .ru-moves button,
 .rack .ru-route {
   height: 28px;
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .rack .ru-route b {
@@ -10040,13 +10040,13 @@ button.ru-ear:disabled {
 }
 
 .rack .ru-adub-screen span {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .rack .ru-band .ru-kill {
   width: 26px;
   height: 22px;
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .rack .vu-face {
@@ -10057,7 +10057,7 @@ button.ru-ear:disabled {
 .rack .mf-power {
   height: 18px;
   padding: 0 6px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 /* Dub Box takes the width it needs (never cut); THROW labels stay on one line. */
@@ -10165,7 +10165,7 @@ button.ru-ear:disabled {
 }
 
 .mx-sec-head span {
-  font-size: 6.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   line-height: 9px;
@@ -10216,7 +10216,7 @@ button.ru-ear:disabled {
 }
 
 .mixer .mx-sec .knob span {
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.03em;
   line-height: 8px;
   white-space: nowrap;
@@ -10305,7 +10305,7 @@ button.ru-ear:disabled {
   background: #1a1712;
   color: var(--dim);
   font: inherit;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.05em;
   line-height: 10px;
@@ -10358,7 +10358,7 @@ button.ru-ear:disabled {
   background: #1a1712;
   color: var(--dim);
   font: inherit;
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
   cursor: pointer;
@@ -10473,7 +10473,7 @@ button.ru-ear:disabled {
 }
 
 .mx-iso-pop > b {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -10501,7 +10501,7 @@ button.ru-ear:disabled {
 .mx-pop-select {
   display: grid;
   gap: 3px;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--dim);
 }
@@ -10643,7 +10643,7 @@ button.ru-ear:disabled {
 }
 
 .mixer .strip-wrap .knob span {
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   line-height: 8px;
   white-space: nowrap;
@@ -10652,7 +10652,7 @@ button.ru-ear:disabled {
 .mixer .strip-head .ch-tag {
   width: 16px;
   height: 16px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .mixer .strip-head .pfl,
@@ -10673,13 +10673,13 @@ button.ru-ear:disabled {
 
 /* Fader scales. */
 .mixer .scale b {
-  font-size: 7px;
+  font-size: 10px;
 }
 
 /* Master brand. */
 .mixer .mx-brand {
   gap: 4px;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -10700,25 +10700,25 @@ button.ru-ear:disabled {
 }
 
 .mixer .mx-sec .knob span {
-  font-size: 6px;
+  font-size: 10px;
   line-height: 8px;
 }
 
 .mx-sec-head span {
-  font-size: 6px;
+  font-size: 10px;
 }
 
 .mx-kill {
   width: 28px;
   height: 11px;
-  font-size: 6.5px;
+  font-size: 10px;
   line-height: 9px;
 }
 
 .mx-drop {
   width: 30px;
   height: 27px;
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.04em;
 }
 
@@ -10727,7 +10727,7 @@ button.ru-ear:disabled {
   height: 13px;
   padding-left: 4px;
   gap: 3px;
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   line-height: 11px;
 }
@@ -10740,18 +10740,18 @@ button.ru-ear:disabled {
 /* Crossfader row. */
 .mixer .xf-curve {
   height: 18px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .mixer .xf-curve span {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.06em;
 }
 
 .mixer .xf-side {
   width: 20px;
   height: 18px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 @media (max-width: 1279px) {
@@ -10794,7 +10794,7 @@ button.ru-ear:disabled {
   background: #1a1712;
   color: var(--dim);
   font: inherit;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
   cursor: pointer;
@@ -10845,7 +10845,7 @@ button.ru-ear:disabled {
 
 .mx-pop-err {
   max-width: 180px;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--err);
 }
 
@@ -10992,7 +10992,7 @@ button.ru-ear:disabled {
   flex: none;
   width: 18px;
   height: 18px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 /* Curve: icon only (its name is in the tooltip and read aloud). */
@@ -11023,7 +11023,7 @@ button.ru-ear:disabled {
   background: #1a1712;
   color: var(--dim);
   font: inherit;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -11040,7 +11040,7 @@ button.ru-ear:disabled {
 }
 
 .mx-tr-route b {
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .mx-tr-route b.a {
@@ -11053,7 +11053,7 @@ button.ru-ear:disabled {
 
 .mx-tr-route span {
   margin-left: 2px;
-  font-size: 6px;
+  font-size: 10px;
   color: var(--dim);
 }
 
@@ -11085,7 +11085,7 @@ button.ru-ear:disabled {
   height: 20px;
   padding: 0 3px;
   overflow: hidden;
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.03em;
   transition:
     transform 120ms var(--ease-out),
@@ -11138,7 +11138,7 @@ button.ru-ear:disabled {
     width: 140px;
   }
   .mx-tr-moves button {
-    font-size: 6.5px;
+    font-size: 10px;
     letter-spacing: 0.01em;
     padding: 0 2px;
   }
@@ -11199,7 +11199,7 @@ button.ru-ear:disabled {
   border: 0;
   background: none;
   font: inherit;
-  font-size: 6.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   line-height: 10px;
@@ -11246,7 +11246,7 @@ button.ru-ear:disabled {
   background: none;
   color: #5f584a;
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
@@ -11285,7 +11285,7 @@ button.ru-ear:disabled {
 }
 
 .rack .knob span {
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.03em;
   line-height: 8px;
   white-space: nowrap;
@@ -11310,25 +11310,25 @@ button.ru-ear:disabled {
 }
 
 .rack .dbx-slot {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .rack .dbx-slot-name {
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .rack .dbx-view button {
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .rack .dbx-fire,
 .rack .dbx-throw {
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .rack .dbx-pick,
 .rack .dbx-pick span {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .rack .pfl {
@@ -11352,23 +11352,23 @@ button.ru-ear:disabled {
 }
 
 .rack .ru-seg button {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .rack .ru-adub-screen {
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .rack .ru-adub-screen small,
 .rack .ru-adub-screen span {
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .rack .ru-throw,
 .rack .ru-select,
 .rack .ru-tap,
 .rack .ru-crash {
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 /* × shows on the module's hover or focus; the row stays clean otherwise. */
@@ -11383,43 +11383,43 @@ button.ru-ear:disabled {
 
 /* Same sizes, stated strongly enough to beat the older rack rules. */
 .rack .rack-strip .ru .knob span {
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.03em;
   line-height: 8px;
 }
 
 .rack .rack-strip .ru .dbx-pick,
 .rack .rack-strip .ru .dbx-pick span {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .rack .rack-strip .ru .dbx-slot {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .rack .rack-strip .ru .dbx-slot-name {
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .rack .rack-strip .ru .dbx-fire,
 .rack .rack-strip .ru .dbx-throw {
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .rack .rack-strip .ru .ru-seg button {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .rack .rack-strip .ru .ru-adub-screen,
 .rack .rack-strip .ru .ru-adub-screen * {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .rack .rack-strip .ru .ru-throw,
 .rack .rack-strip .ru .ru-select,
 .rack .rack-strip .ru .ru-tap,
 .rack .rack-strip .ru .ru-crash {
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 /* Modules share the row: on a wide window they stretch instead of leaving a hole at the end. */
@@ -11489,7 +11489,7 @@ button.ru-ear:disabled {
 }
 
 .dub-badge span {
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.16em;
   line-height: 8px;
@@ -11543,7 +11543,7 @@ button.ru-ear:disabled {
 }
 
 .dub-area .knob span {
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.03em;
   line-height: 8px;
   white-space: nowrap;
@@ -11565,26 +11565,26 @@ button.ru-ear:disabled {
 
 .dub-area .dbx-slot {
   height: 22px;
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .dub-area .dbx-slot-name {
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .dub-area .dbx-view button {
-  font-size: 6.5px;
+  font-size: 10px;
 }
 
 .dub-area .dbx-fire,
 .dub-area .dbx-throw {
   height: 24px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .dub-area .dbx-pick,
 .dub-area .dbx-pick span {
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .dub-area .dbx-step,
@@ -11612,16 +11612,16 @@ button.ru-ear:disabled {
 }
 
 .dub-area .ru-adub-go b {
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .dub-area .ru-adub-go span {
-  font-size: 6px;
+  font-size: 10px;
 }
 
 .dub-area .ru-seg button {
   height: 20px;
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .dub-area .ru-adub-screen {
@@ -11631,11 +11631,11 @@ button.ru-ear:disabled {
 }
 
 .dub-area .ru-adub-screen b {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .dub-area .ru-adub-screen span {
-  font-size: 6.5px;
+  font-size: 10px;
 }
 
 /* Eco fita in its tab: a bit of air around the same unit. */
@@ -11653,7 +11653,7 @@ button.ru-ear:disabled {
 
 .mixer .mx-bottom .xf-curve span {
   display: inline;
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.06em;
 }
 
@@ -11676,7 +11676,7 @@ button.ru-ear:disabled {
   background: rgba(20, 18, 14, 0.85);
   color: #ff8a8d;
   font: inherit;
-  font-size: 6.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   white-space: nowrap;
@@ -11708,7 +11708,7 @@ button.ru-ear:disabled {
 
 .mx-vu .vu-txt {
   fill: #7d7563;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -11876,7 +11876,7 @@ button.ru-ear:disabled {
 }
 
 .echo-desk .knob span {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   line-height: 9px;
   white-space: nowrap;
@@ -11893,7 +11893,7 @@ button.ru-ear:disabled {
 .echo-desk .ru-select,
 .echo-desk .ru-crash {
   height: 20px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .echo-desk .ru-throw {
@@ -11910,7 +11910,7 @@ button.ru-ear:disabled {
 .echo-desk .echo-mode button {
   height: 16px;
   padding: 0 5px;
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.06em;
 }
 
@@ -11951,7 +11951,7 @@ button.ru-ear:disabled {
   width: auto;
   height: 18px;
   padding: 0 8px 0 6px;
-  font-size: 7.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -11968,7 +11968,7 @@ button.ru-ear:disabled {
   background: #1a1712;
   color: var(--dim);
   font: inherit;
-  font-size: 8.5px;
+  font-size: 10px;
   white-space: nowrap;
   cursor: pointer;
   transition:
@@ -11989,7 +11989,7 @@ button.ru-ear:disabled {
 }
 
 .mf2-sub {
-  font-size: 8px;
+  font-size: 10px;
   color: var(--dim);
   white-space: nowrap;
 }
@@ -12012,7 +12012,7 @@ button.ru-ear:disabled {
 }
 
 .mf2 .knob span {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   line-height: 9px;
   white-space: nowrap;
@@ -12030,7 +12030,7 @@ button.ru-ear:disabled {
   min-width: 0;
   height: 16px;
   padding: 0 6px;
-  font-size: 7.5px;
+  font-size: 10px;
   letter-spacing: 0.06em;
 }
 
@@ -12040,23 +12040,23 @@ button.ru-ear:disabled {
   flex-direction: column;
   gap: 4px;
   min-width: 170px;
-  font-size: 9px;
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
 .mf2-read em {
   font-style: normal;
-  font-size: 8.5px;
+  font-size: 10px;
   color: var(--dim);
 }
 
 .mf2-read .mf-gr span {
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .mf2-read .mf-gr b {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 /* ═════════ Áudio tab: outputs as titled areas, like the mixer ═════════ */
@@ -12089,7 +12089,7 @@ button.ru-ear:disabled {
 }
 
 .ap2-head b {
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -12097,7 +12097,7 @@ button.ru-ear:disabled {
 }
 
 .ap2-head span {
-  font-size: 8px;
+  font-size: 10px;
   color: #6e675a;
 }
 
@@ -12106,7 +12106,7 @@ button.ru-ear:disabled {
   border: 1px solid #33452b;
   border-radius: 0;
   font-style: normal;
-  font-size: 7px;
+  font-size: 10px;
   color: #a6d18d;
 }
 
@@ -12136,7 +12136,7 @@ button.ru-ear:disabled {
   background: #1a1712;
   color: var(--dim);
   font: inherit;
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   white-space: nowrap;
@@ -12186,14 +12186,14 @@ button.ru-ear:disabled {
 }
 
 .ap2 .knob span {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   line-height: 9px;
   white-space: nowrap;
 }
 
 .ap2-info {
-  font-size: 9.5px;
+  font-size: 10px;
   color: var(--text);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -12202,7 +12202,7 @@ button.ru-ear:disabled {
 .ap2-hint {
   flex-basis: 100%;
   margin: 2px 2px 0;
-  font-size: 9px;
+  font-size: 10px;
   color: #6e675a;
 }
 
@@ -12236,7 +12236,7 @@ button.ru-ear:disabled {
 
 .mp .side-nav h5 {
   margin: 0 0 3px 8px;
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.14em;
   color: #7d7563;
 }
@@ -12249,7 +12249,7 @@ button.ru-ear:disabled {
 }
 
 .mp .mp-group i {
-  font-size: 8.5px;
+  font-size: 10px;
   font-style: normal;
   font-variant-numeric: tabular-nums;
   color: #6e675a;
@@ -12278,7 +12278,7 @@ button.ru-ear:disabled {
   border: 1px solid #2c281f;
   border-radius: 0;
   background: #0e0c09;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 16px;
   color: #a6d18d;
 }
@@ -12304,7 +12304,7 @@ button.ru-ear:disabled {
 .mp .mp-table th {
   height: 18px;
   padding: 0 8px;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   color: #7d7563;
@@ -12318,13 +12318,13 @@ button.ru-ear:disabled {
 }
 
 .mp .mp-table td.c-type {
-  font-size: 9px;
+  font-size: 10px;
   color: #6e675a;
 }
 
 .mp .mp-table td.c-ctl {
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .mp .mp-table tr.mapped td.c-ctl {
@@ -12342,7 +12342,7 @@ button.ru-ear:disabled {
 .mp .mp-learn {
   height: 16px;
   padding: 0 7px;
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -12354,7 +12354,7 @@ button.ru-ear:disabled {
 }
 
 .mp .mp-chain {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.12em;
 }
 
@@ -12371,7 +12371,7 @@ button.ru-ear:disabled {
 .mp .mp-table th.c-ctl,
 .mp .mp-table th.c-type {
   font-family: inherit;
-  font-size: 7px;
+  font-size: 10px;
 }
 
 /* ═════════ Bottom panels: one step smaller type everywhere ═════════ */
@@ -12400,14 +12400,14 @@ button.ru-ear:disabled {
 }
 
 .library .lib-lists .lib-list i {
-  font-size: 8.5px;
+  font-size: 10px;
   font-style: normal;
   color: #6e675a;
 }
 
 .lib-smart-head {
   margin: 6px 0 2px 8px;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -12433,12 +12433,12 @@ button.ru-ear:disabled {
 
 .library table th {
   height: 18px;
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.12em;
 }
 
 .library table th .lib-sort {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.12em;
 }
 
@@ -12453,7 +12453,7 @@ button.ru-ear:disabled {
 }
 
 .library .t-artist {
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .library .empty {
@@ -12463,7 +12463,7 @@ button.ru-ear:disabled {
 .library .row-btn {
   height: 16px;
   min-width: 16px;
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 /* A track already played this session reads as done. */
@@ -12694,7 +12694,7 @@ button.ru-ear:disabled {
 .dbp .dbp-presets h5,
 .dbp .dbp-side h5 {
   margin: 0 0 3px 8px;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   color: #7d7563;
@@ -12725,7 +12725,7 @@ button.ru-ear:disabled {
   height: 22px;
   min-width: 46px;
   padding: 0 10px;
-  font-size: 8.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -12737,14 +12737,14 @@ button.ru-ear:disabled {
 .dbp .dbp-top .seg button {
   height: 20px;
   padding: 0 8px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .dbp .dbp-top .btn,
 .dbp .dbx-tools .btn {
   height: 20px;
   padding: 0 8px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 /* Sub tabs: like the titles of the mixer's areas. */
@@ -12756,7 +12756,7 @@ button.ru-ear:disabled {
 .dbp .sub-tabs button {
   height: 18px;
   padding: 0 8px;
-  font-size: 7.5px;
+  font-size: 10px;
   letter-spacing: 0.14em;
 }
 
@@ -12774,7 +12774,7 @@ button.ru-ear:disabled {
 
 .dbp .rw-grid label > span,
 .dbp-knob .knob > span {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.06em;
 }
 
@@ -12784,7 +12784,7 @@ button.ru-ear:disabled {
 }
 
 .dbp-knob output {
-  font-size: 9.5px;
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -12807,13 +12807,13 @@ button.ru-ear:disabled {
 .dbp .dbx-slot-row .num {
   width: 18px;
   height: 18px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .dbp .dbx-slot-row .row-btn {
   width: 18px;
   height: 18px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .dbp .dbx-save input {
@@ -12823,16 +12823,16 @@ button.ru-ear:disabled {
 
 .dbp .dbx-save .btn {
   height: 22px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .bottom .dbp .dbp-knob output {
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .bottom .dbp .rw-grid label > span,
 .bottom .dbp .rw-grid .pick > span {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.08em;
 }
 
@@ -12888,7 +12888,7 @@ button.ru-ear:disabled {
 .sp .dr-source button,
 .sp .dr-styles button {
   height: 20px;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .sp .dr-styles {
@@ -12896,7 +12896,7 @@ button.ru-ear:disabled {
 }
 
 .sp .dr-note {
-  font-size: 9.5px;
+  font-size: 10px;
   color: #7d7563;
 }
 
@@ -12912,7 +12912,7 @@ button.ru-ear:disabled {
 }
 
 .sp .knob span {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   line-height: 9px;
   white-space: nowrap;
@@ -12920,7 +12920,7 @@ button.ru-ear:disabled {
 
 .sp .dr-row,
 .sp .dr-listen {
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .sp .dr-row select,
@@ -12933,7 +12933,7 @@ button.ru-ear:disabled {
 .sp .btn {
   height: 20px;
   padding: 0 9px;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .sp .dr-play {
@@ -12966,7 +12966,7 @@ button.ru-ear:disabled {
 
 .spot h5 {
   margin: 0 0 5px;
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -12988,14 +12988,14 @@ button.ru-ear:disabled {
 .spot .spot-steps li::before {
   width: 16px;
   height: 16px;
-  font-size: 8.5px;
+  font-size: 10px;
   line-height: 16px;
 }
 
 .spot .spot-steps code {
   height: 18px;
   padding: 0 6px;
-  font-size: 9.5px;
+  font-size: 10px;
   line-height: 18px;
 }
 
@@ -13004,7 +13004,7 @@ button.ru-ear:disabled {
 .spot .btn.small {
   height: 20px;
   padding: 0 9px;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .spot .spot-login {
@@ -13019,7 +13019,7 @@ button.ru-ear:disabled {
 
 .spot .spot-limits p {
   margin: 0 0 3px;
-  font-size: 9.5px;
+  font-size: 10px;
   line-height: 1.4;
   color: var(--dim);
 }
@@ -13040,7 +13040,7 @@ button.ru-ear:disabled {
 
 .spot .spot-results th {
   height: 18px;
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.12em;
 }
 
@@ -13121,7 +13121,7 @@ button.ru-ear:disabled {
   width: 14px;
   height: 14px;
   border-radius: 0;
-  font-size: 8px;
+  font-size: 10px;
   font-style: normal;
   font-weight: 800;
 }
@@ -13152,7 +13152,7 @@ button.ru-ear:disabled {
   display: inline-block;
   padding: 0 4px;
   border-radius: 0;
-  font-size: 7.5px;
+  font-size: 10px;
   font-style: normal;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -13223,12 +13223,12 @@ button.ru-ear:disabled {
 }
 
 .deck .pitch-top .pitch-range {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .deck .pitch-foot .pad.keylock {
   width: 38px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .deck .pitch-foot .dk-bend .btn.small {
@@ -13243,7 +13243,7 @@ button.ru-ear:disabled {
 .deck .badge {
   height: 14px;
   padding: 0 5px;
-  font-size: 7.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   line-height: 12px;
 }
@@ -13253,11 +13253,11 @@ button.ru-ear:disabled {
 .deck .bpm .btn.small {
   height: 18px;
   padding: 0 6px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .deck .key {
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 /* Times: elapsed small, remaining larger (the number a DJ watches). */
@@ -13271,19 +13271,19 @@ button.ru-ear:disabled {
 
 /* Pads, FX and transport: smaller labels, same hit areas. */
 .deck .pad {
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .deck .pad-mode-btn {
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .deck .fx-btn {
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .deck .dk-transport .btn {
-  font-size: 9.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -13327,12 +13327,12 @@ button.ru-ear:disabled {
 @media (max-width: 1050px) {
   .deck .fx-btn {
     padding: 0 4px;
-    font-size: 7.5px;
+    font-size: 10px;
     letter-spacing: 0.02em;
   }
   .deck .dk-transport .btn {
     padding: 0 2px;
-    font-size: 8.5px;
+    font-size: 10px;
     letter-spacing: 0;
   }
 }
@@ -13371,7 +13371,7 @@ button.ru-ear:disabled {
   width: 14px;
   height: 14px;
   border-radius: 0;
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 800;
 }
 
@@ -13431,7 +13431,7 @@ button.ru-ear:disabled {
 }
 
 .tb-delta {
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #9a917f;
@@ -13461,7 +13461,7 @@ button.ru-ear:disabled {
 .topbar .rec {
   height: 20px;
   padding: 0 9px;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -13543,7 +13543,7 @@ button.ru-ear:disabled {
   background: #171512;
   color: var(--dim);
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -13662,7 +13662,7 @@ button.ru-ear:disabled {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   color: var(--dim);
   cursor: pointer;
@@ -13716,7 +13716,7 @@ button.ru-ear:disabled {
 }
 
 .st-check small {
-  font-size: 8.5px;
+  font-size: 10px;
   color: #6e675a;
 }
 
@@ -13821,7 +13821,7 @@ button.ru-ear:disabled {
 }
 
 .sm-tab small {
-  font-size: 9px;
+  font-size: 10px;
   color: #6e675a;
 }
 
@@ -14089,7 +14089,7 @@ button.ru-ear:disabled {
 }
 
 .deck.dv2 .pad-mode-btn {
-  font-size: 8.5px;
+  font-size: 10px;
 }
 
 .deck.dv2 .pad-mode-btn svg {
@@ -14231,7 +14231,7 @@ button.ru-ear:disabled {
 }
 
 .tt-label b {
-  font-size: clamp(6px, 9cqw, 11px);
+  font-size: clamp(10px, 9cqw, 11px);
   font-weight: 900;
   letter-spacing: 0.08em;
   color: rgba(10, 9, 7, 0.82);
@@ -14340,7 +14340,7 @@ button.ru-ear:disabled {
   background: #1a1712;
   color: var(--dim);
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -14382,7 +14382,7 @@ button.ru-ear:disabled {
   margin: 6px 0 0;
   overflow: auto;
   font: inherit;
-  font-size: 9.5px;
+  font-size: 10px;
   white-space: pre-wrap;
   color: var(--dim);
 }
@@ -14439,7 +14439,7 @@ button.ru-ear:disabled {
 }
 
 .deck.dv2 .dk-transport .btn.dub {
-  font-size: 9.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -14492,7 +14492,7 @@ button.ru-ear:disabled {
 }
 
 .deck.dv2 .dk-fx .knob span {
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   line-height: 8px;
   white-space: nowrap;
@@ -14621,7 +14621,7 @@ button.ru-ear:disabled {
 }
 
 .deck.dv2 .bpm-unit {
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.16em;
   color: #6e675a;
@@ -14651,7 +14651,7 @@ button.ru-ear:disabled {
 }
 
 .deck.dv2 .times .t-cell small {
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: #6e675a;
@@ -14708,7 +14708,7 @@ button.ru-ear:disabled {
   background: linear-gradient(180deg, #34312b 0%, #27241f 100%);
   color: #cfc8b8;
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -14745,11 +14745,11 @@ button.ru-ear:disabled {
 }
 
 .deck.dv2 .dk-cover > span {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .deck.dv2 .deck-title > span {
-  font-size: 8.5px;
+  font-size: 10px;
   line-height: 11px;
 }
 
@@ -14760,7 +14760,7 @@ button.ru-ear:disabled {
 
 .deck.dv2 .deck-title .badge {
   padding: 0 3px;
-  font-size: 6.5px;
+  font-size: 10px;
   line-height: 10px;
 }
 
@@ -14769,11 +14769,11 @@ button.ru-ear:disabled {
 }
 
 .deck.dv2 .bpm-top .bpm-gap {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .deck.dv2 .bpm-unit {
-  font-size: 6px;
+  font-size: 10px;
   letter-spacing: 0.18em;
 }
 
@@ -14794,12 +14794,12 @@ button.ru-ear:disabled {
 }
 
 .deck.dv2 .times .t-cell small {
-  font-size: 6px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
 .deck.dv2 .times .t-cell > span {
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .deck.dv2 .dk-keytap {
@@ -14808,14 +14808,14 @@ button.ru-ear:disabled {
 
 .deck.dv2 .dk-keytap .key {
   padding: 0 4px;
-  font-size: 8.5px;
+  font-size: 10px;
   line-height: 13px;
 }
 
 .deck.dv2 .dk-keytap button {
   height: 14px;
   padding: 0 4px;
-  font-size: 7px;
+  font-size: 10px;
 }
 
 /* Pad mode tabs and transport: lower, smaller type and icons. */
@@ -14825,7 +14825,7 @@ button.ru-ear:disabled {
 
 .deck.dv2 .pad-mode-btn {
   gap: 4px;
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .deck.dv2 .pad-mode-btn svg {
@@ -14838,11 +14838,11 @@ button.ru-ear:disabled {
 }
 
 .deck.dv2 .dk-transport .btn {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .deck.dv2 .dk-transport .btn.dub {
-  font-size: 7.5px;
+  font-size: 10px;
 }
 
 .deck.dv2 .dk-transport .btn svg {
@@ -14852,7 +14852,7 @@ button.ru-ear:disabled {
 
 .deck.dv2 .deck .pad,
 .deck.dv2 .pad-set .pad {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 /* Pressed controls shrink a touch, never when disabled. */
@@ -14956,7 +14956,7 @@ button.ru-ear:disabled {
 .pitch-col > .dk-pitch .pitch-range {
   display: block;
   height: 16px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .pitch-col > .dk-pitch .pitch-row {
@@ -15000,7 +15000,7 @@ button.ru-ear:disabled {
 
 .pitch-col > .dk-pitch .pad.keylock {
   order: 2;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .pitch-col > .dk-pitch .pad.keylock.set {
@@ -15139,7 +15139,7 @@ button.ru-ear:disabled {
 }
 
 .pitch-col .pitch-top .pitch-read output small {
-  font-size: 7px;
+  font-size: 10px;
 }
 
 /* Narrow windows: the decks stack, each strip stays beside its deck. */
@@ -15228,7 +15228,7 @@ button.ru-ear:disabled {
   border-radius: 0;
   background: #2a1411;
   color: #ff8a7a;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -15280,7 +15280,7 @@ button.ru-ear:disabled {
   flex: none;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
   color: var(--accent);
@@ -15300,7 +15300,7 @@ button.ru-ear:disabled {
     0 1px 2px rgba(0, 0, 0, 0.55);
   color: #cfc8b8;
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
   cursor: pointer;
@@ -15310,7 +15310,7 @@ button.ru-ear:disabled {
 
 .deck.dv2 .dk-fx-throw {
   margin-left: auto;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .deck.dv2 .dk-fx-dub:active:not(:disabled),
@@ -15345,7 +15345,7 @@ button.ru-ear:disabled {
   border-radius: 0;
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--accent);
-  font-size: 6.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
 }
@@ -15359,7 +15359,7 @@ button.ru-ear:disabled {
   padding: 0 3px;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
   color: var(--dim);
@@ -15418,7 +15418,7 @@ button.ru-ear:disabled {
 }
 
 .plg-head .seg button {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .plg .knob-dial {
@@ -15428,7 +15428,7 @@ button.ru-ear:disabled {
 }
 
 .plg .knob span {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
@@ -15442,7 +15442,7 @@ button.ru-ear:disabled {
 }
 
 .plg-grid > b {
-  font-size: 7.5px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   text-align: center;
   color: var(--dim);
@@ -15588,19 +15588,19 @@ button.ru-ear:disabled {
 }
 
 .pc .pc-read.synced {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.08em;
 }
 
 .pc .pc-read small {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
   opacity: 0.7;
 }
 
 .pc .pc-range {
   height: 16px;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: #9d968a;
@@ -15667,7 +15667,7 @@ button.ru-ear:disabled {
   right: 10px;
   top: 0;
   transform: translateY(-50%);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -15749,7 +15749,7 @@ button.ru-ear:disabled {
 
 .pc .pc-key {
   height: 20px;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -15958,13 +15958,13 @@ textarea {
   background: #1a1712;
   color: var(--text);
   font: inherit;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 /* ═════════ DUB FX row: compact sound pads, a roomy FIRE, the row takes all the free width ═════════ */
 
 .dub-rack .rack-tag {
-  font-size: 6.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -16117,7 +16117,7 @@ textarea {
 
 .tv-zoom .tv-zoom-read {
   min-width: 42px;
-  font-size: 9px;
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
   color: #8d8678;
 }
@@ -16131,4 +16131,978 @@ textarea {
 .tv-zoom button:disabled {
   opacity: 0.35;
   cursor: default;
+}
+
+/* ═════════ SIMPLE / PRO switch (top bar) ═════════ */
+
+.tb-mode {
+  display: flex;
+  height: 22px;
+  border: 1px solid #3a352d;
+}
+
+.tb-mode button {
+  padding: 0 9px;
+  border: 0;
+  background: #1a1712;
+  color: var(--dim);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+.tb-mode button + button {
+  border-left: 1px solid #3a352d;
+}
+
+.tb-mode button.on {
+  background: color-mix(in srgb, var(--a) 22%, #1f1c17);
+  color: var(--text);
+}
+
+/* ═════════ SIMPLE mode: what most sets need; the rest stays, out of sight ═════════ */
+
+/* Mixer: the channel strips, the master and the crossfader. Isolator, sound system, mic and the
+   transitions are Pro. The mixer column gets narrower, the decks wider. */
+@media (min-width: 901px) {
+  .mode-simple .stage {
+    grid-template-columns: minmax(0, 1fr) clamp(300px, 25vw, 370px) minmax(0, 1fr);
+  }
+}
+
+.mode-simple .mx-master-side,
+.mode-simple .mx-xrow-side,
+.mode-simple .mx-tr-moves {
+  display: none;
+}
+
+.mode-simple .mx-xrow {
+  justify-content: center;
+}
+
+/* Decks: hot cues only, and the FX strip is one big DUB. */
+.mode-simple .deck.dv2 .pad-modes {
+  display: none;
+}
+
+.mode-simple .deck.dv2 .dk-body {
+  grid-template-rows: 0 minmax(0, 1fr) var(--tr-h);
+}
+
+.mode-simple .deck.dv2 > .dk-fx .fx-pick,
+.mode-simple .deck.dv2 > .dk-fx .fx-knob,
+.mode-simple .deck.dv2 > .dk-fx .dk-dubk,
+.mode-simple .deck.dv2 > .dk-fx .dk-fx-throw {
+  display: none;
+}
+
+.mode-simple .deck.dv2 > .dk-fx .dk-fx-dub {
+  flex: 1;
+  height: 24px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
+/* DUB FX row: FIRE, the sound, FX and the level. Quick pads and the sound knobs are Pro. */
+.mode-simple .dub-rack .dbx-head,
+.mode-simple .dub-rack .dbx-body > .knob {
+  display: none;
+}
+
+.mode-simple .dub-rack .dbx-body .dbx-fire {
+  flex: 0 1 220px;
+}
+
+.mode-simple .dub-rack .dbx-body .dbx-out {
+  margin-left: 0;
+}
+
+/* ═════════ Laptop-first layout: one global scale, short decks, a tall library ═════════ */
+
+/* One scale for the whole interface (set from the window size in ui.ts, 1 at 1440×900 and below).
+   The app is zoomed as a whole; its own height is divided back so it still fills the window. */
+.app {
+  zoom: var(--ui-scale, 1);
+  height: calc(100dvh / var(--ui-scale, 1));
+  /* Width breakpoints below are measured in base pixels (the app's own width), not screen pixels. */
+  container: app / inline-size;
+}
+
+/* The turntable never grows past 130 px: the height the decks do not need goes to the library. */
+.deck.dv2 .dk-body {
+  --jog: max(48px, min(130px, calc(100cqh - var(--tab-h) - var(--gap)), calc(100cqw - var(--pads-min, 185px) - var(--gap))));
+}
+
+/* Hot cues: eight low pads in two rows of four. */
+.deck .pad-set.grid2:not(.g5):not(.g6) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(22px, 1fr));
+  max-height: 72px;
+  align-self: end;
+}
+
+.deck .pad.hc4.set {
+  --tint: #3dd68c;
+}
+
+.deck .pad.hc5.set {
+  --tint: #f2c230;
+}
+
+.deck .pad.hc6.set {
+  --tint: #2fd3d3;
+}
+
+.deck .pad.hc7.set {
+  --tint: #ff6fb1;
+}
+
+.deck .pad.hc4.set,
+.deck .pad.hc5.set,
+.deck .pad.hc6.set,
+.deck .pad.hc7.set {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 20%, #1a1814), color-mix(in srgb, var(--tint) 8%, #161411));
+  border-color: #3a352d;
+  box-shadow: none;
+}
+
+/* At 10 px some captions no longer fit; their knobs say what they are on hover (title). */
+.deck.dv2 > .dk-fx .knob > span {
+  display: none;
+}
+
+.mx-sec .knob > span {
+  letter-spacing: 0;
+}
+
+/* Pro mode on a laptop-width window: icons only on the crossfader row, no TOTAL time on the decks. */
+@container app (max-width: 1600px) {
+  .mx-xrow-side .xf-curve > span,
+  .mx-xrow-side .mx-tr-route > span {
+    display: none;
+  }
+
+  .deck.dv2 .wave .times .t-total {
+    display: none;
+  }
+}
+
+/* Simple has no pad mode tabs: the turntable may use the body's whole height. */
+.mode-simple .deck.dv2 .dk-body {
+  --tab-h: 0px;
+}
+
+@container app (max-width: 1700px) {
+  .mx-sec.mx-mic .knob > span {
+    display: none;
+  }
+}
+
+/* ═════════ Pitch column the full height of the deck; the FX strip sits under the rest ═════════ */
+
+.deck.dv2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 52px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas: none;
+}
+
+.deck.dv2.deck-b {
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+
+.deck.dv2 > .dk-top {
+  display: contents;
+}
+
+.deck.dv2 .dk-main {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.deck.dv2 .dk-top > .pc {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  min-height: 0;
+}
+
+.deck.dv2 > .dk-fx {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+}
+
+.deck.dv2.deck-b .dk-main,
+.deck.dv2.deck-b > .dk-fx {
+  grid-column: 2;
+}
+
+.deck.dv2.deck-b .dk-top > .pc {
+  grid-column: 1;
+}
+
+/* ═════════ Mixer: everything on its centre line ═════════ */
+
+/* Channel strip and master: captions without extra tracking, so they stay under their own knob. */
+.mixer .knob > span {
+  letter-spacing: 0;
+}
+
+/* Simple hides the crossfader row's side controls: the crossfader alone, in the middle. */
+.mode-simple .mx-xrow {
+  display: flex;
+  justify-content: center;
+}
+
+.mode-simple .mx-xrow .xfader {
+  flex: 0 1 260px;
+}
+
+/* Pro, FX strip beside the full-height pitch column: the four echo knobs keep their room, THROW gives way. */
+.deck.dv2 > .dk-fx .dk-dubk {
+  min-width: max-content;
+}
+
+.deck.dv2 > .dk-fx .dk-fx-throw {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding-inline: 6px;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+}
+
+/* A laptop-width window drops the strip's "FX A" tag so THROW keeps its whole word. */
+@container app (max-width: 1400px) {
+  .deck.dv2 > .dk-fx .dk-fx-tag {
+    display: none;
+  }
+}
+
+/* ═════════ Centre: MIXER / DUB / FX pages; the master and the crossfader stay on every page ═════════ */
+
+.mixer {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    't t t'
+    'a m b'
+    'x x x';
+}
+
+.mixer.centre-dub,
+.mixer.centre-fx {
+  grid-template-columns: minmax(0, 1fr) 92px;
+  grid-template-areas:
+    't t'
+    'p m'
+    'x x';
+}
+
+.ctr-tabs {
+  grid-area: t;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid #29251d;
+}
+
+.ctr-tabs button {
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: #1a1712;
+  color: var(--dim);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+.ctr-tabs button + button {
+  border-left: 1px solid #29251d;
+}
+
+@media (hover: hover) {
+  .ctr-tabs button:hover:not(.on) {
+    background: #221e18;
+    color: var(--text);
+  }
+}
+
+.ctr-tabs button.on {
+  background: color-mix(in srgb, var(--a) 22%, #1f1c17);
+  color: var(--text);
+}
+
+.ctr-page {
+  grid-area: p;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* DUB / FX pages: the master column keeps only its output (VU, fader, phones). */
+.mixer.centre-dub .mx-master,
+.mixer.centre-fx .mx-master {
+  min-width: 0;
+}
+
+.mixer.centre-dub .mx-out .mx-vu,
+.mixer.centre-fx .mx-out .mx-vu {
+  display: none;
+}
+
+/* ── Page building blocks ── */
+
+.cp {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 100%;
+  font-size: 11px;
+}
+
+.cp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cp-lab {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.cp-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid #29251d;
+  background: #13110d;
+}
+
+.cp-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.cp-b {
+  display: grid;
+  place-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid #2e2a22;
+  background: #1c1914;
+  color: #cfc8b8;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+  touch-action: none;
+}
+
+.cp-b.cp-sq {
+  width: 22px;
+  padding: 0;
+  font-size: 13px;
+}
+
+.cp-b:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.cp-b.on {
+  background: color-mix(in srgb, var(--a) 24%, #1f1c17);
+  color: #fff;
+}
+
+.cp-menu {
+  flex: 1;
+  min-width: 0;
+}
+
+.cp-menu > * {
+  width: 100%;
+}
+
+.cp-knobs {
+  display: flex;
+  justify-content: space-around;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid #29251d;
+  background: #13110d;
+}
+
+.cp-sec .cp-knobs {
+  border: 0;
+  padding: 0;
+  background: none;
+}
+
+.cp-seg {
+  display: flex;
+  border: 1px solid #3a352d;
+  align-self: flex-start;
+}
+
+.cp-seg button {
+  height: 20px;
+  padding: 0 9px;
+  border: 0;
+  background: #1a1712;
+  color: var(--dim);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.cp-seg button + button {
+  border-left: 1px solid #3a352d;
+}
+
+.cp-seg button.on {
+  background: color-mix(in srgb, var(--a) 22%, #1f1c17);
+  color: var(--text);
+}
+
+/* Dub sounds: coloured by kind — siren gold, effect red, spring green, noise blue, yours grey. */
+.cp-sounds {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.cp-sound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  height: 38px;
+  padding: 0 4px;
+  border: 1px solid #2e2a22;
+  background: #1c1914;
+  color: #cfc8b8;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.cp-sound small {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+
+.cp-sound span {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cp-sound.k-siren {
+  background: #241f0f;
+  color: #f2c230;
+}
+
+.cp-sound.k-fx {
+  background: #26130f;
+  color: #ff8a7a;
+}
+
+.cp-sound.k-spring {
+  background: #0f2416;
+  color: #6fdc95;
+}
+
+.cp-sound.k-noise {
+  background: #0f1c26;
+  color: #7fbfff;
+}
+
+.cp-sound.k-empty {
+  color: var(--dim);
+  opacity: 0.6;
+}
+
+.cp-sound.on,
+.cp-sound.now {
+  filter: brightness(1.6);
+}
+
+.cp-sound:disabled {
+  cursor: default;
+}
+
+.cp-sampler {
+  display: flex;
+  gap: 4px;
+  min-height: 38px;
+}
+
+.cp-sampler .dbx-slots {
+  flex: 1;
+}
+
+/* DROP · FIRE · FX: the hands-on buttons, as big as the room allows. */
+.cp-big {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 1fr;
+  gap: 6px;
+  min-height: 52px;
+}
+
+.cp-big button {
+  border: 1px solid #2e2a22;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: none;
+  transition: transform 120ms var(--ease-out);
+}
+
+.cp-big button:active {
+  transform: scale(0.97);
+}
+
+.cp-drop {
+  background: #1f1b10;
+  color: #f2c230;
+  font-size: 15px !important;
+  letter-spacing: 0.14em;
+}
+
+.cp-drop.on {
+  background: #4a3f1c;
+  color: #fff;
+}
+
+.cp-fire {
+  background: #2a1411;
+  color: #ff8a7a;
+  font-size: 20px !important;
+  letter-spacing: 0.2em;
+}
+
+.cp-fire.on {
+  background: #8a2b20;
+  color: #fff;
+}
+
+.cp-fxb {
+  background: #1c1914;
+  color: #cfc8b8;
+  font-size: 14px !important;
+  letter-spacing: 0.14em;
+}
+
+.cp-fxb.on {
+  background: #3a2a1c;
+  color: #fff;
+}
+
+/* FX page */
+.cp-tag {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #0b0a08;
+  background: var(--a);
+}
+
+.cp-deckfx.b .cp-tag {
+  background: var(--b);
+}
+
+.cp-fxpick {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.cp-fxpick button {
+  height: 20px;
+  padding: 0;
+  border: 1px solid #2e2a22;
+  background: #1c1914;
+  color: #cfc8b8;
+  font: inherit;
+  font-size: 9.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cp-fxpick button.on {
+  background: color-mix(in srgb, var(--a) 24%, #1f1c17);
+  color: #fff;
+}
+
+.cp-deckfx.b .cp-fxpick button.on,
+.cp-deckfx.b .cp-b.on {
+  background: color-mix(in srgb, var(--b) 24%, #1f1c17);
+}
+
+.cp-throw {
+  height: 26px;
+}
+
+.cp-aux {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cp-aux select {
+  height: 22px;
+  border: 1px solid #3a352d;
+  background: #1a1712;
+  color: var(--text);
+  font: inherit;
+  font-size: 10px;
+}
+
+/* The tape echo unit, laid flat inside the page. */
+.cp-tape .echo-desk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cp .knob span {
+  font-size: 10px;
+}
+
+/* The big buttons sit high on the DUB page, first thing under the sound. */
+.cp-dub .cp-big {
+  flex: none;
+  height: 52px;
+}
+
+/* ═════════ Deck: transport as a column beside the turntable, pads under both; its effect lives on the FX page ═════════ */
+
+.deck.dv2 > .dk-fx .fx-pick,
+.deck.dv2 > .dk-fx .fx-knob,
+.deck.dv2 > .dk-fx .dk-dubk {
+  display: none;
+}
+
+.deck.dv2 > .dk-fx .dk-fx-dub {
+  flex: 1;
+}
+
+.deck.dv2 .dk-body {
+  --tr-w: 76px;
+  --pads-h: 54px;
+  --jog: max(56px, min(calc(100cqh - var(--tab-h) - var(--pads-h) - 2 * var(--gap)), calc(100cqw - var(--tr-w) - var(--gap))));
+  grid-template-columns: var(--tr-w) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) var(--tab-h) var(--pads-h);
+  grid-template-areas:
+    'tr   jog'
+    'tabs tabs'
+    'pads pads';
+}
+
+.deck.dv2.deck-b .dk-body {
+  grid-template-columns: minmax(0, 1fr) var(--tr-w);
+  grid-template-areas:
+    'jog  tr'
+    'tabs tabs'
+    'pads pads';
+}
+
+.deck.dv2 .dk-body .jog {
+  grid-row: auto;
+  grid-area: jog;
+}
+
+.deck.dv2 .dk-transport {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  min-height: 0;
+}
+
+.deck.dv2 .dk-transport .btn {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.deck.dv2 .dk-transport .btn.cue {
+  order: 1;
+  flex: 1.3;
+}
+
+.deck.dv2 .dk-transport .btn.play {
+  order: 2;
+  flex: 1.3;
+}
+
+.deck.dv2 .dk-transport .btn.sync {
+  order: 3;
+}
+
+.deck.dv2 .dk-transport .btn.rew,
+.deck.dv2.deck-b .dk-transport .btn.rew {
+  order: 4;
+  flex: 0.8;
+}
+
+.deck.dv2 .dk-body .pad-set {
+  height: 100%;
+}
+
+/* Simple: no pad mode tabs. */
+.mode-simple .deck.dv2 .dk-body {
+  grid-template-rows: minmax(0, 1fr) 0 var(--pads-h);
+}
+
+/* No rack row any more: top bar · waveforms · divider · stage · divider · library. */
+.app {
+  grid-template-rows: auto var(--track-h, 60px) 7px minmax(0, 1fr) 7px var(--bottom-h, 300px);
+}
+
+/* Four effect names never squeeze: two over two. */
+.cp-fxpick {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* ═════════ Text fits its box: these units were drawn for 7–8 px type; at 10 px their boxes grow with it ═════════ */
+
+/* Section headers (Isolator, Sound system, Mic input…): one line, the title shortens before it spills. */
+.mx-sec-head {
+  height: auto;
+  min-height: 14px;
+  gap: 6px;
+}
+
+.mx-sec-head span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 14px;
+  letter-spacing: 0.06em;
+}
+
+.mx-sec.bus .mx-sec-head::before {
+  flex: none;
+  line-height: 13px;
+  letter-spacing: 0.04em;
+}
+
+.mx-sec-more {
+  flex: none;
+  width: 18px;
+  height: 14px;
+  margin-right: 0;
+  line-height: 1;
+}
+
+/* Isolator KILL, COMP / LIM, DROP: boxes as tall and wide as their words. */
+.mx-kill {
+  height: 16px;
+  min-width: 30px;
+  padding: 0 4px;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+}
+
+.mx-dyn-btn {
+  height: 18px;
+  width: auto;
+  min-width: 44px;
+  padding: 0 6px;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.mx-drop {
+  min-width: 48px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+/* Knob names in the mixer: no wide tracking, so neighbours never touch. */
+.mixer .knob span,
+.cp .knob span {
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Mic input: TALK and its knobs wrap to a second row rather than run out of the box. */
+.mx-mic .mx-sec-body {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 4px 8px;
+}
+
+.mx-mic .knob-dial {
+  width: 22px;
+  height: 22px;
+}
+
+/* The tape echo inside the FX page: THROW A / THROW B on one line each. */
+.cp-tape .ru-throw {
+  width: auto;
+  min-width: 72px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+/* The AI stems badge sits inside the pads' corner, not over the RIDDIM tab. */
+.pad-set[data-ai='ready']::after {
+  top: auto;
+  bottom: 2px;
+  right: 2px;
+  line-height: 12px;
+  z-index: 1;
+}
+
+/* One "MASTER BUS" label over the column instead of a tag in every header (the titles get their room back). */
+.mx-sec.bus .mx-sec-head::before {
+  content: none;
+}
+
+.mixer .mx-master-side::before {
+  content: 'MASTER BUS';
+  flex: none;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 14px;
+  color: #a59f92;
+}
+
+/* Throw buttons (tape echo, mic): the word on one line, the box as wide as it needs. */
+.ru-throw {
+  width: auto;
+  min-width: 64px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.bottom .ru-throw,
+.bottom .ru-throw.voice-throw,
+.cp .ru-throw {
+  width: auto;
+  min-width: 64px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+/* ═════════ Centre pages (DUB / FX) in the desktop app: breathing room, nothing cut ═════════ */
+
+.ctr-page {
+  padding: 4px 4px 4px 2px;
+}
+
+/* The tape echo laid out inside the FX page: each unit as tall as its controls (no fixed 64 px). */
+.cp-tape .echo-desk .mx-sec {
+  height: auto;
+  min-height: 0;
+  padding: 6px 8px;
+}
+
+.cp-tape .echo-desk .mx-sec-body {
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+/* The master column on the DUB / FX pages: room for PHONES and CUE·MIX side by side. */
+.mixer.centre-dub,
+.mixer.centre-fx {
+  grid-template-columns: minmax(0, 1fr) 112px;
+}
+
+.mixer.centre-dub .mx-out .phones-knobs,
+.mixer.centre-fx .mx-out .phones-knobs {
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.mixer .mx-out .phones-knobs .knob span {
+  letter-spacing: 0;
+}
+
+.ctr-page {
+  overflow-x: hidden;
+}
+
+.cp-tape .echo-desk .mx-sec {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* PHONES over CUE·MIX in the narrow master column of the DUB / FX pages. */
+.mixer.centre-dub .mx-out .phones-knobs,
+.mixer.centre-fx .mx-out .phones-knobs {
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Sound system: COMP and LIM side by side on their own row, under the knobs and DROP, never past the edge. */
+.mx-ss .mx-sec-body {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.mx-ss .mx-dyn {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+
+.mx-ss .mx-dyn .mx-dyn-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+}
+
+/* Mic knobs keep their names at every window size (they wrap to a second row instead). */
+@container app (max-width: 1700px) {
+  .mx-sec.mx-mic .knob > span {
+    display: block;
+  }
+}
+
+/* DUB presets on the FX page: a row of four. */
+.cp-fxpick.cp-presets {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cp-fx .cp-knobs {
+  flex-wrap: wrap;
 }

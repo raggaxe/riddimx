@@ -1,4 +1,5 @@
 import { mixer } from './engine/mixer'
+import { mic, VOICE_PRESETS, VOICE_TIMES, type VoiceTime } from './engine/mic'
 import { COMP_PRESETS, DYNAMICS_DEFAULT, LIMITS } from './engine/dynamics'
 import { dubBox, FACTORY, PATCH_LIMITS, ECHO_BEATS, type Patch } from './engine/dubbox'
 import { dubSettings, DUB_BEATS, DUB_LIMITS, DUB_PRESETS } from './engine/dub'
@@ -340,11 +341,68 @@ const masterSections: Section[] = [
   },
 ]
 
+// ───────── Mic: the MC's voice, from the Mac's input or from the phone itself ─────────
+const mc = () => mic.get()
+const micSections: Section[] = [
+  {
+    title: 'Voice',
+    hint: 'talk, level, ducking',
+    open: true,
+    controls: [
+      { kind: 'button', id: 'rack.talkHold', label: 'HOLD TO TALK', hold: true, lit: 'mic.talk' },
+      { kind: 'switch', k: 'mic.talk', label: 'TALK (LATCH)', get: () => mc().talk, set: (on) => mic.setTalk(on) },
+      { kind: 'button', id: 'rack.voiceThrow', label: 'MIC THROW', hold: true, lit: 'mic.throwing' },
+      knob('mic.level', 'LEVEL', lin(0, 1.5), () => mc().level, (x) => mic.update({ level: x }), pct),
+      knob('mic.duck', 'DUCK', lin(0, 1), () => mc().duck, (x) => mic.update({ duck: x }), (x) => (x < 0.02 ? 'never' : '−' + Math.round(x * 12) + ' dB')),
+    ],
+  },
+  {
+    title: 'Colour',
+    hint: 'presets, filter, drive',
+    open: true,
+    controls: [
+      {
+        kind: 'choice',
+        k: 'mic.preset',
+        label: 'PRESET',
+        options: VOICE_PRESETS.map((p) => ({ v: p.id, label: p.label })),
+        get: () => VOICE_PRESETS.find((p) => Object.entries(p.set).every(([k, v]) => mc()[k as keyof typeof p.set] === v))?.id ?? '',
+        set: (v) => {
+          const p = VOICE_PRESETS.find((x) => x.id === v)
+          if (p) mic.update(p.set)
+        },
+      },
+      { kind: 'knob', k: 'mic.filter', label: 'FILTER', center: true, get: () => mc().filter, set: (v) => mic.update({ filter: v }), show: () => (Math.abs(mc().filter) < 0.02 ? 'open' : mc().filter < 0 ? 'dark ' + Math.round(-mc().filter * 100) + '%' : 'radio ' + Math.round(mc().filter * 100) + '%') },
+      knob('mic.drive', 'DRIVE', lin(0, 1), () => mc().drive, (x) => mic.update({ drive: x }), (x) => (x < 0.02 ? 'clean' : pct(x))),
+    ],
+  },
+  {
+    title: 'Mic echo',
+    hint: 'its own echo and spring',
+    controls: [
+      {
+        kind: 'choice',
+        k: 'mic.time',
+        label: 'TIME',
+        options: VOICE_TIMES.map((t) => ({ v: t, label: t === 'rack' ? 'TAPE' : t })),
+        get: () => mc().time,
+        set: (v) => mic.update({ time: v as VoiceTime }),
+      },
+      knob('mic.echo', 'SEND', lin(0, 1), () => mc().echo, (x) => mic.update({ echo: x }), pct),
+      knob('mic.repeats', 'FEEDBACK', lin(0, 0.95), () => mc().repeats, (x) => mic.update({ repeats: x }), pct),
+      knob('mic.tone', 'TONE', lin(0, 1), () => mc().tone, (x) => mic.update({ tone: x }), (x) => (x < 0.35 ? 'dark' : x > 0.7 ? 'bright' : 'tape')),
+      knob('mic.spring', 'SPRING', lin(0, 1), () => mc().spring, (x) => mic.update({ spring: x }), pct),
+      knob('mic.fx', 'EFFECTS', lin(0, 1.5), () => mc().fx, (x) => mic.update({ fx: x }), pct),
+    ],
+  },
+]
+
 /** Pages of the phone: their sections, in order. */
-export const PANELS: Record<'dub' | 'fx' | 'mix', Section[]> = {
+export const PANELS: Record<'dub' | 'fx' | 'mix' | 'mic', Section[]> = {
   dub: [...dubBoxSections, deckDub],
   fx: fxSections,
   mix: masterSections,
+  mic: micSections,
 }
 
 const all = Object.values(PANELS).flatMap((secs) => secs.flatMap((s) => s.controls))
@@ -381,6 +439,12 @@ export function panelValues(): { v: Record<string, number | string | boolean>; r
   v['echo.throwB'] = ob().throwing.B
   v['ss.dropping'] = ob().dropping
   v['ss.autodub'] = autoDub.get().on
+  v['mic.on'] = mc().on
+  v['mic.throwing'] = mc().throwing
+  v['mic.phone'] = mc().phone
+  v['mic.source'] = mc().source
+  v['mic.speaking'] = mc().speaking
+  v['mic.error'] = mc().error ?? ''
   return { v, r }
 }
 

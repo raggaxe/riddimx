@@ -58,7 +58,7 @@ function deckActions(deck: Deck, other: Deck): Action[] {
     a('pfl', 'Headphone cue (PFL)', 'button', () => deck.togglePfl()),
     a('tap', 'TAP (track tempo)', 'button', () => deck.tap()),
     a('markBar', 'Mark the one of the bar here', 'button', () => deck.markBar()),
-    ...[0, 1, 2, 3].map((i) => a('hotcue' + (i + 1), 'Hot cue ' + (i + 1), 'button', () => deck.hotcue(i))),
+    ...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => a('hotcue' + (i + 1), 'Hot cue ' + (i + 1), 'button', () => deck.hotcue(i))),
     ...[1, 2, 4, 8].map((b) => a('loop' + b, 'Loop ' + b, 'button', () => deck.toggleLoop(b))),
     a('volume', 'Volume', 'fader', (v) => deck.setVolume(v)),
     // Same range as the deck's ±8 / 16 / 50 button; down is faster, like on screen.
@@ -83,6 +83,7 @@ function deckActions(deck: Deck, other: Deck): Action[] {
     a('fxOn', 'Effect on / off', 'button', () => deck.toggleFx()),
     a('fxAmount', 'Effect amount', 'fader', (v) => deck.setFxAmount(v)),
     ...STEMS.map((st) => a('stem.' + st, 'Stem ' + st, 'button', () => deck.toggleStem(st))),
+    ...STEMS.map((st) => a('stemSolo.' + st, 'Stem ' + st + ' only', 'button', () => deck.soloStem(st))),
     a('jog', 'Jog wheel', 'jog', (v) => deck.jog(v)),
     a('vinyl', 'VINYL: jog vinyl mode (on / off)', 'button', () => {
       vinyl[deck.name as 'A' | 'B'] = !vinyl[deck.name as 'A' | 'B']
