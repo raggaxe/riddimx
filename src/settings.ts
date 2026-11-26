@@ -13,8 +13,8 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   zoom: 1,
-  colorA: '#f2c230',
-  colorB: '#35c46a',
+  colorA: '#e5484d', // red
+  colorB: '#4aa8ff', // blue
   snapBars: true,
   jogInertia: true,
   beatCounter: true,
@@ -28,6 +28,9 @@ function saved(): Settings {
   try {
     const s = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(LS) || '{}') } as Settings
     s.zoom = clamp(Number(s.zoom) || 1, ZOOM_MIN, ZOOM_MAX)
+    // The old default pair (gold / green), never changed by the DJ: moves to the new default (red / blue).
+    if (s.colorA === '#f2c230' && s.colorB === '#35c46a')
+      Object.assign(s, { colorA: DEFAULT_SETTINGS.colorA, colorB: DEFAULT_SETTINGS.colorB })
     if (!/^#[0-9a-f]{6}$/i.test(s.colorA)) s.colorA = DEFAULT_SETTINGS.colorA
     if (!/^#[0-9a-f]{6}$/i.test(s.colorB)) s.colorB = DEFAULT_SETTINGS.colorB
     return s

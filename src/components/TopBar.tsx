@@ -11,6 +11,8 @@ import { library } from '../library'
 import { lyrics } from '../engine/lyrics'
 import logo from '../assets/riddimx-x.svg'
 import { useStore } from '../store'
+import { ClockAndSet, SetWidget } from './SetTimer'
+import { NotesButton } from './NotesPanel'
 import { panic } from '../panic'
 
 /** Master level, left over right, as two thin horizontal bars. */
@@ -124,23 +126,9 @@ function HotSource() {
   )
 }
 
-/** Wall clock: DJs play to the hour. */
-function Clock() {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 10_000)
-    return () => window.clearInterval(timer)
-  }, [])
-  return (
-    <time className="tb-clock" dateTime={now.toISOString()} title="Time">
-      {now.getHours()}:{String(now.getMinutes()).padStart(2, '0')}
-    </time>
-  )
-}
-
 /**
- * Top bar: name on the left, what the app is busy with in the middle (only while it is busy),
- * clock, master level and recording on the right.
+ * Top bar: name, REC, PANIC and master level on the left; the bar counter and what the app is busy
+ * with in the middle; clock with the set countdown, notes, SIMPLE / PRO and Settings on the right.
  */
 export function TopBar() {
   const mix = useStore(mixer)
@@ -180,13 +168,35 @@ export function TopBar() {
 
   return (
     <header className="topbar">
-      {/* The painted X is the logo and the last letter of the name at once. */}
-      <h1 aria-label="RiddimX">
-        <b className="rx-name" aria-hidden="true">
-          Riddim
-          <img className="rx-x" src={logo} alt="" />
-        </b>
-      </h1>
+      {/* Left: the name, then what is live — recording, panic, the hour and the master level. */}
+      <div className="tb-left">
+        {/* The painted X is the logo and the last letter of the name at once. */}
+        <h1 aria-label="RiddimX">
+          <b className="rx-name" aria-hidden="true">
+            Riddim
+            <img className="rx-x" src={logo} alt="" />
+          </b>
+        </h1>
+        <button
+          className={'rec' + (mix.recording ? ' on' : '')}
+          aria-pressed={mix.recording}
+          onClick={() => mixer.toggleRecording()}
+          title={mix.recording ? 'Stop and save the recording' : 'Record the mix'}
+        >
+          <i />
+          {mix.recording ? Math.floor(recorded / 60) + ':' + String(recorded % 60).padStart(2, '0') : 'REC'}
+        </button>
+        <button
+          className={'tb-panic' + (pan.busy ? ' busy' : '')}
+          onClick={() => void panic.run()}
+          disabled={pan.busy}
+          title="PANIC: stops every echo tail and stuck sound, reopens the sound card on the same outputs (fixes a changed sample rate, crackle or silence). The music keeps its place. If the engine is still stuck, the window restarts and the tracks come back on their decks."
+        >
+          {pan.busy ? 'RESETTING…' : 'PANIC'}
+        </button>
+                <HotSource />
+        <MasterMeter />
+      </div>
       {set.beatCounter && <BeatCounter />}
       <div className="tb-status" aria-live="polite">
         {busy.map((text) => (
@@ -196,12 +206,13 @@ export function TopBar() {
           </span>
         ))}
       </div>
+      {/* Right: how the app looks and how it is set up. */}
       <div className="top-actions">
         {(up.status === 'downloading' || up.status === 'ready' || (up.status === 'available' && !up.error)) && (
           <button
             className={'tb-update' + (up.status === 'ready' ? ' ready' : '')}
             onClick={() => (up.status === 'ready' ? updates.install() : ui.openSettings('geral'))}
-            title={(up.notes ? 'What\'s new:\n' + up.notes + '\n\n' : '') + updateText(up)}
+            title={(up.notes ? "What's new:\n" + up.notes + '\n\n' : '') + updateText(up)}
           >
             <i aria-hidden="true" />
             {up.status === 'ready'
@@ -209,6 +220,8 @@ export function TopBar() {
               : 'Version ' + up.version + (up.status === 'downloading' ? ' · ' + Math.round((up.progress ?? 0) * 100) + '%' : '')}
           </button>
         )}
+        <ClockAndSet />
+        <NotesButton />
         <div className="tb-mode" role="radiogroup" aria-label="Interface">
           <button
             role="radio"
@@ -230,14 +243,6 @@ export function TopBar() {
           </button>
         </div>
         <button
-          className={'tb-panic' + (pan.busy ? ' busy' : '')}
-          onClick={() => void panic.run()}
-          disabled={pan.busy}
-          title="PANIC: stops every echo tail and stuck sound, reopens the sound card on the same outputs (fixes a changed sample rate, crackle or silence). The music keeps its place. If the engine is still stuck, the window restarts and the tracks come back on their decks."
-        >
-          {pan.busy ? 'RESETTING…' : 'PANIC'}
-        </button>
-        <button
           className={'tb-gear' + (open ? ' on' : '')}
           onClick={() => ui.openSettings(open ? null : 'geral')}
           title="Settings: audio interface, controller, keyboard, size and colours"
@@ -245,22 +250,18 @@ export function TopBar() {
           aria-expanded={open}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8.6 4.9-1.9-.4a7 7 0 0 1-.6 1.5l1.1 1.6-1.6 1.6-1.6-1.1a7 7 0 0 1-1.5.6l-.4 1.9h-2.2l-.4-1.9a7 7 0 0 1-1.5-.6l-1.6 1.1-1.6-1.6 1.1-1.6a7 7 0 0 1-.6-1.5l-1.9-.4v-2.2l1.9-.4a7 7 0 0 1 .6-1.5L4.4 6.9 6 5.3l1.6 1.1a7 7 0 0 1 1.5-.6L9.5 4h2.2l.4 1.9a7 7 0 0 1 1.5.6l1.6-1.1 1.6 1.6-1.1 1.6a7 7 0 0 1 .6 1.5l1.9.4z" />
+            <path
+              d="M10.3 3h3.4l.5 2.4 1.6.9 2.3-.8 1.7 2.9-1.8 1.6v1.9l1.8 1.6-1.7 2.9-2.3-.8-1.6.9-.5 2.4h-3.4l-.5-2.4-1.6-.9-2.3.8-1.7-2.9 1.8-1.6v-1.9L4.2 8.4l1.7-2.9 2.3.8 1.6-.9z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinejoin="round"
+            />
+            <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.6" />
           </svg>
         </button>
-        <Clock />
-        <HotSource />
-        <MasterMeter />
-        <button
-          className={'rec' + (mix.recording ? ' on' : '')}
-          aria-pressed={mix.recording}
-          onClick={() => mixer.toggleRecording()}
-          title={mix.recording ? 'Stop and save the recording' : 'Record the mix'}
-        >
-          <i />
-          {mix.recording ? Math.floor(recorded / 60) + ':' + String(recorded % 60).padStart(2, '0') : 'REC'}
-        </button>
       </div>
+      <SetWidget />
     </header>
   )
 }

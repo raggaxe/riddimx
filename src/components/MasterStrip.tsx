@@ -42,7 +42,11 @@ export function MixSection({
         <span>{title}</span>
         {more && (
           <button className="mx-sec-more" aria-label={moreLabel} title={moreLabel} onClick={more}>
-            ⋯
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <circle cx="3" cy="8" r="1.6" fill="currentColor" />
+              <circle cx="8" cy="8" r="1.6" fill="currentColor" />
+              <circle cx="13" cy="8" r="1.6" fill="currentColor" />
+            </svg>
           </button>
         )}
       </header>
@@ -176,7 +180,7 @@ export function VuPair() {
             </radialGradient>
           </defs>
           <rect x="0" y="0" width="80" height="50" rx="1.5" className="vu-bg" />
-          <rect x="1" y="1" width="78" height="48" rx="1" fill={'url(#vu-glow-' + side + ')'} />
+          <rect x="1" y="1" width="78" height="48" rx="1" className="vu-glow" fill={'url(#vu-glow-' + side + ')'} />
           {marks.map((m) => {
             const a = (vuAngle(m) * Math.PI) / 180
             const r2 = m === 0 || m === -20 || m === 3 ? 28 : 31
@@ -222,7 +226,8 @@ function GrLight({ read }: { read: () => number }) {
       raf = requestAnimationFrame(draw)
       const r = -Math.min(0, read())
       shown = r > shown ? r : shown * 0.9 + r * 0.1
-      dot.current?.style.setProperty('opacity', String(Math.min(1, 0.25 + shown / 6)))
+      // How much it presses, 0.25…1: the stylesheet turns it into the light's strength.
+      dot.current?.style.setProperty('--gr', String(Math.min(1, 0.25 + shown / 6)))
     }
     raf = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(raf)
@@ -300,7 +305,7 @@ const pct = (v: number) => Math.round(v * 100) + '%'
 export function MicSection() {
   const m = useStore(mic)
   return (
-    <MixSection title={m.source === 'phone' ? 'Mic input · phone' : 'Mic input'} className="mx-mic" more={() => ui.open('voice')} moreLabel="All mic effects (Mic tab)">
+    <MixSection title={m.source === 'phone' ? 'Mic input · phone' : 'Mic input'} className="mx-mic" more={() => ui.open('voice')} moreLabel="All mic effects (Voice tab)">
       <button
         className={'mx-talk' + (m.talk ? ' on' : '') + (m.speaking ? ' speaking' : '') + (m.error ? ' err' : '')}
         aria-pressed={m.talk}

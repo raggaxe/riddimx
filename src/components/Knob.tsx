@@ -21,6 +21,13 @@ const at = (deg: number) => {
   return [18 + R * Math.cos(r), 18 + R * Math.sin(r)]
 }
 
+/** The scale: eleven dots over the sweep, just outside the ring. */
+const TICKS = Array.from({ length: 11 }, (_, i) => -SWEEP / 2 + (i * SWEEP) / 10)
+const dot = (deg: number) => {
+  const r = ((deg - 90) * Math.PI) / 180
+  return [18 + 18.6 * Math.cos(r), 18 + 18.6 * Math.sin(r)]
+}
+
 /** SVG arc between two angles (12 o'clock = 0, clockwise). */
 function arc(from: number, to: number): string {
   if (Math.abs(to - from) < 0.5) return ''
@@ -81,6 +88,13 @@ export function Knob({ label, value, min = -1, max = 1, reset = 0, format, onCha
         <svg className="knob-ring" viewBox="0 0 36 36" aria-hidden="true">
           <path className="track" d={arc(-SWEEP / 2, SWEEP / 2)} />
           {moved && <path className="value" d={arc(rest, angle)} />}
+          {/* Scale dots around the dial, like printed marks on a hardware mixer; the ones the knob has
+              travelled over (from its resting point) light up. */}
+          {TICKS.map((t) => {
+            const [x, y] = dot(t)
+            const lit = moved && t >= Math.min(rest, angle) - 0.5 && t <= Math.max(rest, angle) + 0.5
+            return <circle key={t} className={'tick' + (lit ? ' lit' : '') + (t === rest ? ' home' : '')} cx={x} cy={y} r={0.9} />
+          })}
         </svg>
         <div className="knob-cap" style={{ transform: `rotate(${angle}deg)` }}>
           <i />

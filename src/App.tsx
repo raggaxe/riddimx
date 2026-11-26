@@ -19,7 +19,7 @@ import { DubBoxPanel } from './components/DubBoxPanel'
 import { SamplerPanel } from './components/SamplerPanel'
 import { TrackView } from './components/TrackView'
 import { TopBar } from './components/TopBar'
-import { VoicePanel } from './components/VoicePanel'
+import { VoiceTab } from './components/VoiceTab'
 
 import { SIMPLE_TABS, ui, type Tab } from './ui'
 import { padModes } from './padmode'
@@ -88,8 +88,8 @@ export function App() {
           {tabButton('sampler', 'Sampler')}
           {tabButton('dubbox', 'Dub Box')}
           {tabButton('echo', 'Tape echo')}
-          {tabButton('voice', 'Mic')}
-          {tabButton('plugin', 'Plugin')}
+          {tabButton('voice', 'Voice')}
+          {tabButton('plugin', 'FX')}
           {tabButton('master', 'Master')}
           {tabButton('spotify', 'Spotify', sp.loggedIn)}
           {/* The open tab's own tools (search, add files…) sit here, on the tab row, not on a row of their own. */}
@@ -104,11 +104,7 @@ export function App() {
               <EchoUnit />
             </div>
           )}
-          {tab === 'voice' && (
-            <div className="echo-panel">
-              <VoicePanel />
-            </div>
-          )}
+          {tab === 'voice' && <VoiceTab />}
           {tab === 'plugin' && <PluginPanel />}
           {tab === 'master' && <MasterPanel />}
           {tab === 'spotify' && <SpotifyPanel />}

@@ -6,7 +6,9 @@ import { useStore } from '../store'
 const RANGES = [8, 16, 50] as const
 const marksFor = (r: number) => {
   const half = String(r / 2)
-  return ['−' + r, null, '−' + half, null, '0', null, '+' + half, null, '+' + r]
+  // Three fine ticks between each number, like the scale printed beside a hardware pitch fader.
+  const labels = ['−' + r, '−' + half, '0', '+' + half, '+' + r]
+  return labels.flatMap((l, i) => (i < labels.length - 1 ? [l, null, null, null] : [l]))
 }
 const savedRange = (name: string): number => {
   try {
@@ -115,6 +117,12 @@ export function PitchColumn({ deck }: { deck: Deck }) {
           onDoubleClick={() => deck.setRate(1)}
           title={'Pitch ±' + range + '%: down speeds up (double-click: reset)'}
         />
+        {/* The same ladder on the other side of the slot, without numbers. */}
+        <div className="pc-ticks" aria-hidden="true">
+          {marks.map((m, i) => (
+            <span key={i} className={m === null ? 'minor' : m === '0' ? 'major zero' : 'major'} />
+          ))}
+        </div>
       </div>
       <div className="pc-bend">
         <button
@@ -150,6 +158,11 @@ export function PitchColumn({ deck }: { deck: Deck }) {
                   '. Click to turn on'
         }
       >
+        {/* Padlock: closed while the key is locked. */}
+        <svg className="pc-lock" viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
+          <rect x="2.5" y="5.5" width="7" height="5" fill="currentColor" />
+          <path d={locked ? 'M4 5.5V4a2 2 0 0 1 4 0v1.5' : 'M4 5.5V4a2 2 0 0 1 4 0'} fill="none" stroke="currentColor" strokeWidth="1.3" />
+        </svg>
         KEY
       </button>
     </div>

@@ -27,6 +27,15 @@ for ARCH in arm64 x64; do
   FILES="$FILES $ZIP $ZIP.sha256"
 done
 
+# Windows (x64): built from this Mac, zipped without Mac metadata. It has no update-in-place: the app
+# announces a new version and the DJ downloads it.
+npm run package:win
+WZIP="release/RiddimX-win32-x64.zip"
+rm -f "$WZIP" "$WZIP.sha256"
+(cd release && /usr/bin/ditto -c -k --norsrc --noextattr --noqtn --keepParent RiddimX-win32-x64 RiddimX-win32-x64.zip)
+/usr/bin/shasum -a 256 "$WZIP" | awk '{print $1}' > "$WZIP.sha256"
+FILES="$FILES $WZIP $WZIP.sha256"
+
 if command -v gh >/dev/null 2>&1; then
   # shellcheck disable=SC2086
   gh release create "$TAG" $FILES --repo raggaxe/riddimx --title "RiddimX $VERSION" --notes-file "$NOTES"

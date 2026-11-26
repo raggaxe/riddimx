@@ -6,8 +6,8 @@ const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'
 
 /** Colour pairs to try quickly (A, B). The first is the app's own. */
 const PAIRS: [string, string, string][] = [
+  ['Red / Blue', '#e5484d', '#4aa8ff'],
   ['Rasta', '#f2c230', '#35c46a'],
-  ['Classic', '#4aa8ff', '#e5484d'],
   ['Fire', '#ff8a3d', '#c77dff'],
   ['Ice', '#7fdcff', '#f4f4f4'],
 ]
@@ -105,6 +105,11 @@ export function SettingsPanel() {
           {up.status === 'ready' ? (
             <button className="ap2-btn st-go" onClick={() => updates.install()}>
               RESTART AND UPDATE
+            </button>
+          ) : up.status === 'available' && up.url?.startsWith('https://github.com/') ? (
+            // No update in place here (Windows): the release page, to download the new version.
+            <button className="ap2-btn st-go" onClick={() => window.open(up.url, '_blank')}>
+              DOWNLOAD {up.version}
             </button>
           ) : (
             <button

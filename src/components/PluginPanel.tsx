@@ -8,7 +8,7 @@ const pct = (v: number) => Math.round(v * 100) + '%'
 const STEM_NAME: Record<Stem, string> = { vocal: 'VOCAL', instr: 'INSTR', bass: 'BASS', kick: 'KICK', hat: 'HATS' }
 
 /**
- * Plugin tab: two AUX effects fed by the stems. Each knob in the grid sends one stem of one deck
+ * FX tab (bottom; was "Plugin"): two AUX effects fed by the stems. Each knob in the grid sends one stem of one deck
  * (after its fader) into that AUX; the AUX returns into the master.
  */
 export function PluginPanel() {

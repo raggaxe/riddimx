@@ -109,14 +109,14 @@ function savedMode(): UiMode {
   }
 }
 
-/** The centre of the stage shows one page at a time: the mixer, the Dub Box, or the effects. */
-export type Centre = 'mixer' | 'dub' | 'fx'
+/** The centre of the stage shows one page at a time: the mixer, the Dub Box, the effects, the deck DUB echo or the tape echo. */
+export type Centre = 'mixer' | 'dub' | 'fx' | 'echo' | 'tape' | 'mic'
 const LS_CENTRE = 'vx_centre'
 function savedCentre(): Centre {
   try {
     // ?centre=dub opens that page (handy for links and screenshots).
     const c = new URLSearchParams(location.search).get('centre') ?? localStorage.getItem(LS_CENTRE)
-    return c === 'dub' || c === 'fx' ? c : 'mixer'
+    return c === 'dub' || c === 'fx' || c === 'echo' || c === 'tape' || c === 'mic' ? c : c === 'aux' ? 'fx' : 'mixer'
   } catch {
     return 'mixer'
   }

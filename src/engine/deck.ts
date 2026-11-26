@@ -24,7 +24,9 @@ import { bpmStore } from './bpm'
 import { stemsFor } from './ai/stems'
 import { ALL_STEMS, STEMS, createStems, setStems, type Stem, type StemState } from './stems'
 
-type AiPart = 'vocals' | 'drums' | 'bass' | 'other'
+export type AiPart = 'vocals' | 'drums' | 'bass' | 'other'
+/** What a cut for a drop is taken from: the whole track or one AI stem. */
+export type ClipPart = 'full' | AiPart
 const AI_PARTS: AiPart[] = ['vocals', 'drums', 'bass', 'other']
 
 export type SourceKind = 'none' | 'local' | 'youtube' | 'spotify'
@@ -647,12 +649,12 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   }
 
   /**
-   * The loaded file's audio, for cutting a piece out of it (the drop maker): the voice alone when the
-   * AI stems are ready and `voiceOnly` is asked, else the whole track. Null for streams or an empty deck.
+   * The loaded file's audio, for cutting a piece out of it (the drop maker): one AI stem (vocals,
+   * drums, bass, other) once they are ready, or the whole track. Null for streams or an empty deck.
    */
-  clipSource(voiceOnly: boolean): AudioBuffer | null {
+  clipSource(part: ClipPart = 'full'): AudioBuffer | null {
     if (this.state.kind !== 'local' || !this.buffer) return null
-    return voiceOnly && this.stemBuffers ? this.stemBuffers.vocals : this.buffer
+    return part !== 'full' && this.stemBuffers ? this.stemBuffers[part] : this.buffer
   }
 
   /** This deck's sound after its fader and the crossfader: what the rack's echo throws take. */

@@ -140,7 +140,11 @@ function stemsModel(dir) {
 
 function readStems(dir) {
   if (!stemsModel(dir)) return null
-  return Object.fromEntries(STEM_NAMES.map((name) => [name, fs.readFileSync(path.join(dir, name + '.m4a'))]))
+  // AAC on a Mac; plain WAV where there is no afconvert (Windows).
+  const file = (name) => ['.m4a', '.wav'].map((ext) => path.join(dir, name + ext)).find((f) => fs.existsSync(f))
+  const files = STEM_NAMES.map(file)
+  if (files.some((f) => !f)) return null
+  return Object.fromEntries(STEM_NAMES.map((name, i) => [name, fs.readFileSync(files[i])]))
 }
 
 function run(cmd, args, onLine, env) {
@@ -180,7 +184,7 @@ function wav16(pcm, rate) {
 
 /**
  * Stores the 4 stems the app separated (interleaved stereo float32 each) as AAC files for this track,
- * so the next time it loads they are there at once. afconvert comes with every Mac.
+ * so the next time it loads they are there at once. afconvert comes with every Mac; elsewhere they stay WAV.
  */
 async function saveStems(id, stems, rate) {
   // Made in a folder of its own and swapped in at the end: stems already there stay usable until then.
@@ -192,6 +196,7 @@ async function saveStems(id, stems, rate) {
     for (const name of STEM_NAMES) {
       const wav = path.join(dir, name + '.wav')
       fs.writeFileSync(wav, wav16(stems[name], rate))
+      if (process.platform !== 'darwin') continue // no afconvert here: the WAV is kept as it is
       await run('/usr/bin/afconvert', ['-f', 'm4af', '-d', 'aac', '-b', '256000', wav, path.join(dir, name + '.part')])
       fs.renameSync(path.join(dir, name + '.part'), path.join(dir, name + '.m4a'))
       fs.rmSync(wav)
@@ -242,6 +247,7 @@ app.whenReady().then(async () => {
     height: 900,
     backgroundColor: '#0f1115',
     title: 'RiddimX',
+    autoHideMenuBar: true, // Windows: no File / Edit menu bar over the decks (Alt shows it)
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,

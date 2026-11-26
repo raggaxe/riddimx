@@ -7,7 +7,7 @@ import { DB_MARKS, FADER_MARKS, Meter, Scale } from './Meter'
 import { DUB_PRESET_DRAG, PATCH_LIMITS, dubBox } from '../engine/dubbox'
 import { sampler } from '../engine/sampler'
 import { ui, type Centre } from '../ui'
-import { DubPage, FxPage } from './CentrePages'
+import { DubPage, EchoPage, FxSide, MicPage, TapePage } from './CentrePages'
 import { DubSoundMenu } from './DubSoundMenu'
 import { useState } from 'react'
 import logo from '../assets/riddimx-x.svg'
@@ -185,7 +185,13 @@ function Crossfader() {
           value={m.crossfader}
           aria-label="Crossfader"
           aria-valuetext={
-            m.crossfader < 0.02 ? 'A only' : m.crossfader > 0.98 ? 'B only' : Math.abs(m.crossfader - 0.5) < 0.02 ? 'Meio' : undefined
+            m.crossfader < 0.02
+              ? 'A only'
+              : m.crossfader > 0.98
+                ? 'B only'
+                : Math.abs(m.crossfader - 0.5) < 0.02
+                  ? 'Meio'
+                  : undefined
           }
           onChange={(e) => mixer.setCrossfader(Number(e.target.value))}
           onDoubleClick={() => mixer.setCrossfader(0.5)}
@@ -439,7 +445,15 @@ export function DubBoxStrip() {
           format={(v) => fromLog(v, rLo, rHi).toFixed(1) + ' Hz'}
           onChange={(v) => dubBox.updatePatch({ lfoRate: fromLog(v, rLo, rHi) })}
         />
-        <Knob label="ECHO" value={p.echo} min={0} max={1} reset={0.5} format={pct} onChange={(v) => dubBox.updatePatch({ echo: v })} />
+        <Knob
+          label="ECHO"
+          value={p.echo}
+          min={0}
+          max={1}
+          reset={0.5}
+          format={pct}
+          onChange={(v) => dubBox.updatePatch({ echo: v })}
+        />
         <Knob label="FILTER" value={d.filter} format={filterText} onChange={(v) => dubBox.setFilter(v)} />
         <div className="dbx-out">
           <Knob label="LEVEL" value={d.level} min={0} max={1} reset={0.8} format={pct} onChange={(v) => dubBox.setLevel(v)} />
@@ -453,11 +467,14 @@ export function DubBoxStrip() {
 const PAGES: { id: Centre; label: string; hint: string }[] = [
   { id: 'mixer', label: 'MIXER', hint: 'Channels, EQ and filters (in Pro also isolator, sound system, mic, transitions)' },
   { id: 'dub', label: 'DUB', hint: 'Dub Box: FIRE, its sounds, DROP' },
-  { id: 'fx', label: 'FX', hint: "Each deck's effect, the DUB echo, the tape echo" },
+  { id: 'fx', label: 'FX', hint: "Each deck's effect and THROW; in Pro the two AUX effects fed by the stems" },
+  { id: 'echo', label: 'DECK DUB', hint: "The echo of the decks' DUB button: presets, time, feedback, tone, hold / latch" },
+  { id: 'tape', label: 'TAPE', hint: 'The tape echo on the master: throw, time, tape, spring, output' },
+  { id: 'mic', label: 'MIC', hint: 'The microphone: TALK, level, duck, presets, colour, echo and spring' },
 ]
 
 /**
- * The centre of the stage: one page at a time (MIXER, DUB, FX). The master output and the
+ * The centre of the stage: one page at a time (MIXER, DUB, FX, DECK DUB, TAPE, MIC). The master output and the
  * crossfader stay on every page.
  */
 export function MixerView() {
@@ -485,7 +502,15 @@ export function MixerView() {
           <Strip deck={deckA} />
         </div>
       )}
-      {!onMixer && <div className="ctr-page">{centre === 'dub' ? <DubPage /> : <FxPage />}</div>}
+      {centre === 'fx' && (
+        <div className="ctr-page fx-a">
+          <FxSide deck={deckA} />
+        </div>
+      )}
+
+      {!onMixer && centre !== 'fx' && (
+        <div className="ctr-page">{centre === 'dub' ? <DubPage /> : centre === 'echo' ? <EchoPage /> : centre === 'mic' ? <MicPage /> : <TapePage />}</div>
+      )}
       <div className="mx-master">
         <section className="mx-sec mx-out" aria-label="Master output">
           <span className="ch-tag mx-brand">
@@ -511,11 +536,24 @@ export function MixerView() {
           </div>
           <div
             className={'phones-knobs' + (m.hpDevice ? '' : ' bypassed')}
-            title={m.hpDevice ? '' : 'Pick the headphone output in Settings › Audio'}
+            title={
+              m.hpDevice
+                ? 'Headphones: VOL is their volume, MIX goes from the cue to the master'
+                : 'Pick the headphone output in Settings › Audio'
+            }
           >
-            <Knob label="PHONES" value={m.hpVolume} min={0} max={1} reset={0.8} format={pct} onChange={(v) => mixer.setHeadphoneVolume(v)} />
+            <span className="phones-cap">PHONES</span>
             <Knob
-              label="CUE·MIX"
+              label="VOL"
+              value={m.hpVolume}
+              min={0}
+              max={1}
+              reset={0.8}
+              format={pct}
+              onChange={(v) => mixer.setHeadphoneVolume(v)}
+            />
+            <Knob
+              label="MIX"
               value={m.cueMix}
               min={0}
               max={1}
@@ -533,6 +571,11 @@ export function MixerView() {
           </div>
         )}
       </div>
+      {centre === 'fx' && (
+        <div className="ctr-page fx-b">
+          <FxSide deck={deckB} />
+        </div>
+      )}
       {onMixer && (
         <div className="strip-wrap b">
           <Strip deck={deckB} />
@@ -549,7 +592,7 @@ export function MixerView() {
             <TransitionTiming />
           </div>
         </div>
-        {onMixer && <TransitionMoves />}
+        <TransitionMoves />
       </div>
     </section>
   )

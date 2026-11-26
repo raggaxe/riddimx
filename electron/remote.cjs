@@ -12,7 +12,6 @@ const crypto = require('node:crypto')
 const fs = require('node:fs')
 const http = require('node:http')
 const https = require('node:https')
-const { execFileSync } = require('node:child_process')
 const os = require('node:os')
 const path = require('node:path')
 
@@ -51,8 +50,8 @@ function localName() {
 }
 
 /**
- * A self-signed certificate for the HTTPS page, made once with macOS's own openssl and kept in the
- * app's data folder. A phone shows a warning the first time (the certificate is this Mac's own);
+ * A self-signed certificate for the HTTPS page, made once (selfSigned, below) and kept in the
+ * app's data folder. A phone shows a warning the first time (the certificate is this computer's own);
  * after that the page can use the phone's microphone. Null when it cannot be made.
  */
 function certificate(dataDir) {
@@ -62,23 +61,75 @@ function certificate(dataDir) {
   try {
     if (fs.existsSync(key) && fs.existsSync(cert)) return { key: fs.readFileSync(key), cert: fs.readFileSync(cert) }
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 })
-    const names = [localName(), 'localhost'].filter(Boolean).map((n) => 'DNS:' + n)
-    const ips = ['127.0.0.1', ...addresses()].map((ip) => 'IP:' + ip)
-    const cfg = path.join(dir, 'openssl.cnf')
-    fs.writeFileSync(
-      cfg,
-      ['[req]', 'distinguished_name=dn', 'x509_extensions=v3', 'prompt=no', '[dn]', 'CN=RiddimX', '[v3]', 'subjectAltName=' + [...names, ...ips].join(','), 'basicConstraints=CA:FALSE', ''].join('\n'),
-    )
-    const openssl = fs.existsSync('/usr/bin/openssl') ? '/usr/bin/openssl' : 'openssl'
-    execFileSync(openssl, ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '3650', '-keyout', key, '-out', cert, '-config', cfg], {
-      stdio: 'ignore',
-      timeout: 20000,
-    })
+    const made = selfSigned('RiddimX', [localName(), 'localhost'].filter(Boolean), ['127.0.0.1', ...addresses()])
+    fs.writeFileSync(key, made.key, { mode: 0o600 })
+    fs.writeFileSync(cert, made.cert)
     fs.chmodSync(key, 0o600)
     return { key: fs.readFileSync(key), cert: fs.readFileSync(cert) }
   } catch {
     return null
   }
+}
+
+// ───────── a self-signed certificate, made here (no openssl needed: Windows has none) ─────────
+
+/** One DER element: tag, length, body. */
+function der(tag, ...parts) {
+  const body = Buffer.concat(parts)
+  const n = body.length
+  const len = n < 0x80 ? Buffer.from([n]) : n < 0x100 ? Buffer.from([0x81, n]) : Buffer.from([0x82, n >> 8, n & 0xff])
+  return Buffer.concat([Buffer.from([tag]), len, body])
+}
+const seq = (...p) => der(0x30, ...p)
+function oid(text) {
+  const [a, b, ...rest] = text.split('.').map(Number)
+  const bytes = [a * 40 + b]
+  for (const v of rest) {
+    const chunk = [v & 0x7f]
+    for (let x = v >> 7; x > 0; x >>= 7) chunk.unshift((x & 0x7f) | 0x80)
+    bytes.push(...chunk)
+  }
+  return der(0x06, Buffer.from(bytes))
+}
+function utcTime(d) {
+  const p = (n) => String(n).padStart(2, '0')
+  const text = p(d.getUTCFullYear() % 100) + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + p(d.getUTCHours()) + p(d.getUTCMinutes()) + p(d.getUTCSeconds()) + 'Z'
+  return der(0x17, Buffer.from(text, 'ascii'))
+}
+const pem = (label, buf) => '-----BEGIN ' + label + '-----\n' + buf.toString('base64').match(/.{1,64}/g).join('\n') + '\n-----END ' + label + '-----\n'
+
+/** An RSA key and an X.509 v3 certificate for these host names and IPv4 addresses, valid ten years. */
+function selfSigned(cn, dnsNames, ips) {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 })
+  const sha256Rsa = seq(oid('1.2.840.113549.1.1.11'), Buffer.from([0x05, 0x00]))
+  const name = seq(der(0x31, seq(oid('2.5.4.3'), der(0x0c, Buffer.from(cn, 'utf8')))))
+  const serial = crypto.randomBytes(16)
+  serial[0] &= 0x7f // a positive number
+  const now = Date.now()
+  const alt = [
+    ...dnsNames.map((n) => der(0x82, Buffer.from(n, 'ascii'))),
+    ...ips.filter((ip) => /^\d+\.\d+\.\d+\.\d+$/.test(ip)).map((ip) => der(0x87, Buffer.from(ip.split('.').map(Number)))),
+  ]
+  const extensions = der(
+    0xa3,
+    seq(
+      seq(oid('2.5.29.17'), der(0x04, seq(...alt))), // subjectAltName
+      seq(oid('2.5.29.19'), der(0x04, seq())), // basicConstraints: not a CA
+    ),
+  )
+  const tbs = seq(
+    der(0xa0, der(0x02, Buffer.from([2]))), // version 3
+    der(0x02, serial),
+    sha256Rsa,
+    name,
+    seq(utcTime(new Date(now - 86400000)), utcTime(new Date(now + 3650 * 86400000))),
+    name,
+    publicKey.export({ type: 'spki', format: 'der' }),
+    extensions,
+  )
+  const signature = crypto.sign('sha256', tbs, privateKey)
+  const cert = seq(tbs, sha256Rsa, der(0x03, Buffer.from([0]), signature))
+  return { key: privateKey.export({ type: 'pkcs8', format: 'pem' }), cert: pem('CERTIFICATE', cert) }
 }
 
 function same(a, b) {
@@ -327,4 +378,4 @@ function createRemote({ dataDir, onMessage, onClients }) {
   }
 }
 
-module.exports = { createRemote, addresses, localName }
+module.exports = { selfSigned, createRemote, addresses, localName }

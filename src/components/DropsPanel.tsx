@@ -1,6 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { myDrops } from '../engine/mydrops'
-import { MicTake, STYLES, SUGGESTIONS, canSpeak, render, speak, toWav, voices, type DropOptions, type Voice } from '../engine/drops'
+import {
+  MicTake,
+  STYLES,
+  SUGGESTIONS,
+  canSpeak,
+  render,
+  speak,
+  toWav,
+  voices,
+  type DropOptions,
+  type Voice,
+} from '../engine/drops'
 import { sampler } from '../engine/sampler'
 import { SFX } from '../engine/soundsystem'
 import { useStore } from '../store'
@@ -160,7 +171,7 @@ export function DropsPanel() {
           }
         }
       } catch {
-        if (!stale) setError('Couldn\'t apply the style.')
+        if (!stale) setError("Couldn't apply the style.")
       }
     }, 260)
     return () => {
@@ -278,16 +289,30 @@ export function DropsPanel() {
   const style = STYLES.find((x) => x.id === options.style) ?? STYLES[0]
   const groups = GROUPS.map(([label, test]) => [label, list.filter(test)] as const).filter(([, vs]) => vs.length)
 
+  const ready = raw && spoken.current === text + '|' + voice + '|' + rate
   return (
-    <div className="dr">
-      {/* 1. What is said, and by whom */}
-      <section className="dr-col">
-        <div className="dr-source" role="group" aria-label="Drop voice">
-          <button className={source === 'mac' ? 'now' : ''} aria-pressed={source === 'mac'} onClick={() => update({ source: 'mac' })}>
-            Write
+    <div className="dr dr2">
+      {/* 1 · SAY IT: what is said and by whom, and the button that makes it and plays it */}
+      <section className="dr-col dr-step" aria-label="1. Say it">
+        <h4 className="dr-step-title">
+          <b>1</b> Say it
+        </h4>
+        <div className="dr-source" role="group" aria-label="Where the voice comes from">
+          <button
+            className={source === 'mac' ? 'now' : ''}
+            aria-pressed={source === 'mac'}
+            onClick={() => update({ source: 'mac' })}
+            title="Type it and a Mac voice says it"
+          >
+            Type
           </button>
-          <button className={source === 'mic' ? 'now' : ''} aria-pressed={source === 'mic'} onClick={() => update({ source: 'mic' })}>
-            My voice
+          <button
+            className={source === 'mic' ? 'now' : ''}
+            aria-pressed={source === 'mic'}
+            onClick={() => update({ source: 'mic' })}
+            title="Say it on your microphone"
+          >
+            Record
           </button>
           <button
             className={source === 'track' ? 'now' : ''}
@@ -340,25 +365,43 @@ export function DropsPanel() {
               </select>
               <label title="Speech speed">
                 <span>Rhythm</span>
-                <input type="range" min={110} max={280} step={5} value={rate} onChange={(e) => update({ rate: Number(e.target.value) })} />
+                <input
+                  type="range"
+                  min={110}
+                  max={280}
+                  step={5}
+                  value={rate}
+                  onChange={(e) => update({ rate: Number(e.target.value) })}
+                />
               </label>
             </div>
+            <button className="dr-make" disabled={!!busy || !text.trim() || !voice} onClick={() => void make()}>
+              {busy ?? (ready ? '▶ Play again' : '▶ Make & play')}
+            </button>
           </>
         ) : (
           <div className="dr-mic">
-            <button className={'dr-rec' + (recording ? ' on' : '')} onClick={() => void record()} aria-pressed={recording}>
+            <button
+              className={'dr-make dr-rec' + (recording ? ' on' : '')}
+              onClick={() => void record()}
+              aria-pressed={recording}
+            >
               <i aria-hidden="true" />
-              {recording ? 'Stop and use' : 'Record'}
+              {recording ? '■ Stop and use' : '● Record'}
             </button>
-            <p>
-              Record your drop on the mic, close and loud. Silence at the start and end is trimmed. Use only your own voice or one you have permission for.
+            <p className="dr-note">
+              Close to the mic and loud; silence at the start and end is trimmed. Only your own voice, or one you may use.
             </p>
           </div>
         )}
+        {!canSpeak() && source === 'mac' && <p className="dr-note">Mac voices only exist in the desktop app.</p>}
       </section>
 
-      {/* 2. How it sounds */}
-      <section className="dr-col">
+      {/* 2 · SOUND: the style (one click), an effect, and the fine knobs folded away */}
+      <section className="dr-col dr-step" aria-label="2. Sound">
+        <h4 className="dr-step-title">
+          <b>2</b> Sound
+        </h4>
         <div className="dr-styles" role="group" aria-label="Style">
           {STYLES.map((s) => (
             <button
@@ -371,63 +414,6 @@ export function DropsPanel() {
               {s.label}
             </button>
           ))}
-        </div>
-        {/* Every effect on its own knob; double-click puts it back to the style's value. */}
-        <div className="dr-knobs">
-          <Knob
-            label="PITCH"
-            value={options.pitch}
-            min={-8}
-            max={6}
-            reset={style.set.pitch}
-            format={(v) => (Math.round(v) > 0 ? '+' : '') + Math.round(v) + ' meios-tons'}
-            onChange={(v) => setOptions({ pitch: Math.round(v) })}
-          />
-          <Knob
-            label="ECHO"
-            value={options.echo}
-            min={0}
-            max={1}
-            reset={style.set.echo}
-            format={pct}
-            onChange={(v) => setOptions({ echo: v })}
-          />
-          <Knob
-            label="TIME"
-            value={options.echoTime}
-            min={0.08}
-            max={0.75}
-            reset={style.set.echoTime}
-            format={(v) => Math.round(v * 1000) + ' ms'}
-            onChange={(v) => setOptions({ echoTime: v })}
-          />
-          <Knob
-            label="REVERB"
-            value={options.reverb}
-            min={0}
-            max={1}
-            reset={style.set.reverb}
-            format={pct}
-            onChange={(v) => setOptions({ reverb: v })}
-          />
-          <Knob
-            label="DIRTY"
-            value={options.drive}
-            min={0}
-            max={1}
-            reset={style.set.drive}
-            format={pct}
-            onChange={(v) => setOptions({ drive: v })}
-          />
-          <Knob
-            label="BASS"
-            value={options.bass}
-            min={-1}
-            max={1}
-            reset={style.set.bass}
-            format={(v) => (v > 0 ? '+' : '') + (v * 9).toFixed(1) + ' dB'}
-            onChange={(v) => setOptions({ bass: v })}
-          />
         </div>
         <div className="dr-row">
           <span>Effect</span>
@@ -445,23 +431,82 @@ export function DropsPanel() {
             disabled={!options.sfx}
             onChange={(e) => setOptions({ sfxAt: e.target.value as 'start' | 'end' })}
           >
-            <option value="start">antes</option>
+            <option value="start">at the start</option>
             <option value="end">at the end</option>
           </select>
         </div>
-        <label className="dr-listen" title="Turning a knob plays the drop again with the change">
-          <input type="checkbox" checked={listen} onChange={(e) => setListen(e.target.checked)} />
-          Listen while tweaking
-        </label>
+        <details className="dr-fine">
+          <summary>Fine tune</summary>
+          {/* Every effect on its own knob; double-click puts it back to the style's value. */}
+          <div className="dr-knobs">
+            <Knob
+              label="PITCH"
+              value={options.pitch}
+              min={-8}
+              max={6}
+              reset={style.set.pitch}
+              format={(v) => (Math.round(v) > 0 ? '+' : '') + Math.round(v) + ' meios-tons'}
+              onChange={(v) => setOptions({ pitch: Math.round(v) })}
+            />
+            <Knob
+              label="ECHO"
+              value={options.echo}
+              min={0}
+              max={1}
+              reset={style.set.echo}
+              format={pct}
+              onChange={(v) => setOptions({ echo: v })}
+            />
+            <Knob
+              label="TIME"
+              value={options.echoTime}
+              min={0.08}
+              max={0.75}
+              reset={style.set.echoTime}
+              format={(v) => Math.round(v * 1000) + ' ms'}
+              onChange={(v) => setOptions({ echoTime: v })}
+            />
+            <Knob
+              label="REVERB"
+              value={options.reverb}
+              min={0}
+              max={1}
+              reset={style.set.reverb}
+              format={pct}
+              onChange={(v) => setOptions({ reverb: v })}
+            />
+            <Knob
+              label="DIRTY"
+              value={options.drive}
+              min={0}
+              max={1}
+              reset={style.set.drive}
+              format={pct}
+              onChange={(v) => setOptions({ drive: v })}
+            />
+            <Knob
+              label="BASS"
+              value={options.bass}
+              min={-1}
+              max={1}
+              reset={style.set.bass}
+              format={(v) => (v > 0 ? '+' : '') + (v * 9).toFixed(1) + ' dB'}
+              onChange={(v) => setOptions({ bass: v })}
+            />
+          </div>
+          <label className="dr-listen" title="Turning a knob plays the drop again with the change">
+            <input type="checkbox" checked={listen} onChange={(e) => setListen(e.target.checked)} />
+            Play again on every change
+          </label>
+        </details>
+        <p className="dr-note">Changing the style or the effect remakes the drop and plays it.</p>
       </section>
 
-      {/* 3. Listen and put it on a pad */}
-      <section className="dr-col dr-out">
-        {source === 'mac' && (
-          <button className="dr-make" disabled={!!busy || !text.trim() || !voice} onClick={() => void make()}>
-            {busy ?? (raw && spoken.current === text + '|' + voice + '|' + rate ? 'Listen again' : 'Make drop')}
-          </button>
-        )}
+      {/* 3 · USE IT: hear it, put it on a pad, keep it */}
+      <section className="dr-col dr-step dr-out" aria-label="3. Use it">
+        <h4 className="dr-step-title">
+          <b>3</b> Use it
+        </h4>
         <div className="dr-preview">
           <button
             className="dr-play"
@@ -474,7 +519,7 @@ export function DropsPanel() {
             </svg>
           </button>
           <Shape buffer={drop} />
-          <span className="dr-len">{drop ? drop.duration.toFixed(1) + 's' : ''}</span>
+          <span className="dr-len">{drop ? drop.duration.toFixed(1) + 's' : 'no drop yet'}</span>
         </div>
         <div className="dr-place">
           <select value={pad} aria-label="Target pad" onChange={(e) => setPad(Number(e.target.value))}>
@@ -485,11 +530,13 @@ export function DropsPanel() {
               </option>
             ))}
           </select>
-          <button className="btn small" disabled={!drop} onClick={() => void place()} title="Replaces the sound on that pad (and keeps the drop in My drops)">
-            {placed === pad ? 'On pad ✓' : 'To pad'}
-          </button>
-          <button className="btn small" disabled={!drop} onClick={() => drop && exportWav(toWav(drop), dropName.trim() || label)} title="Export as a WAV file">
-            WAV
+          <button
+            className="dr-put"
+            disabled={!drop}
+            onClick={() => void place()}
+            title="Replaces the sound on that pad (and keeps the drop in My drops)"
+          >
+            {placed === pad ? 'On pad ✓' : 'Put on pad'}
           </button>
         </div>
         <form
@@ -506,86 +553,104 @@ export function DropsPanel() {
             aria-label="Name to save the drop under"
             onChange={(e) => setDropName(e.target.value)}
           />
-          <button className="btn small" disabled={!drop || kept === drop} title="Keep this drop in the app, under My drops, to use in any later set">
+          <button disabled={!drop || kept === drop} title="Keep this drop in the app, under My drops, to use in any later set">
             {drop && kept === drop ? 'Saved ✓' : 'Save'}
           </button>
+          <button
+            type="button"
+            disabled={!drop}
+            onClick={() => drop && exportWav(toWav(drop), dropName.trim() || label)}
+            title="Export as a WAV file"
+          >
+            WAV
+          </button>
         </form>
-        <div className="dr-mine" aria-label="My drops">
-          <h5>My drops{mine.length ? ' · ' + mine.length : ''}</h5>
-          {!mine.length && <p className="dr-note">Saved drops show up here, ready for any set.</p>}
-          <ul>
-            {mine.map((d) => (
-              <li key={d.id}>
-                <button
-                  className="dr-mine-play"
-                  onClick={() => void hear(d.id)}
-                  aria-label={(hearing === d.id ? 'Stop ' : 'Play ') + d.name}
-                >
-                  <svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true">
-                    {hearing === d.id ? <path d="M4 4h8v8H4z" fill="currentColor" /> : <path d="M5 3v10l8-5z" fill="currentColor" />}
-                  </svg>
-                </button>
-                {renaming === d.id ? (
-                  <input
-                    className="dr-mine-edit"
-                    autoFocus
-                    defaultValue={d.name}
-                    maxLength={40}
-                    aria-label={'New name for ' + d.name}
-                    onBlur={(e) => {
-                      void myDrops.rename(d.id, e.target.value)
-                      setRenaming(null)
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') e.currentTarget.blur()
-                      if (e.key === 'Escape') setRenaming(null)
-                    }}
-                  />
-                ) : (
-                  <span
-                    className="dr-mine-name"
-                    title={'Double-click to rename · saved ' + new Date(d.created).toLocaleString()}
-                    onDoubleClick={() => setRenaming(d.id)}
-                  >
-                    {d.name}
-                  </span>
-                )}
-                <span className="dr-len">{d.duration.toFixed(1)}s</span>
-                <select
-                  className="dr-mine-pad"
-                  value=""
-                  aria-label={'Put ' + d.name + ' on a pad'}
-                  onChange={(e) => e.target.value !== '' && void toPad(d, Number(e.target.value))}
-                >
-                  <option value="">{placedOn[d.id] !== undefined ? 'On pad ' + (placedOn[d.id] + 1) + ' ✓' : 'To pad…'}</option>
-                  {pads.map((p, i) => (
-                    <option key={i} value={i}>
-                      Pad {i + 1}
-                      {p.name ? ' · ' + p.name : ' · empty'}
-                    </option>
-                  ))}
-                </select>
-                <button className="row-btn show" onClick={() => setRenaming(d.id)} title="Rename" aria-label={'Rename ' + d.name}>
-                  ✎
-                </button>
-                <button
-                  className="row-btn show"
-                  onClick={() => void myDrops.wav(d.id).then((w) => w && exportWav(w.slice(), d.name))}
-                  title="Export as a WAV file"
-                  aria-label={'Export ' + d.name}
-                >
-                  ⤓
-                </button>
-                <button className="row-btn show x" onClick={() => void myDrops.remove(d.id)} title="Delete" aria-label={'Delete ' + d.name}>
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
         {error && <p className="deck-msg error">{error}</p>}
-        {!canSpeak() && source === 'mac' && <p className="dr-note">Mac voices only exist in the desktop app.</p>}
       </section>
+
+      {/* My drops: every saved drop, ready for any set */}
+      <div className="dr-mine dr-strip" aria-label="My drops">
+        <h5>My drops{mine.length ? ' · ' + mine.length : ''}</h5>
+        {!mine.length && <p className="dr-note">Saved drops show up here, ready for any set.</p>}
+        <ul>
+          {mine.map((d) => (
+            <li key={d.id}>
+              <button
+                className="dr-mine-play"
+                onClick={() => void hear(d.id)}
+                aria-label={(hearing === d.id ? 'Stop ' : 'Play ') + d.name}
+              >
+                <svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true">
+                  {hearing === d.id ? (
+                    <path d="M4 4h8v8H4z" fill="currentColor" />
+                  ) : (
+                    <path d="M5 3v10l8-5z" fill="currentColor" />
+                  )}
+                </svg>
+              </button>
+              {renaming === d.id ? (
+                <input
+                  className="dr-mine-edit"
+                  autoFocus
+                  defaultValue={d.name}
+                  maxLength={40}
+                  aria-label={'New name for ' + d.name}
+                  onBlur={(e) => {
+                    void myDrops.rename(d.id, e.target.value)
+                    setRenaming(null)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur()
+                    if (e.key === 'Escape') setRenaming(null)
+                  }}
+                />
+              ) : (
+                <span
+                  className="dr-mine-name"
+                  title={'Double-click to rename · saved ' + new Date(d.created).toLocaleString()}
+                  onDoubleClick={() => setRenaming(d.id)}
+                >
+                  {d.name}
+                </span>
+              )}
+              <span className="dr-len">{d.duration.toFixed(1)}s</span>
+              <select
+                className="dr-mine-pad"
+                value=""
+                aria-label={'Put ' + d.name + ' on a pad'}
+                onChange={(e) => e.target.value !== '' && void toPad(d, Number(e.target.value))}
+              >
+                <option value="">{placedOn[d.id] !== undefined ? 'On pad ' + (placedOn[d.id] + 1) + ' ✓' : 'To pad…'}</option>
+                {pads.map((p, i) => (
+                  <option key={i} value={i}>
+                    Pad {i + 1}
+                    {p.name ? ' · ' + p.name : ' · empty'}
+                  </option>
+                ))}
+              </select>
+              <button className="row-btn show" onClick={() => setRenaming(d.id)} title="Rename" aria-label={'Rename ' + d.name}>
+                ✎
+              </button>
+              <button
+                className="row-btn show"
+                onClick={() => void myDrops.wav(d.id).then((w) => w && exportWav(w.slice(), d.name))}
+                title="Export as a WAV file"
+                aria-label={'Export ' + d.name}
+              >
+                ⤓
+              </button>
+              <button
+                className="row-btn show x"
+                onClick={() => void myDrops.remove(d.id)}
+                title="Delete"
+                aria-label={'Delete ' + d.name}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }

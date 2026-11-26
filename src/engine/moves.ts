@@ -5,8 +5,8 @@ import { liveDeck, outboard } from './outboard'
 
 /**
  * Transitions: one button takes the dance from the deck playing to the other one, on the beat,
- * and leaves everything tidy afterwards (outgoing deck stopped with its fader, EQ, filter and pitch
- * put back; crossfader on the new side). A running move can be cancelled, which puts things back too.
+ * and leaves everything tidy afterwards (outgoing deck stopped and back on its cue, with its fader, EQ,
+ * filter and pitch put back; crossfader on the new side). A running move can be cancelled, which puts things back too.
  */
 
 export type Move = 'cut' | 'echoOut' | 'bassSwap' | 'sweep' | 'tapeStop' | 'drop'
@@ -19,6 +19,7 @@ export interface MovesState {
   waiting: boolean // armed, waiting for the beat / bar to start
   startedAt: number // performance.now() when the move really began
   length: number // seconds the move lasts once it has begun
+  beat: number // one beat of the outgoing deck, in seconds (for the beat count on screen)
   beats: 4 | 8 | 16 // length of the long moves
   quant: Quant
   direction: Direction
@@ -92,6 +93,7 @@ class Moves extends Store<MovesState> {
       waiting: false,
       startedAt: 0,
       length: 0,
+      beat: 0.5,
       beats: s.beats === 4 || s.beats === 16 ? s.beats : 8,
       quant: s.quant === 'beat' ? 'beat' : 'bar',
       direction: s.direction === 'AB' || s.direction === 'BA' ? s.direction : 'auto',
@@ -137,6 +139,9 @@ class Moves extends Store<MovesState> {
   /** The outgoing deck stops and gets its controls back, ready for the next track. */
   private tidy(from: Deck, snap: Snapshot): void {
     if (from.get().playing) from.pause()
+    // Back to its cue: the next transition that brings this deck in starts it from there,
+    // never from the middle of the bar where it was stopped.
+    if (from.get().kind !== 'none') from.seek(from.get().cue)
     from.setBend(1)
     from.setVolume(snap.volume)
     from.setEq('low', snap.low)
@@ -199,6 +204,7 @@ class Moves extends Store<MovesState> {
       waiting: wait > 0.05,
       startedAt: performance.now() + wait * 1000,
       length: lengths[move],
+      beat,
     })
     const finish = () => {
       if (token !== this.token) return

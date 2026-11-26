@@ -68,40 +68,67 @@ export function TransitionTiming() {
   )
 }
 
-/** The six beat-synced transitions; the running one fills its button, a click on it cancels. */
+/**
+ * The six beat-synced transitions, in one row (no status line, to leave the mixer its height).
+ * The running one fills its bar and its label counts the beats ("WAIT…", then "3 / 8"); a click on it
+ * cancels and puts everything back. Hover says what a move does, or why the row is off.
+ */
 export function TransitionMoves() {
   const mv = useStore(moves)
   useStore(deckA)
   useStore(deckB)
   useStore(mixer)
   const way = mv.from ? route(mv.from === 'A' ? 'AB' : 'BA') : route(mv.direction)
+  const toEmpty = !!way && way.to.get().kind === 'none'
+  const ready = !!way && !toEmpty
   const bar = useRef<HTMLDivElement>(null)
-  // Progress of the running move, drawn every frame without re-rendering.
+  // Progress of the running move, drawn every frame without re-rendering; back to empty when it ends.
   useEffect(() => {
-    if (!mv.running) return
+    const buttons = () => bar.current?.querySelectorAll<HTMLElement>('button') ?? []
+    if (!mv.running) {
+      buttons().forEach((b) => b.style.setProperty('--p', '0'))
+      return
+    }
+    const beats = Math.max(1, Math.round(mv.length / Math.max(0.25, mv.beat)))
     let raf = 0
     const draw = () => {
       raf = requestAnimationFrame(draw)
-      const t = Math.min(1, Math.max(0, (performance.now() - mv.startedAt) / (mv.length * 1000)))
-      bar.current?.querySelector<HTMLElement>('button.on')?.style.setProperty('--p', String(t))
+      const now = performance.now()
+      const t = Math.min(1, Math.max(0, (now - mv.startedAt) / (mv.length * 1000)))
+      const on = bar.current?.querySelector<HTMLElement>('button.on')
+      if (!on) return
+      on.style.setProperty('--p', String(t))
+      const count = on.querySelector<HTMLElement>('.mx-tr-count')
+      if (count) count.textContent = now < mv.startedAt ? 'WAIT…' : Math.min(beats, Math.floor(t * beats) + 1) + ' / ' + beats
     }
     raf = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(raf)
-  }, [mv.running, mv.startedAt, mv.length])
+    return () => {
+      cancelAnimationFrame(raf)
+      buttons().forEach((b) => b.style.setProperty('--p', '0'))
+    }
+  }, [mv.running, mv.startedAt, mv.length, mv.beat, mv.quant])
+
+  const why = !way ? 'Nothing on air: play a deck first' : toEmpty ? 'Load a track on deck ' + way.to.name + ' to mix into it' : ''
   return (
-    <div className="mx-tr-moves" ref={bar} role="group" aria-label="Transitions">
-      {(Object.keys(MOVES) as Move[]).map((m) => (
-        <button
-          key={m}
-          className={(mv.running === m ? 'on' : '') + (mv.running === m && mv.waiting ? ' armed' : '')}
-          disabled={!way || (!!mv.running && mv.running !== m)}
-          onClick={() => moves.run(m)}
-          title={mv.running === m ? 'Click to cancel and restore everything' : MOVES[m].hint}
-        >
-          {MOVES[m].label}
-          <i aria-hidden="true" />
-        </button>
-      ))}
+    <div className="mx-tr" aria-label="Transitions">
+      <div className="mx-tr-moves" ref={bar} role="group" aria-label="Transitions">
+        {(Object.keys(MOVES) as Move[]).map((m) => (
+          <button
+            key={m}
+            className={(mv.running === m ? 'on' : '') + (mv.running === m && mv.waiting ? ' armed' : '')}
+            disabled={mv.running ? mv.running !== m : !ready}
+            onClick={() => moves.run(m)}
+            title={
+              mv.running === m
+                ? (way ? way.from.name + ' → ' + way.to.name + ' · ' : '') + 'click to cancel and put everything back'
+                : why || (way ? way.from.name + ' → ' + way.to.name + ': ' : '') + MOVES[m].hint
+            }
+          >
+            {mv.running === m ? <span className="mx-tr-count" aria-live="polite" /> : MOVES[m].label}
+            <i aria-hidden="true" />
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

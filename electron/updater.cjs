@@ -42,7 +42,7 @@ function bundlePath() {
 
 function setupUpdater(win) {
   const dir = path.join(app.getPath('userData'), 'updates')
-  const asset = 'RiddimX-darwin-' + process.arch + '.zip'
+  const asset = 'RiddimX-' + process.platform + '-' + process.arch + '.zip'
   // What the page shows: idle · checking · none · available · downloading · ready · error · dev
   let state = { status: app.isPackaged ? 'idle' : 'dev', current: app.getVersion() }
   let ready = null // { version, app } once a new version is unpacked and checked
@@ -102,7 +102,9 @@ function setupUpdater(win) {
       const zip = rel.assets?.find((a) => a.name === asset)
       const sum = rel.assets?.find((a) => a.name === asset + '.sha256')
       const info = { version: String(version).replace(/^v/, ''), notes: String(rel.body || '').slice(0, 2000), url: rel.html_url }
-      if (!zip || !sum) return send({ status: 'available', ...info, error: 'this version has no file for this Mac' })
+      if (!zip || !sum) return send({ status: 'available', ...info, error: 'this version has no file for this computer' })
+      // Windows: the new version is announced with its page; the DJ downloads it (no swap-in-place yet).
+      if (process.platform !== 'darwin') return send({ status: 'available', ...info })
       send({ status: 'downloading', ...info, progress: 0 })
 
       await fs.promises.rm(dir, { recursive: true, force: true })

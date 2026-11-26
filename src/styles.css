@@ -6,8 +6,8 @@
   --line: #2c281f;
   --text: #ece6d8;
   --dim: #958c7a;
-  --a: #f2c230; /* deck A: gold */
-  --b: #35c46a; /* deck B: green */
+  --a: #e5484d; /* deck A: red */
+  --b: #4aa8ff; /* deck B: blue */
   --hot: #e5484d; /* red: needle, play, live states */
   --ok: #35c46a;
   --err: #ff6b6b;
@@ -16174,8 +16174,7 @@ textarea {
 }
 
 .mode-simple .mx-master-side,
-.mode-simple .mx-xrow-side,
-.mode-simple .mx-tr-moves {
+.mode-simple .mx-xrow-side {
   display: none;
 }
 
@@ -16392,7 +16391,11 @@ textarea {
 }
 
 .mixer.centre-dub,
-.mixer.centre-fx {
+.mixer.centre-fx,
+.mixer.centre-echo,
+.mixer.centre-tape,
+.mixer.centre-aux,
+.mixer.centre-mic {
   grid-template-columns: minmax(0, 1fr) 92px;
   grid-template-areas:
     't t'
@@ -16447,12 +16450,20 @@ textarea {
 
 /* DUB / FX pages: the master column keeps only its output (VU, fader, phones). */
 .mixer.centre-dub .mx-master,
-.mixer.centre-fx .mx-master {
+.mixer.centre-fx .mx-master,
+.mixer.centre-echo .mx-master,
+.mixer.centre-tape .mx-master,
+.mixer.centre-aux .mx-master,
+.mixer.centre-mic .mx-master {
   min-width: 0;
 }
 
 .mixer.centre-dub .mx-out .mx-vu,
-.mixer.centre-fx .mx-out .mx-vu {
+.mixer.centre-fx .mx-out .mx-vu,
+.mixer.centre-echo .mx-out .mx-vu,
+.mixer.centre-tape .mx-out .mx-vu,
+.mixer.centre-aux .mx-out .mx-vu,
+.mixer.centre-mic .mx-out .mx-vu {
   display: none;
 }
 
@@ -17038,12 +17049,20 @@ textarea {
 
 /* The master column on the DUB / FX pages: room for PHONES and CUE·MIX side by side. */
 .mixer.centre-dub,
-.mixer.centre-fx {
+.mixer.centre-fx,
+.mixer.centre-echo,
+.mixer.centre-tape,
+.mixer.centre-aux,
+.mixer.centre-mic {
   grid-template-columns: minmax(0, 1fr) 112px;
 }
 
 .mixer.centre-dub .mx-out .phones-knobs,
-.mixer.centre-fx .mx-out .phones-knobs {
+.mixer.centre-fx .mx-out .phones-knobs,
+.mixer.centre-echo .mx-out .phones-knobs,
+.mixer.centre-tape .mx-out .phones-knobs,
+.mixer.centre-aux .mx-out .phones-knobs,
+.mixer.centre-mic .mx-out .phones-knobs {
   justify-content: space-between;
   gap: 4px;
   padding: 0 4px;
@@ -17065,7 +17084,11 @@ textarea {
 
 /* PHONES over CUE·MIX in the narrow master column of the DUB / FX pages. */
 .mixer.centre-dub .mx-out .phones-knobs,
-.mixer.centre-fx .mx-out .phones-knobs {
+.mixer.centre-fx .mx-out .phones-knobs,
+.mixer.centre-echo .mx-out .phones-knobs,
+.mixer.centre-tape .mx-out .phones-knobs,
+.mixer.centre-aux .mx-out .phones-knobs,
+.mixer.centre-mic .mx-out .phones-knobs {
   flex-direction: column;
   align-items: center;
   gap: 6px;
@@ -17105,4 +17128,4010 @@ textarea {
 
 .cp-fx .cp-knobs {
   flex-wrap: wrap;
+}
+
+/* Transitions: the buttons, and one line under them that says what happens (or how far it is). */
+.mx-tr {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.mx-tr-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 14px;
+  margin: 0;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dim, #8a8f98);
+}
+.mx-tr-status span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mx-tr-status b {
+  flex: none;
+  padding: 0 4px;
+  background: #f5a524;
+  color: #111;
+  font-weight: 800;
+}
+.mx-tr-status.run span {
+  color: #f5a524;
+}
+.mx-tr-moves button i {
+  transition: none;
+}
+
+/* ═════════ Clean mixer: one surface per page, sections split by a hairline, no boxes in boxes ═════════
+   Layers: page (#12100c) · control (#221e18, no border) · active (accent tint). A section is a title
+   and its controls; the line above it is the only edge. Buttons keep a transparent border so a
+   high-contrast (forced colours) mode still draws them. */
+
+.mixer {
+  --mx-page: #12100c;
+  --mx-ctl: #221e18;
+  --mx-ctl-hover: #2b261e;
+  --mx-line: rgba(255, 255, 255, 0.06);
+}
+
+/* Sections: no frame, no gradient; a hairline between neighbours. */
+.mixer .mx-sec,
+.mixer .cp-sec,
+.mixer .strip-wrap {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.mixer .cp-sec {
+  padding: 8px 2px;
+}
+.mixer .cp-sec + .cp-sec,
+.mixer .cp > .cp-two + .cp-sec,
+.mixer .cp > .cp-sec + .cp-two,
+.mixer .mx-master-side .mx-sec + .mx-sec {
+  border-top: 1px solid var(--mx-line);
+}
+.mixer .cp-two {
+  gap: 12px;
+}
+.mixer .cp {
+  gap: 0;
+  padding-right: 2px;
+}
+
+/* The tape echo's inner groups (throw, time, tape, spring, output): just labelled groups. */
+.mixer .cp-tape .mx-sec {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.mixer .cp-tape .echo-desk {
+  column-gap: 14px;
+  row-gap: 4px;
+}
+
+/* Bottom bar: same surface, a hairline above instead of an inset frame. */
+.mixer .mx-bottom {
+  background: var(--mx-page);
+  box-shadow: none;
+  border-top: 1px solid var(--mx-line);
+}
+
+/* Page tabs: no outer frame; the active tab is its background. */
+.mixer .ctr-tabs {
+  border: 0;
+  gap: 2px;
+}
+.mixer .ctr-tabs button + button {
+  border-left: 0;
+}
+
+/* Controls: background only, no outline. */
+.mixer .cp-b,
+.mixer .cp-seg button,
+.mixer .cp-fxpick button,
+.mixer .ru-throw,
+.mixer .ru-tap,
+.mixer .ru-crash,
+.mixer .mx-kill,
+.mixer .mx-dyn-btn,
+.mixer .mx-talk,
+.mixer .mx-drop,
+.mixer .pfl,
+.mixer .xf-curve,
+.mixer .mx-tr-route,
+.mixer .xf-side,
+.mixer .mx-tr-quant,
+.mixer .mx-tr-moves button,
+.mixer .dbx-pick,
+.mixer .cp-drop,
+.mixer .cp-fire,
+.mixer .cp-fxb,
+.mixer .seg button {
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+.mixer .cp-b,
+.mixer .cp-seg button,
+.mixer .cp-fxpick button,
+.mixer .ru-throw,
+.mixer .ru-tap,
+.mixer .mx-tr-moves button,
+.mixer .xf-curve,
+.mixer .mx-tr-route,
+.mixer .mx-tr-quant,
+.mixer .seg button {
+  background: var(--mx-ctl);
+}
+@media (hover: hover) {
+  .mixer .cp-b:hover:not(:disabled):not(.on),
+  .mixer .cp-seg button:hover:not(.on),
+  .mixer .cp-fxpick button:hover:not(.on),
+  .mixer .mx-tr-moves button:hover:not(:disabled):not(.on) {
+    background: var(--mx-ctl-hover);
+  }
+}
+/* Segmented groups: buttons side by side with a 2 px gap, no frame around the group. */
+.mixer .cp-seg,
+.mixer .seg {
+  gap: 2px;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.mixer .cp-seg button + button,
+.mixer .seg button + button {
+  border-left-color: transparent;
+}
+.mixer select,
+.mixer .cp-aux select {
+  border: 1px solid #3a352d;
+  background: var(--mx-ctl);
+}
+
+/* AUX 1 · AUX 2 · STEM SENDS: wraps instead of running under the scrollbar. */
+.mixer .cp-aux {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.mixer .cp-aux > .cp-b:last-child {
+  margin-left: auto;
+}
+
+/* Transitions: on every page, a row of their own with a title, buttons big enough to hit. */
+.mixer .mx-tr {
+  gap: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--mx-line);
+}
+.mixer .mx-tr-moves {
+  gap: 2px;
+}
+.mixer .mx-tr-moves button {
+  height: 24px;
+  color: #e8dcc4;
+  font-weight: 800;
+}
+.mixer .mx-tr-moves button.on {
+  background: color-mix(in srgb, #f5a524 22%, #1f1c17);
+  color: #fff;
+}
+.mixer .mx-tr-moves button i {
+  height: 3px;
+}
+.mixer .mx-tr-status::before {
+  content: 'TRANSITIONS';
+  flex: none;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #7d7563;
+}
+
+/* Scrollbars: thin and quiet everywhere in the app (the system one is 15 px and light). */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a352d;
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4d463a;
+}
+.mixer .ctr-page {
+  scrollbar-gutter: stable;
+}
+
+/* DUB page: the knob row, the big buttons and the sound pads without frames (their colour says it). */
+.mixer .cp-knobs,
+.mixer .cp-big,
+.mixer .cp-big button,
+.mixer .cp-sound,
+.mixer .cp-sampler .dbx-slots,
+.mixer .cp-sampler .dbx-slots > * {
+  border-color: transparent;
+  box-shadow: none;
+}
+.mixer .cp-knobs {
+  background: transparent;
+  border-top: 1px solid var(--mx-line);
+  border-bottom: 1px solid var(--mx-line);
+}
+.mixer .cp-big {
+  gap: 2px;
+  background: transparent;
+}
+
+/* ═════════ Hardware finish (mixer pages): machined knobs, raised keys, lit pads ═════════
+   Knob: a dark metal cap with a soft top light and a drop shadow, a fine white pointer, and a printed
+   scale of dots around it; the dots it has travelled over light up. Keys: a raised face (top light,
+   shadow under), no outline. Pads: their colour as a thin edge and a tint; lit = glow. Square corners
+   stay (house rule). */
+
+.app .knob-dial {
+  background: transparent;
+  border: 0;
+  padding: 3px;
+}
+.app .knob-cap {
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 55%),
+    radial-gradient(circle at 50% 50%, #34312b 0%, #23211d 62%, #171612 100%);
+  box-shadow:
+    0 0 0 1px #0b0a08,
+    0 2px 4px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.45);
+}
+.app .knob-cap::after {
+  /* the machined centre */
+  content: '';
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #2d2b26, #1b1a16);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.app .knob-cap i {
+  top: 8%;
+  width: 2px;
+  height: 30%;
+  margin-left: -1px;
+  background: #f3eee4;
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.35);
+  z-index: 1;
+}
+.app .knob-ring .track {
+  stroke: none;
+}
+.app .knob-ring .value {
+  stroke: var(--accent, #e6e0d4);
+  stroke-width: 1.4;
+  opacity: 0.55;
+}
+.app .knob-ring .tick {
+  fill: rgba(255, 255, 255, 0.2);
+}
+.app .knob-ring .tick.home {
+  fill: rgba(255, 255, 255, 0.45);
+}
+.app .knob-ring .tick.lit {
+  fill: var(--accent, var(--on-c));
+}
+.app .knob-dial:active .knob-cap {
+  box-shadow:
+    0 0 0 1px #0b0a08,
+    0 1px 2px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.45);
+}
+.app .mixer .knob {
+  gap: 4px;
+}
+.app .mixer .knob span {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #b9b2a3;
+}
+
+/* Section titles: centred, quiet, with room above (the space separates the sections). */
+.mixer .mx-sec-head {
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.mixer .mx-sec-head span {
+  color: #d9d2c3;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.mixer .mx-master-side .mx-sec + .mx-sec,
+.mixer .cp-sec + .cp-sec,
+.mixer .cp > .cp-two + .cp-sec,
+.mixer .cp > .cp-sec + .cp-two {
+  border-top: 0;
+}
+.mixer .mx-master-side .mx-sec + .mx-sec,
+.mixer .cp > .cp-sec + .cp-sec,
+.mixer .cp > .cp-two + .cp-sec,
+.mixer .cp > .cp-sec + .cp-two {
+  margin-top: 6px;
+}
+.mixer .cp-sec > .cp-row:first-child .cp-lab:first-child,
+.mixer .cp-tag {
+  color: #d9d2c3;
+}
+
+/* The page: one panel, lit from the top. */
+.mixer .ctr-page,
+.mixer .mx-master-side {
+  background: linear-gradient(180deg, #1d1b17 0%, #161511 100%);
+}
+
+/* Keys: raised face, no outline. */
+.mixer .cp-b,
+.mixer .cp-seg button,
+.mixer .cp-fxpick button,
+.mixer .ru-throw,
+.mixer .ru-tap,
+.mixer .ru-crash,
+.mixer .mx-kill,
+.mixer .mx-dyn-btn,
+.mixer .mx-talk,
+.mixer .pfl,
+.mixer .xf-curve,
+.mixer .mx-tr-route,
+.mixer .mx-tr-quant,
+.mixer .mx-tr-moves button,
+.mixer .seg button,
+.mixer .ctr-tabs button {
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+}
+@media (hover: hover) {
+  .mixer .cp-b:hover:not(:disabled):not(.on),
+  .mixer .cp-seg button:hover:not(.on),
+  .mixer .cp-fxpick button:hover:not(.on),
+  .mixer .mx-kill:hover:not(.on),
+  .mixer .mx-tr-moves button:hover:not(:disabled):not(.on),
+  .mixer .ctr-tabs button:hover:not(.on) {
+    background: linear-gradient(180deg, #34302a 0%, #26231e 100%);
+  }
+}
+.mixer .cp-b:active:not(:disabled),
+.mixer .cp-seg button:active,
+.mixer .cp-fxpick button:active,
+.mixer .mx-kill:active,
+.mixer .mx-tr-moves button:active:not(:disabled) {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+/* On: the key lights from inside (amber by default, the deck colour on deck units). */
+.mixer .cp-b.on,
+.mixer .cp-seg button.on,
+.mixer .cp-fxpick button.on,
+.mixer .mx-kill.on,
+.mixer .mx-dyn-btn.on,
+.mixer .mx-talk.on,
+.mixer .seg button.on,
+.mixer .ctr-tabs button.on {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--on-c) 34%, #2a261f) 0%, color-mix(in srgb, var(--on-c) 22%, #1f1c17) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 8px color-mix(in srgb, var(--on-c) 35%, transparent);
+  color: #fff;
+}
+.mixer .ctr-tabs {
+  gap: 4px;
+  padding: 0 0 6px;
+}
+.mixer .ctr-tabs button {
+  height: 24px;
+}
+
+/* Pads: the colour of their kind as a fine edge and tint; playing = glow. */
+.mixer .cp-sound {
+  --k: #f2c230;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--k) 14%, #1d1b17), color-mix(in srgb, var(--k) 8%, #151410));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--k) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  color: color-mix(in srgb, var(--k) 85%, #fff);
+}
+.mixer .cp-sound.k-fx { --k: #4aa8ff; }
+.mixer .cp-sound.k-spring { --k: #3dd68c; }
+.mixer .cp-sound.k-noise { --k: #ff6f5e; }
+.mixer .cp-sound.k-empty { --k: #6b665c; }
+.mixer .cp-sound.on,
+.mixer .cp-sound.now {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--k) 34%, #1d1b17), color-mix(in srgb, var(--k) 20%, #151410));
+  box-shadow:
+    inset 0 0 0 1px var(--k),
+    0 0 12px color-mix(in srgb, var(--k) 45%, transparent);
+  color: #fff;
+}
+.mixer .cp-sounds {
+  gap: 6px;
+}
+
+/* The big three: DROP green, FIRE red, FX neutral; each with its edge, glowing while held. */
+.mixer .cp-big {
+  gap: 6px;
+}
+.mixer .cp-big button {
+  --k: #9a9282;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--k) 16%, #1d1b17), color-mix(in srgb, var(--k) 8%, #141310));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--k) 55%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  color: color-mix(in srgb, var(--k) 90%, #fff);
+}
+.mixer .cp-big .cp-drop { --k: #3dd68c; }
+.mixer .cp-big .cp-fire { --k: #ff5a4e; }
+.mixer .cp-big button.on,
+.mixer .cp-big button:active {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--k) 38%, #1d1b17), color-mix(in srgb, var(--k) 22%, #141310));
+  box-shadow:
+    inset 0 0 0 1px var(--k),
+    0 0 16px color-mix(in srgb, var(--k) 55%, transparent);
+  color: #fff;
+}
+
+/* The knob row reads as one strip: a recessed tray under the knobs. */
+.mixer .cp-knobs {
+  padding: 8px 4px 6px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mixer .cp-sound.on,
+  .mixer .cp-big button.on {
+    box-shadow: inset 0 0 0 1px var(--k);
+  }
+}
+
+/* Knob sizes on the mixer pages: big enough for the cap, pointer and scale to read. */
+.app .mixer .cp .knob-dial {
+  width: 28px;
+  height: 28px;
+}
+.app .mixer .mx-master-side .mx-sec .knob-dial,
+.app .mixer .mx-mic .knob-dial {
+  width: 24px;
+  height: 24px;
+}
+.app .mixer .strip-wrap .eq-grid .knob-dial {
+  width: 22px;
+  height: 22px;
+}
+.app .mixer .strip-wrap .gain .knob-dial {
+  width: 24px;
+  height: 24px;
+}
+
+/* Room for the knob scale under each section title (the dots sit outside the dial). */
+.app .mixer .mx-master-side .mx-sec-body {
+  padding-top: 5px;
+}
+/* MIC INPUT: TALK across the top, then LEVEL · ECHO · SPRING · DUCK in one even row. */
+.app .mixer .mx-mic .mx-sec-body {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-items: center;
+  gap: 6px 4px;
+}
+.app .mixer .mx-mic .mx-talk {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  height: 22px;
+}
+.app .mixer .mx-master-side::before {
+  text-align: center;
+  color: #7d7563;
+}
+.app .mixer .mx-drop {
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.app .mixer .mx-drop.on {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--on-c) 34%, #2a261f), color-mix(in srgb, var(--on-c) 22%, #1f1c17));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 8px color-mix(in srgb, var(--on-c) 35%, transparent);
+  color: #fff;
+}
+.app .mixer .mx-mic .mx-talk {
+  justify-content: center;
+}
+
+/* MIXER page widths: the channel strips and the master output only take what their knobs and faders
+   need; the MASTER BUS column (isolator, sound system, mic) gets the rest. */
+.app .mixer.centre-mixer {
+  grid-template-columns: 76px minmax(0, 1fr) 76px;
+}
+.app .mixer.centre-mixer .mx-out {
+  flex: 0 0 92px;
+  width: 92px;
+}
+.app .mixer.centre-mixer .mx-master-side {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.app .mixer.centre-mixer .mx-iso .mx-sec-body,
+.app .mixer.centre-mixer .mx-ss .mx-sec-body {
+  justify-content: space-evenly;
+}
+
+/* MIXER page rhythm: every knob has air above (its scale dots) and below (after its label), so the
+   KILL keys, buttons and the next section never touch it. */
+.app .mixer.centre-mixer .knob {
+  padding: 4px 0 3px;
+  gap: 5px;
+}
+.app .mixer.centre-mixer .knob span {
+  line-height: 11px;
+}
+.app .mixer.centre-mixer .mx-iso-band {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-sec {
+  padding-top: 2px;
+  padding-bottom: 4px;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-sec + .mx-sec {
+  margin-top: 8px;
+}
+.app .mixer.centre-mixer .mx-ss .mx-sec-body {
+  row-gap: 6px;
+}
+.app .mixer.centre-mixer .mx-mic .mx-sec-body {
+  row-gap: 4px;
+}
+.app .mixer.centre-mixer .strip-body {
+  row-gap: 2px;
+}
+
+/* SOUND SYSTEM in one band: WEIGHT · FREQ, then DROP / COMP / LIM stacked in a column beside them. */
+.app .mixer.centre-mixer .mx-ss .mx-sec-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-items: center;
+  gap: 4px 6px;
+}
+.app .mixer.centre-mixer .mx-ss .knob {
+  grid-row: 1 / span 2;
+}
+.app .mixer.centre-mixer .mx-ss .mx-drop {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: stretch;
+  height: 20px;
+  min-height: 0;
+}
+.app .mixer.centre-mixer .mx-ss .mx-dyn {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: stretch;
+  display: flex;
+  flex-direction: row;
+  gap: 3px;
+  flex: none;
+}
+.app .mixer.centre-mixer .mx-ss .mx-dyn-btn {
+  flex: 1 1 0;
+  width: auto;
+  height: 20px;
+}
+
+/* MIC INPUT in one band too: TALK as the first key, then LEVEL · ECHO · SPRING · DUCK. */
+.app .mixer.centre-mixer .mx-mic .mx-sec-body {
+  grid-template-columns: auto repeat(4, minmax(0, 1fr));
+  align-items: center;
+}
+.app .mixer.centre-mixer .mx-mic .mx-talk {
+  grid-column: auto;
+  justify-self: center;
+  height: 24px;
+  padding: 0 8px;
+}
+
+/* MIXER page: each section closed by one hairline, the same gap everywhere; knob labels and keys
+   one point smaller (TALK keeps its size: it is the one you hit live). */
+.app .mixer.centre-mixer .mx-master-side .mx-sec {
+  padding: 2px 0 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer.centre-mixer .mx-master-side .mx-sec:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-sec + .mx-sec {
+  margin-top: 6px;
+}
+.app .mixer.centre-mixer .strip-wrap.a {
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer.centre-mixer .strip-wrap.b {
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer.centre-mixer .mx-out {
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer.centre-mixer .knob span,
+.app .mixer.centre-mixer .mx-kill,
+.app .mixer.centre-mixer .mx-drop,
+.app .mixer.centre-mixer .mx-dyn-btn,
+.app .mixer.centre-mixer .pfl {
+  font-size: 9px;
+}
+.app .mixer.centre-mixer .mx-mic .mx-talk {
+  font-size: 10px;
+}
+
+/* Crossfader: the main control of the bottom bar. It takes the whole middle of the row, sits in a
+   recessed slot, and its cap is a proper fader knob (grip lines, light on top, shadow under). */
+.app .mixer .mx-xrow {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  height: 36px;
+}
+.app .mixer .mx-bottom .xfader {
+  width: auto;
+  height: 36px;
+  gap: 8px;
+  padding: 0 8px;
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.app .mixer .mx-bottom .xf-track input {
+  height: 32px;
+}
+.app .mixer .mx-bottom .xfader input::-webkit-slider-runnable-track {
+  height: 6px;
+  background: #050504;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.app .mixer .mx-bottom .xfader input::-webkit-slider-thumb {
+  width: 18px;
+  height: 30px;
+  margin-top: -12px;
+  border: 0;
+  background:
+    linear-gradient(to right, transparent 0 46%, #f3eee4 46% 54%, transparent 54%),
+    repeating-linear-gradient(180deg, transparent 0 3px, rgba(0, 0, 0, 0.35) 3px 4px),
+    linear-gradient(180deg, #4a4640 0%, #2e2b26 55%, #22201c 100%);
+  box-shadow:
+    0 0 0 1px #0b0a08,
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 3px 6px rgba(0, 0, 0, 0.6);
+}
+.app .mixer .mx-bottom .xf-marks {
+  left: 9px;
+  right: 8px;
+  height: 26px;
+}
+.app .mixer .mx-bottom .xf-marks i {
+  height: 26px;
+  background: linear-gradient(#4a453d 0 4px, transparent 4px 22px, #4a453d 22px);
+}
+.app .mixer .mx-bottom .xf-marks i.minor {
+  background: linear-gradient(#332f29 0 3px, transparent 3px 23px, #332f29 23px);
+}
+.app .mixer .mx-bottom .xf-marks i.mid {
+  background: linear-gradient(#a59d8f 0 6px, transparent 6px 20px, #a59d8f 20px);
+}
+.app .mixer .mx-bottom .xf-side {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+}
+
+/* Transition keys: taller, easy to hit live. */
+.app .mixer .mx-tr-moves button {
+  height: 32px;
+  font-size: 10px;
+}
+/* Balanced against the page height: the bar grows, the mixer above keeps its room. */
+.app .mixer .mx-xrow,
+.app .mixer .mx-bottom .xfader {
+  height: 32px;
+}
+.app .mixer .mx-bottom .xf-track input {
+  height: 28px;
+}
+.app .mixer .mx-bottom .xfader input::-webkit-slider-thumb {
+  height: 26px;
+  margin-top: -10px;
+}
+.app .mixer .mx-tr-moves button {
+  height: 28px;
+}
+.app .mixer .mx-bottom {
+  gap: 4px;
+  padding-top: 5px;
+}
+
+/* Dividers with the same space on both sides: each section is as tall as its content (it never
+   stretches to fill the column), 8 px between its last control and the line, 8 px from the line
+   to the next title. Knob labels' own bottom padding is counted in. */
+.app .mixer.centre-mixer .mx-master-side {
+  justify-content: flex-start;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-sec {
+  flex: none;
+  height: auto;
+  padding: 0 0 5px;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-sec + .mx-sec {
+  margin-top: 0;
+  padding-top: 8px;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-sec-body {
+  flex: none;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-sec-head {
+  margin: 0 0 2px;
+}
+/* Measured: 10 px from the last control to the line, 10 px from the line to the next title. */
+.app .mixer.centre-mixer .mx-master-side .mx-sec + .mx-sec {
+  padding-top: 6px;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-iso {
+  padding-bottom: 9px;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-ss {
+  padding-bottom: 6px;
+}
+/* The column's own "MASTER BUS" caption goes: its three titled sections already say what they are,
+   and the line it took lets every section keep its spacing. */
+.app .mixer.centre-mixer .mx-master-side::before {
+  content: none;
+}
+.app .mixer.centre-mixer .mx-master-side {
+  padding-top: 4px;
+}
+
+/* Section headers: title on the left, the settings wrench on the right. */
+.app .mixer .mx-sec-head {
+  justify-content: space-between;
+}
+.app .mixer .mx-sec-head span {
+  text-align: left;
+}
+.app .mx-sec-more {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: none;
+  color: #8a8373;
+  font-size: 0;
+  line-height: 0;
+  cursor: pointer;
+  transition: color 100ms ease;
+}
+@media (hover: hover) {
+  .app .mx-sec-more:hover {
+    color: #f3eee4;
+    background: none;
+  }
+}
+
+/* "⋯" settings key: a small raised key so it reads as something to press. */
+.app .mx-sec-more {
+  width: 24px;
+  height: 16px;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #d9d2c3;
+}
+@media (hover: hover) {
+  .app .mx-sec-more:hover {
+    background: linear-gradient(180deg, #34302a 0%, #26231e 100%);
+    color: #fff;
+  }
+}
+
+/* Side margins inside each section: title, "⋯" and controls keep 10 px from the column edges. */
+.app .mixer.centre-mixer .mx-master-side {
+  padding-left: 0;
+  padding-right: 0;
+}
+.app .mixer.centre-mixer .mx-master-side .mx-sec {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* The mixer is one panel like the decks: one background for the whole of it (no second tone behind
+   the sections), and only the 6 px gap of the stage between it and each deck. */
+.app .stage > .mixer {
+  padding: 4px 6px;
+  background: linear-gradient(180deg, #1d1b17 0%, #161511 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.app .mixer .ctr-page,
+.app .mixer .mx-master-side,
+.app .mixer .mx-out,
+.app .mixer .strip-wrap,
+.app .mixer .mx-bottom {
+  background: transparent;
+}
+
+/* ═════════ Deck: one clean panel like the mixer ═════════
+   One background for the whole deck, no frames inside (pitch column, FX strip); every key is a raised
+   key without an outline. Lit states (CUE at its point, PLAY, SYNC, hot cues, stems, DUB…) keep their
+   own colours: only the resting keys take the neutral face. */
+.app .deck.dv2 {
+  border: 0;
+  background: linear-gradient(180deg, #1d1b17 0%, #161511 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.app .deck.dv2 .pc,
+.app .deck.dv2 .dk-fx {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.app .deck.dv2 .pc {
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+.app .deck.dv2 .btn,
+.app .deck.dv2 .pad,
+.app .deck.dv2 .pad-mode-btn,
+.app .deck.dv2 .pc-key,
+.app .deck.dv2 .pc-range,
+.app .deck.dv2 .dk-fx-dub,
+.app .deck.dv2 .dk-fx-throw,
+.app .deck.dv2 .eject {
+  border-color: transparent;
+}
+.app .deck.dv2 .btn:not(.on):not(.at),
+.app .deck.dv2 .pad:not(.set),
+.app .deck.dv2 .pad-mode-btn:not(.now):not(.lit),
+.app .deck.dv2 .pc-key:not(.on):not(.warn),
+.app .deck.dv2 .pc-range,
+.app .deck.dv2 .dk-fx-dub:not(.on),
+.app .deck.dv2 .dk-fx-throw:not(.on) {
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+@media (hover: hover) {
+  .app .deck.dv2 .btn:not(.on):not(.at):hover,
+  .app .deck.dv2 .pad:not(.set):hover,
+  .app .deck.dv2 .pad-mode-btn:not(.now):hover,
+  .app .deck.dv2 .dk-fx-dub:not(.on):hover,
+  .app .deck.dv2 .dk-fx-throw:not(.on):hover {
+    background: linear-gradient(180deg, #34302a 0%, #26231e 100%);
+  }
+}
+.app .deck.dv2 .pc-read {
+  border-color: transparent;
+}
+
+/* Pitch column centred in its lane: the same 10 px on both sides (deck content | pitch | deck edge). */
+.app .deck.dv2.deck-a {
+  padding-right: 6px;
+}
+.app .deck.dv2.deck-b {
+  padding-left: 6px;
+}
+
+/* ═════════ One unit: deck A · mixer · deck B on a single surface ═════════
+   No gap and no box per part: the stage carries the one background, and a hairline marks where the
+   mixer starts and ends, like the seams of one piece of hardware. */
+.app .stage {
+  column-gap: 0;
+  background: linear-gradient(180deg, #1d1b17 0%, #161511 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.app .stage > .deck.dv2,
+.app .stage > .mixer {
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+}
+.app .stage > .mixer {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Pitch column: readout, range, bend and KEY span the full column; 6 px of air on each side of it. */
+.app .deck.dv2 .dk-top > .pc {
+  padding: 4px 0;
+  border: 0;
+}
+.app .deck.dv2 .pc > * {
+  width: 100%;
+}
+
+/* Pitch fader: a fine scale on both sides of the slot (numbers on the outer side only). */
+.app .deck.dv2 .pc-fader {
+  grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
+}
+.app .deck.dv2 .pc-b .pc-fader {
+  grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
+}
+.app .deck.dv2 .pc-b .pc-scale {
+  order: 3;
+}
+.app .deck.dv2 .pc-b .pc-fader input[type='range'] {
+  order: 2;
+}
+.app .deck.dv2 .pc-b .pc-ticks {
+  order: 1;
+}
+.pc-ticks {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: calc(var(--thumb-h) / 2) 0;
+  min-height: 0;
+}
+.pc-ticks span {
+  position: relative;
+  height: 0;
+}
+.pc-ticks span::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -0.5px;
+  width: 4px;
+  height: 1px;
+  background: #4a453c;
+}
+.pc-ticks span.major::after {
+  width: 7px;
+  background: #7a7366;
+}
+.pc-ticks span.zero::after {
+  width: 9px;
+  background: #cfc8b8;
+}
+.pc-b .pc-ticks span::after {
+  left: auto;
+  right: 0;
+}
+.app .deck.dv2 .pc-fader {
+  grid-template-columns: minmax(0, 1fr) 22px 10px;
+}
+.app .deck.dv2 .pc-b .pc-fader {
+  grid-template-columns: 10px 22px minmax(0, 1fr);
+}
+.app .deck.dv2 .pc-fader {
+  grid-template-columns: minmax(0, 1fr) 22px 8px;
+}
+.app .deck.dv2 .pc-b .pc-fader {
+  grid-template-columns: 8px 22px minmax(0, 1fr);
+}
+.app .deck.dv2 .pc-scale b {
+  right: 8px;
+}
+.app .deck.dv2 .pc-b .pc-scale b {
+  right: auto;
+  left: 8px;
+}
+
+/* Pitch column: more air on both sides (10 px), type one step smaller, a padlock on KEY. */
+.app .deck.dv2.deck-a {
+  padding-right: 10px;
+}
+.app .deck.dv2.deck-b {
+  padding-left: 10px;
+}
+.app .deck.dv2.deck-a .dk-top > .pc {
+  margin-left: 4px;
+}
+.app .deck.dv2.deck-b .dk-top > .pc {
+  margin-right: 4px;
+}
+.app .deck.dv2 .pc .pc-read {
+  font-size: 11px;
+}
+.app .deck.dv2 .pc .pc-range,
+.app .deck.dv2 .pc .pc-key,
+.app .deck.dv2 .pc-scale b {
+  font-size: 9px;
+}
+.app .deck.dv2 .pc .pc-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.app .deck.dv2 .pc .pc-key .pc-lock {
+  flex: none;
+  opacity: 0.75;
+}
+.app .deck.dv2 .pc .pc-key.on .pc-lock {
+  opacity: 1;
+}
+.app .deck.dv2 .dk-top > .pc {
+  width: auto;
+  min-width: 0;
+  justify-self: stretch;
+}
+.app .deck.dv2 .pc-fader {
+  grid-template-columns: minmax(0, 1fr) 20px 6px;
+}
+.app .deck.dv2 .pc-b .pc-fader {
+  grid-template-columns: 6px 20px minmax(0, 1fr);
+}
+.app .deck.dv2 .pc-fader input[type='range'] {
+  width: 20px;
+}
+.app .deck.dv2 .pc-ticks span.major::after {
+  width: 5px;
+}
+.app .deck.dv2 .pc-ticks span.zero::after {
+  width: 6px;
+}
+.app .deck.dv2 .pc-ticks span::after {
+  width: 3px;
+}
+
+/* Pitch fader cap and slot: the crossfader's finish turned upright (centre line, grip ridges, light
+   on top, shadow under; recessed 6 px slot). */
+.app .deck.dv2 .pc {
+  --thumb-h: 18px;
+}
+.app .deck.dv2 .pc-fader input[type='range']::-webkit-slider-runnable-track {
+  width: 6px;
+  background: #050504;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.app .deck.dv2 .pc-fader input[type='range']::-webkit-slider-thumb {
+  width: 20px;
+  height: var(--thumb-h);
+  margin-left: -7px;
+  border: 0;
+  background:
+    linear-gradient(180deg, transparent 0 44%, #f3eee4 44% 56%, transparent 56%),
+    repeating-linear-gradient(90deg, transparent 0 3px, rgba(0, 0, 0, 0.35) 3px 4px),
+    linear-gradient(180deg, #4a4640 0%, #2e2b26 55%, #22201c 100%);
+  box-shadow:
+    0 0 0 1px #0b0a08,
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 3px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* "FX A" on one line beside the DUB key (it was stacked sideways and read as broken). */
+.app .deck.dv2 .dk-fx-tag {
+  writing-mode: horizontal-tb;
+  transform: none;
+  align-self: center;
+  width: auto;
+  height: auto;
+  padding: 0 6px 0 2px;
+  white-space: nowrap;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+/* ═════════ Top bar: live things on the left, setup on the right, no colour band ═════════ */
+.app .topbar::after {
+  content: none;
+}
+.app .topbar .tb-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.app .topbar .tb-left h1 {
+  margin-right: 4px;
+}
+.app .topbar .top-actions {
+  gap: 8px;
+}
+/* Smaller type across the bar. */
+.app .topbar .tb-mode button,
+.app .topbar .tb-panic,
+.app .topbar .rec,
+.app .topbar .tb-update {
+  font-size: 9px;
+}
+.app .topbar .tb-clock {
+  font-size: 11px;
+}
+/* The bar counter: lower, slimmer squares. */
+.app .topbar .bc-row {
+  grid-template-columns: repeat(4, 14px);
+  gap: 2px;
+}
+.app .topbar .bc-row i {
+  height: 5px;
+}
+.app .topbar .beat-count {
+  gap: 2px;
+}
+/* The new gear: outline, same weight as the text beside it. */
+.app .topbar .tb-gear svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+}
+
+/* Top bar sits right on the waveform strip: no slack under its controls, no top padding on the strip. */
+.app .topbar {
+  height: 28px;
+  min-height: 28px;
+}
+.app .trackview {
+  padding-top: 1px;
+}
+
+/* ═════════ Top bar: clock + set countdown, notes ═════════ */
+.app .topbar {
+  overflow: visible;
+  z-index: 40;
+}
+.tb-set,
+.tb-notes {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.app .topbar .tb-clock {
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .app .topbar .tb-clock:hover {
+    background: #221e18;
+  }
+}
+.tb-countdown,
+.tb-notes-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.tb-countdown small,
+.tb-notes-btn small {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #8a8373;
+}
+.tb-notes-btn {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+.tb-notes-btn.on {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--on-c) 34%, #2a261f), color-mix(in srgb, var(--on-c) 22%, #1f1c17));
+  color: #fff;
+}
+/* The time left changes colour as the end nears: amber in the last 10 minutes, red in the last 2 and over. */
+.tb-countdown.soon,
+.set-widget.soon .sw-time {
+  color: #f5a524;
+}
+.tb-countdown.last,
+.tb-countdown.over,
+.set-widget.last .sw-time,
+.set-widget.over .sw-time {
+  color: #ff5a4e;
+}
+.tb-countdown.paused {
+  opacity: 0.65;
+}
+
+/* Popovers under the bar. */
+.tb-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  padding: 10px;
+  background: #1d1b17;
+  box-shadow: 0 0 0 1px #0b0a08, 0 12px 28px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+.tb-pop button,
+.set-widget button {
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.tb-pop button:disabled,
+.set-widget button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.tb-pop button.on,
+.set-widget button.on {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--on-c) 34%, #2a261f), color-mix(in srgb, var(--on-c) 22%, #1f1c17));
+  color: #fff;
+}
+.st-pop {
+  width: 230px;
+}
+.st-ctl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.st-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.st-row > button {
+  flex: 1;
+}
+.st-lab {
+  flex: 1;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8373;
+}
+.st-row:first-child > button {
+  flex: none;
+  width: 28px;
+}
+.st-len {
+  min-width: 52px;
+  text-align: center;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.st-presets {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 3px;
+}
+.st-go {
+  flex: 1.4 !important;
+}
+
+/* The floating countdown. */
+.set-widget {
+  position: fixed;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 170px;
+  padding: 8px 10px 10px;
+  background: rgba(29, 27, 23, 0.94);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px #0b0a08, 0 16px 36px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.set-widget:active {
+  cursor: grabbing;
+}
+.sw-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #8a8373;
+}
+.sw-head button {
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  font-size: 12px;
+}
+.sw-time {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #f3eee4;
+}
+.sw-row {
+  display: flex;
+  gap: 4px;
+}
+.sw-row button {
+  flex: 1;
+}
+
+/* Notes. */
+.nt-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  height: 380px;
+  resize: both;
+  overflow: hidden;
+  min-width: 260px;
+  min-height: 220px;
+}
+.nt-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nt-tabs {
+  display: flex;
+  flex: 1;
+  gap: 2px;
+}
+.nt-text {
+  flex: 1;
+  min-height: 0;
+  padding: 8px;
+  border: 1px solid #3a352d;
+  border-radius: 0;
+  background: #12100c;
+  color: var(--text);
+  font: 12px/1.5 ui-monospace, 'SF Mono', Menlo, monospace;
+  resize: none;
+  outline: none;
+}
+.nt-text:focus-visible {
+  border-color: #6b6455;
+}
+.nt-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+.nt-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+}
+.nt-list li i {
+  flex: none;
+  width: 18px;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: right;
+  color: #8a8373;
+}
+.nt-list li.played span {
+  color: #8a8373;
+  text-decoration: line-through;
+}
+.nt-list li.played i {
+  color: #3dd68c;
+}
+.nt-list .nt-empty {
+  color: #8a8373;
+  border: 0;
+}
+
+/* Top bar keys all alike: REC, PANIC, SIMPLE / PRO and the gear take the same raised key as NOTES. */
+.app .topbar .rec,
+.app .topbar .tb-panic,
+.app .topbar .tb-gear,
+.app .topbar .tb-mode button {
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.app .topbar .rec,
+.app .topbar .tb-mode button {
+  color: #e3dccd;
+}
+.app .topbar .tb-mode {
+  gap: 2px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.app .topbar .tb-mode button.on,
+.app .topbar .tb-gear.on {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--on-c) 34%, #2a261f), color-mix(in srgb, var(--on-c) 22%, #1f1c17));
+  color: #fff;
+}
+.app .topbar .tb-panic {
+  color: #ff6f5e;
+}
+.app .topbar .rec.on {
+  background: linear-gradient(180deg, color-mix(in srgb, #ff5a4e 38%, #2a261f), color-mix(in srgb, #ff5a4e 24%, #1f1c17));
+  color: #fff;
+}
+@media (hover: hover) {
+  .app .topbar .rec:not(.on):hover,
+  .app .topbar .tb-panic:not(:disabled):hover,
+  .app .topbar .tb-gear:not(.on):hover,
+  .app .topbar .tb-mode button:not(.on):hover,
+  .app .topbar .tb-notes-btn:not(.on):hover,
+  .app .topbar .tb-countdown:hover {
+    background: linear-gradient(180deg, #34302a 0%, #26231e 100%);
+  }
+}
+
+/* Logo optically centred: its capitals sit high in their line box, so the whole name comes down 2 px. */
+.app .topbar h1 .rx-name {
+  transform: translateY(2px);
+}
+
+/* Bar counter squares: wider (still low). */
+.app .topbar .bc-row {
+  grid-template-columns: repeat(4, 26px);
+  gap: 3px;
+}
+
+/* MIXER page: the channel strips need room for GAIN between the deck tag and the headphones key, and
+   for the fader beside the EQ; the mixer takes it from the decks (Pro layout). */
+@media (min-width: 901px) {
+  .app:not(.mode-simple) .stage {
+    grid-template-columns: minmax(0, 1fr) clamp(530px, 42vw, 600px) minmax(0, 1fr);
+  }
+}
+.app .mixer.centre-mixer {
+  grid-template-columns: 92px minmax(0, 1fr) 92px;
+}
+.app .mixer.centre-mixer .strip-head {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 22px;
+  align-items: start;
+  column-gap: 4px;
+}
+.app .mixer.centre-mixer .strip-head .gain {
+  justify-self: center;
+}
+.app .mixer.centre-mixer .strip-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  column-gap: 6px;
+}
+.app .mixer.centre-mixer .strip-wrap.b .strip-body {
+  grid-template-columns: 34px minmax(0, 1fr);
+}
+
+/* Deck time row on a narrower deck: tighter spacing so TAP · ½ · ×2 stay inside. */
+.app .deck.dv2 .times {
+  gap: 6px;
+}
+.app .deck.dv2 .times .t-cell {
+  gap: 4px;
+}
+.app .deck.dv2 .times .t-cell small {
+  letter-spacing: 0.04em;
+}
+.app .deck.dv2 .dk-keytap {
+  gap: 2px;
+  margin-left: auto;
+}
+/* Times without their words: elapsed as is, remaining with a minus (DJ convention); room for key + TAP. */
+.app .deck.dv2 .times .t-cell small {
+  display: none;
+}
+.app .deck.dv2 .times .t-left::before {
+  content: '−';
+}
+.app .deck.dv2 .times .t-cell:nth-child(2) {
+  color: var(--dim);
+}
+.app .deck.dv2 .dk-keytap > * {
+  flex: none;
+}
+
+/* Channel strips: 8 px from the hairlines on both sides (it was 3 px). */
+.app .mixer.centre-mixer .strip-wrap {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.app .mixer.centre-mixer .strip-wrap {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.app .mixer.centre-mixer .strip-head {
+  grid-template-columns: 16px minmax(0, 1fr) 20px;
+}
+.app .mixer.centre-mixer .strip-head .ch-tag {
+  width: 16px;
+}
+.app .mixer.centre-mixer .strip-head .pfl {
+  width: 20px;
+}
+.app .mixer .strip-wrap .gain .knob-dial {
+  width: 20px;
+  height: 20px;
+}
+
+/* Channel strips: the fader side gets more air from the hairline (A: right, B: left, mirrored). */
+.app .mixer.centre-mixer .strip-wrap.a {
+  padding-right: 12px;
+}
+.app .mixer.centre-mixer .strip-wrap.b {
+  padding-left: 12px;
+}
+.app .mixer.centre-mixer .strip-body {
+  grid-template-columns: minmax(0, 1fr) 30px;
+}
+.app .mixer.centre-mixer .strip-wrap.b .strip-body {
+  grid-template-columns: 30px minmax(0, 1fr);
+}
+
+/* Master output column: as wide as its contents (meter · scale · fader · scale ≈ 66 px) plus a small
+   margin; the 12 px it gives back go to the MASTER BUS. */
+.app .mixer.centre-mixer .mx-out {
+  flex: 0 0 80px;
+  width: 80px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+.app .mixer.centre-mixer .mx-out .fader-row {
+  justify-content: center;
+}
+.app .mixer.centre-mixer .mx-out .mx-vu {
+  gap: 2px;
+}
+.app .mixer.centre-mixer .mx-out .phones-knobs {
+  justify-content: space-around;
+  gap: 0;
+}
+.app .mixer.centre-mixer .mx-out .phones-knobs .knob {
+  min-width: 0;
+}
+.app .mixer.centre-mixer .mx-out .phones-knobs .knob span {
+  letter-spacing: 0.01em;
+}
+
+/* Headphones: one PHONES caption over the pair, short labels under the knobs (VOL · MIX). */
+.app .mixer .mx-out .phones-knobs {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+.app .mixer .mx-out .phones-cap {
+  flex: 0 0 100%;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 11px;
+  color: #8a8373;
+}
+.mx-out .phones-cap {
+  display: block;
+}
+
+/* VU meters, plain: one flat dark face (no glow, no gradient), white marks and needle, red zone in red. */
+.app .mx-vu .vu-glow {
+  display: none;
+}
+.app .mx-vu .vu-bg {
+  fill: #0e0d0a;
+  stroke: rgba(255, 255, 255, 0.08);
+}
+.app .mx-vu .vu-mark {
+  stroke: #e6e0d4;
+  opacity: 0.85;
+}
+.app .mx-vu .vu-red,
+.app .mx-vu .vu-redarc {
+  stroke: #ff3b30;
+  opacity: 1;
+}
+.app .mx-vu .vu-txt {
+  fill: #e6e0d4;
+}
+.app .mx-vu .vu-needle {
+  stroke: #ffffff;
+}
+.app .mx-vu .vu-hub {
+  fill: #e6e0d4;
+  stroke: none;
+}
+/* VU face: no fill of its own, it shows the panel behind it (same colour as the mixer). */
+.app .mx-vu .vu-bg {
+  fill: none;
+}
+
+/* Bigger VU meters: the master column widens a little for them (the fader below keeps its size). */
+.app .mixer.centre-mixer .mx-out {
+  flex: 0 0 96px;
+  width: 96px;
+}
+.app .mixer .mx-vu {
+  gap: 3px;
+}
+.app .mx-vu .vu-txt {
+  font-size: 14px;
+}
+
+/* VUs as big as the column allows: wider column, thinner side margins, the X MASTER caption smaller. */
+.app .mixer.centre-mixer .mx-out {
+  flex: 0 0 104px;
+  width: 104px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.app .mixer .mx-vu {
+  gap: 2px;
+}
+.app .mixer .mx-out .mx-brand {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  line-height: 12px;
+}
+.app .mixer .mx-out .mx-brand .rx-logo {
+  width: 10px;
+  height: 10px;
+}
+/* VU faces without an outline: just the scale, the red zone and the needle on the panel. */
+.app .mx-vu .vu-bg {
+  stroke: none;
+}
+
+/* Lit keys: amber across the mixer; the deck units (deck effect, deck A / B sections) light in their deck's colour. */
+.mixer .cp-deckfx.a,
+.mixer .cp-deckfx:not(.b) {
+  --on-c: var(--a);
+}
+.mixer .cp-deckfx.b {
+  --on-c: var(--b);
+}
+
+/* Everything outside a deck that lights up (library tab, selected list or row, + List) uses it too;
+   decks and channel strips keep their own colour. */
+:root {
+  --accent: var(--on-c);
+}
+.app .lib-list.new {
+  color: var(--on-c);
+}
+
+/* ═════════ Lit keys and tabs: one solid colour (set by --on-c / --on-hi, see "Active = yellow") ═════════
+   A lit key or tab is solid green (#1ED760 → #1DB954) with dark text, as on Spotify; the deck units
+   keep their deck colour. */
+.mixer .cp-b.on,
+.mixer .cp-seg button.on,
+.mixer .cp-fxpick button.on,
+.mixer .mx-kill.on,
+.mixer .mx-dyn-btn.on,
+.mixer .mx-talk.on,
+.mixer .seg button.on,
+.mixer .ctr-tabs button.on,
+.app .mixer .mx-drop.on,
+.app .topbar .tb-mode button.on,
+.app .topbar .tb-gear.on,
+.app .tb-notes-btn.on,
+.app .tb-pop button.on,
+.app .set-widget button.on,
+.app .tab.active,
+.app .nt-tabs button.on {
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 10px rgba(30, 215, 96, 0.35);
+  color: var(--on-ink);
+}
+.app .tab.active svg,
+.app .mixer .ctr-tabs button.on svg {
+  color: var(--on-ink);
+}
+/* Selected list item / row: a softer green so the text stays light and readable. */
+.app .library tbody tr.sel td,
+.app .library .lib-lists .lib-list.active,
+.app .side-nav .side-item.active,
+.app .sp > .side-nav .side-item[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--on-c) 28%, #14120e);
+  color: #fff;
+}
+/* Deck units stay in their deck colour (lighter mix, light text). */
+.mixer .cp-deckfx .cp-b.on,
+.mixer .cp-deckfx .cp-fxpick button.on {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--on-c) 40%, #2a261f), color-mix(in srgb, var(--on-c) 26%, #1f1c17));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 8px color-mix(in srgb, var(--on-c) 35%, transparent);
+  color: #fff;
+}
+
+/* COMP / LIM: a proper green LED beside the word, lit while the unit is on. */
+.app .mixer .mx-dyn-btn {
+  gap: 5px;
+}
+.app .mixer .mx-dyn-btn .mx-gr {
+  width: 6px;
+  height: 6px;
+  background: var(--on-hi);
+  box-shadow: 0 0 6px rgba(30, 215, 96, 0.8);
+}
+.app .mixer .mx-dyn-btn .mx-gr.off {
+  background: #3a362f;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+.app .mixer .mx-dyn-btn.on .mx-gr {
+  background: #eafff1;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+/* ═════════ Active colour: yellow (tried green, ice white, purple, orange and blue; yellow stays) ═════════ */
+:root {
+  --on-c: #f2c230;
+  --on-hi: #f7d35f;
+  --on-ink: #1a1c1e;
+}
+.mixer .cp-b.on,
+.mixer .cp-seg button.on,
+.mixer .cp-fxpick button.on,
+.mixer .mx-kill.on,
+.mixer .mx-dyn-btn.on,
+.mixer .mx-talk.on,
+.mixer .seg button.on,
+.mixer .ctr-tabs button.on,
+.app .mixer .mx-drop.on,
+.app .topbar .tb-mode button.on,
+.app .topbar .tb-gear.on,
+.app .tb-notes-btn.on,
+.app .tb-pop button.on,
+.app .set-widget button.on,
+.app .tab.active,
+.app .nt-tabs button.on {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 10px rgba(242, 194, 48, 0.35);
+}
+
+/* ═════════ Rounded keys (replaces the square-corner rule for controls) ═════════
+   Every button, tab, menu and text field has 6 px corners (small keys 4 px); the panels and sections
+   stay square, so the hardware reads as one body with modern keys on it. */
+.app button,
+.app select,
+.app input[type='text'],
+.app input[type='search'],
+.app input[type='number'],
+.app textarea,
+.app .tb-pop,
+.app .set-widget,
+.app .cp-sound,
+.app .deck.dv2 .pad,
+.app .ch-tag {
+  border-radius: 6px;
+}
+.app .mixer .mx-kill,
+.app .mixer .pfl,
+.app .mx-sec-more,
+.app .deck.dv2 .dk-keytap > *,
+.app .bc-row i,
+.app .xf-side {
+  border-radius: 4px;
+}
+/* Segmented groups read as one piece: only the outer corners round. */
+.app .cp-seg button,
+.app .seg button,
+.app .tb-mode button {
+  border-radius: 0;
+}
+.app .cp-seg button:first-child,
+.app .seg button:first-child,
+.app .tb-mode button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+.app .cp-seg button:last-child,
+.app .seg button:last-child,
+.app .tb-mode button:last-child {
+  border-radius: 0 6px 6px 0;
+}
+/* Knobs, platter, LEDs and fader caps keep their own shapes. */
+.app .knob-dial,
+.app .knob-cap {
+  border-radius: 50%;
+}
+
+/* COMP / LIM light: strength from --gr (how hard it presses). On the lit key it is a dark ring that is
+   always visible, filled as it presses; on a dark key a green dot. */
+.app .mx-gr {
+  opacity: var(--gr, 1);
+}
+.app .mixer .mx-dyn-btn.on .mx-gr {
+  opacity: 1;
+  width: 7px;
+  height: 7px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--on-ink);
+  background: color-mix(in srgb, var(--on-ink) calc(var(--gr, 1) * 100%), transparent);
+  box-shadow: none;
+}
+
+/* SOUND SYSTEM keys: DROP above COMP · LIM, all the same height, padding and edges; COMP and LIM split
+   the column evenly. */
+.app .mixer.centre-mixer .mx-ss .mx-drop,
+.app .mixer.centre-mixer .mx-ss .mx-dyn {
+  justify-self: stretch;
+  width: 100%;
+}
+.app .mixer.centre-mixer .mx-ss .mx-drop,
+.app .mixer.centre-mixer .mx-ss .mx-dyn-btn {
+  height: 22px;
+  padding: 0 6px;
+  box-sizing: border-box;
+}
+.app .mixer.centre-mixer .mx-ss .mx-dyn {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+.app .mixer.centre-mixer .mx-ss .mx-dyn-btn {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  gap: 5px;
+}
+.app .mixer.centre-mixer .mx-ss .mx-sec-body {
+  row-gap: 4px;
+}
+.app .mixer.centre-mixer .mx-ss .mx-sec-body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.6fr);
+}
+.app .mixer.centre-mixer .mx-ss .mx-dyn-btn {
+  padding: 0 4px;
+  gap: 4px;
+  letter-spacing: 0.04em;
+}
+.app .mixer.centre-mixer .mx-ss .mx-sec-body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.9fr);
+}
+
+/* Transitions: just the row of keys (the status line is gone); the bar above it keeps its hairline. */
+.app .mixer .mx-tr {
+  gap: 0;
+}
+.app .mixer .mx-tr-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Crossfader row keys (curve, direction, length, BAR/BEAT) at the height of the transition keys (28 px),
+   same raised face, no outline. */
+.app .mixer .mx-bottom .xf-curve,
+.app .mixer .mx-tr-route,
+.app .mixer .mx-tr-quant,
+.app .mixer .mx-tr-beats {
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font-size: 10px;
+  font-weight: 800;
+}
+.app .mixer .mx-tr-beats {
+  padding: 0 6px;
+  cursor: pointer;
+}
+.app .mixer .mx-tr-quant.on {
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 10px rgba(242, 194, 48, 0.35);
+  color: var(--on-ink);
+}
+.app .mixer .mx-xrow-side {
+  gap: 4px;
+}
+
+/* ═════════ DUB page, tidied like the MIXER page ═════════ */
+
+/* Master column on DUB / FX: VOL and MIX side by side under the PHONES caption (not stacked). */
+.app .mixer.centre-dub .mx-out .phones-knobs,
+.app .mixer.centre-fx .mx-out .phones-knobs,
+.app .mixer.centre-echo .mx-out .phones-knobs,
+.app .mixer.centre-tape .mx-out .phones-knobs,
+.app .mixer.centre-aux .mx-out .phones-knobs,
+.app .mixer.centre-mic .mx-out .phones-knobs {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: flex-start;
+  row-gap: 2px;
+}
+.app .mixer.centre-dub .mx-out,
+.app .mixer.centre-fx .mx-out,
+.app .mixer.centre-echo .mx-out,
+.app .mixer.centre-tape .mx-out,
+.app .mixer.centre-aux .mx-out,
+.app .mixer.centre-mic .mx-out {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+/* The page: 10 px side margins, one even 10 px gap between its blocks. */
+.app .mixer.centre-dub .cp-dub {
+  gap: 10px;
+  padding: 8px 10px 10px;
+}
+/* Dub Box header keys at the standard height. */
+.app .mixer .cp-dub > .cp-row:first-child {
+  gap: 4px;
+}
+.app .mixer .cp-dub > .cp-row:first-child button,
+.app .mixer .cp-dub > .cp-row:first-child select {
+  height: 28px;
+  font-size: 10px;
+}
+.app .mixer .cp-dub > .cp-row:first-child .cp-sq {
+  width: 28px;
+}
+/* DROP · FIRE · FX: still the biggest keys, but not oversized. */
+.app .mixer .cp-dub .cp-big button {
+  height: 38px;
+  min-height: 0;
+  font-size: 15px;
+  letter-spacing: 0.16em;
+}
+.app .mixer .cp-dub .cp-big .cp-fire {
+  font-size: 17px;
+}
+/* Knob labels and small keys one point smaller, as on MIXER. */
+.app .mixer .cp .knob span {
+  font-size: 9px;
+}
+.app .mixer .cp-dub .cp-knobs {
+  padding: 8px 6px 6px;
+}
+/* Pads: room above and below the two lines of text. */
+.app .mixer .cp-sound {
+  height: auto;
+  min-height: 42px;
+  padding: 7px 4px;
+  gap: 2px;
+}
+/* Source toggle and FIRE BUTTON row at the standard key height. */
+.app .mixer .cp-dub .cp-seg button,
+.app .mixer .cp-dub > .cp-row:last-child button {
+  height: 28px;
+}
+/* Balanced against the page height (it scrolls less): tighter gaps, slimmer big keys and pads. */
+.app .mixer.centre-dub .cp-dub {
+  gap: 8px;
+  padding-top: 6px;
+}
+.app .mixer .cp-dub .cp-big button {
+  height: 34px;
+}
+.app .mixer .cp-sound {
+  min-height: 38px;
+  padding: 5px 4px;
+}
+.app .mixer .cp-dub > .cp-row:first-child > * {
+  flex: none;
+}
+.app .mixer .cp-dub > .cp-row:first-child .cp-menu {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.app .mixer .cp-dub > .cp-row:first-child .cp-menu select {
+  width: 100%;
+}
+.app .mixer .cp-dub > .cp-row:first-child button:not(.cp-sq) {
+  padding: 0 7px;
+}
+/* The page is already called DUB: the "DUB BOX" caption gives its room to the sound's name. */
+.app .mixer .cp-dub > .cp-row:first-child > .cp-lab {
+  display: none;
+}
+
+/* ═════════ DUB page fits without scrolling ═════════
+   Five bands: header · DROP/FIRE/FX · knobs · pads · (pad source | FIRE BUTTON). The pad-source toggle
+   and the FIRE BUTTON row share the last band; everything a little slimmer. */
+.app .mixer.centre-dub .ctr-page {
+  overflow-y: hidden;
+}
+.app .mixer.centre-dub .cp-dub {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'head head'
+    'big big'
+    'knobs knobs'
+    'pads pads'
+    'src fire';
+  gap: 6px 8px;
+  height: 100%;
+  min-height: 0;
+  padding: 6px 10px 8px;
+}
+.app .mixer.centre-dub .cp-dub > .cp-row:first-child { grid-area: head; }
+.app .mixer.centre-dub .cp-dub > .cp-big { grid-area: big; }
+.app .mixer.centre-dub .cp-dub > .cp-knobs { grid-area: knobs; }
+.app .mixer.centre-dub .cp-dub > .cp-sounds,
+.app .mixer.centre-dub .cp-dub > .cp-sampler { grid-area: pads; }
+.app .mixer.centre-dub .cp-dub > .cp-seg { grid-area: src; }
+.app .mixer.centre-dub .cp-dub > .cp-row:last-child { grid-area: fire; justify-content: flex-end; }
+
+.app .mixer.centre-dub .cp-dub > .cp-row:first-child button,
+.app .mixer.centre-dub .cp-dub > .cp-row:first-child select,
+.app .mixer.centre-dub .cp-dub .cp-seg button,
+.app .mixer.centre-dub .cp-dub > .cp-row:last-child button {
+  height: 24px;
+}
+.app .mixer.centre-dub .cp-dub > .cp-row:first-child .cp-sq {
+  width: 24px;
+}
+.app .mixer.centre-dub .cp-dub .cp-big button {
+  height: 30px;
+}
+.app .mixer.centre-dub .cp-dub .cp-knobs {
+  padding: 5px 6px 3px;
+}
+.app .mixer.centre-dub .cp-dub .cp-knobs .knob {
+  gap: 3px;
+}
+.app .mixer.centre-dub .cp-dub .cp-knobs .knob-dial {
+  width: 24px;
+  height: 24px;
+}
+/* Pads share whatever height is left, never less than a readable 30 px a row. */
+.app .mixer.centre-dub .cp-dub > .cp-sounds {
+  gap: 4px;
+  grid-auto-rows: minmax(30px, 1fr);
+  align-content: stretch;
+  min-height: 0;
+}
+.app .mixer.centre-dub .cp-sound {
+  min-height: 30px;
+  padding: 3px 4px;
+}
+.app .mixer.centre-dub .cp-dub > .cp-big {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  align-items: stretch;
+}
+/* Last band: pad source on the left, FIRE HOLD / LATCH and ALL SETTINGS on the right, no caption. */
+.app .mixer.centre-dub .cp-dub > .cp-row:last-child > .cp-lab {
+  display: none;
+}
+.app .mixer.centre-dub .cp-dub > .cp-row:last-child {
+  gap: 6px;
+}
+.app .mixer.centre-dub .cp-dub .cp-seg button {
+  white-space: nowrap;
+  padding: 0 10px;
+}
+
+/* DUB: the sound selector fills the whole space between ‹ and › (name left, arrow right). */
+.app .mixer .cp-dub .cp-menu {
+  display: flex;
+}
+.app .mixer .cp-dub .cp-menu .dbx-menu,
+.app .mixer .cp-dub .cp-menu .dbx-pick {
+  width: 100%;
+  max-width: none;
+  flex: 1 1 auto;
+}
+.app .mixer .cp-dub .cp-menu .dbx-pick {
+  height: 24px;
+  justify-content: space-between;
+  padding: 0 8px;
+}
+/* DROP, FIRE and FX share one type size. */
+.app .mixer.centre-dub .cp-dub .cp-big button,
+.app .mixer.centre-dub .cp-dub .cp-big .cp-fire {
+  font-size: 15px;
+}
+/* One size for all three, over the older per-key sizes. */
+.app .mixer .cp-dub .cp-big > button {
+  font-size: 15px !important;
+}
+
+/* DUB page knobs: no tray behind them, same surface as the rest of the page. */
+.app .mixer .cp-dub .cp-knobs,
+.app .mixer.centre-dub .cp-dub .cp-knobs {
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+}
+
+/* Master column (all pages): PHONES caption with air above and below; the knob scales never touch it. */
+.app .mixer .mx-out .phones-knobs {
+  margin-top: 8px;
+  row-gap: 6px;
+  padding-bottom: 2px;
+}
+.app .mixer .mx-out .phones-cap {
+  line-height: 11px;
+}
+.app .mixer .mx-out .phones-knobs .knob {
+  padding-top: 3px;
+  gap: 4px;
+}
+.app .mixer .mx-out .phones-knobs .knob > span {
+  line-height: 11px;
+}
+.app .mixer .mx-out .phones-knobs .knob {
+  padding-top: 7px;
+}
+
+/* Six centre pages: MIXER · DUB · FX · DECK DUB · TAPE · MIC (the AUX effects live on FX). */
+.app .mixer .ctr-tabs {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+/* FX · DECK DUB · TAPE pages: 10 px side margins and the same even gaps as MIXER / DUB; standard 28 px keys. */
+.app .mixer .cp-fx {
+  gap: 10px;
+  padding: 8px 10px 10px;
+  overflow: hidden;
+}
+.app .mixer .cp-fx .cp-b,
+.app .mixer .cp-fx .cp-fxpick button,
+.app .mixer .cp-fx .cp-seg button,
+.app .mixer .cp-fx .ru-throw,
+.app .mixer .cp-fx .ru-tap,
+.app .mixer .cp-fx select {
+  min-height: 24px;
+}
+.app .mixer .cp-fx {
+  box-sizing: border-box;
+  min-height: 0;
+  height: 100%;
+}
+.app .mixer.centre-fx .ctr-page,
+.app .mixer.centre-echo .ctr-page,
+.app .mixer.centre-tape .ctr-page,
+.app .mixer.centre-aux .ctr-page,
+.app .mixer.centre-mic .ctr-page {
+  overflow-y: hidden;
+}
+
+/* AUX page: two bands, each the effect on top and one row of knobs (settings · RETURN | A stems | B stems). */
+.app .mixer .cp-aux-page {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  gap: 10px;
+  padding: 8px 10px 10px;
+  overflow: hidden;
+}
+.app .mixer .cp-auxband {
+  gap: 6px;
+  padding: 0;
+}
+.app .mixer .cp-auxband + .cp-auxband {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer .cp-auxband .cp-row {
+  gap: 6px;
+}
+.app .mixer .cp-auxband .cp-tag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #d9d2c3;
+}
+.app .mixer .cp-auxband .cp-seg button,
+.app .mixer .cp-auxband .cp-b {
+  height: 24px;
+  font-size: 9px;
+}
+.app .mixer .cp-auxknobs {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+.app .mixer .cp-auxgroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+.app .mixer .cp-auxgroup.sends {
+  position: relative;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer .cp-auxgroup em {
+  position: absolute;
+  left: 3px;
+  top: 2px;
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--a);
+}
+.app .mixer .cp-auxgroup.b em {
+  color: var(--b);
+}
+.app .mixer .cp-auxknobs .knob {
+  width: 30px;
+  padding-top: 3px;
+}
+.app .mixer .cp-auxknobs .knob-dial {
+  width: 20px;
+  height: 20px;
+}
+.app .mixer .cp-auxknobs .knob span {
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+.app .mixer .cp-auxknobs .knob {
+  width: 27px;
+}
+.app .mixer .cp-auxknobs .knob span {
+  letter-spacing: 0;
+}
+.app .mixer .cp-auxgroup.sends {
+  padding-left: 10px;
+}
+.app .mixer .cp-auxband .cp-tag {
+  width: auto;
+  padding: 0 4px 0 0;
+  background: none;
+  white-space: nowrap;
+}
+/* Narrow mixer (laptop windows): the knob row shrinks evenly instead of running past the edge. */
+.app .mixer .cp-aux-page {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.app .mixer .cp-auxknobs .knob {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 24px;
+  max-width: 30px;
+}
+.app .mixer .cp-auxgroup {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: space-between;
+}
+.app .mixer .cp-auxgroup:first-child {
+  flex: 0.6 1 auto;
+}
+.app .mixer .cp-auxgroup:first-child .knob {
+  min-width: 31px;
+  max-width: 34px;
+}
+
+/* FX page, merged: deck A | deck B effect in two compact bands, then AUX 1 and AUX 2 below.
+   Each deck band: [A] ECHO REVERB FLANGER WAH on top; AMOUNT · ON · THROW under it. */
+.app .mixer .cp-part-fx .cp-deckfx {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'tag pick pick pick'
+    'knob on . throw';
+  align-items: center;
+  gap: 6px 6px;
+  padding: 0;
+}
+.app .mixer .cp-part-fx .cp-deckfx > .cp-row {
+  display: contents;
+}
+.app .mixer .cp-part-fx .cp-deckfx .cp-lab,
+.app .mixer .cp-part-fx .cp-deckfx > .cp-row > span[style] {
+  display: none;
+}
+.app .mixer .cp-part-fx .cp-deckfx .cp-tag { grid-area: tag; }
+.app .mixer .cp-part-fx .cp-deckfx .cp-fxpick {
+  grid-area: pick;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+}
+.app .mixer .cp-part-fx .cp-deckfx .cp-fxpick button {
+  height: 24px;
+  min-height: 0;
+  padding: 0 2px;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+.app .mixer .cp-part-fx .cp-deckfx .knob { grid-area: knob; }
+.app .mixer .cp-part-fx .cp-deckfx > .cp-row:first-child > .cp-b { grid-area: on; height: 24px; }
+.app .mixer .cp-part-fx .cp-deckfx .cp-throw { grid-area: throw; height: 24px; }
+.app .mixer .cp-part-fx .cp-deckfx .knob-dial {
+  width: 22px;
+  height: 22px;
+}
+.app .mixer .cp-part-fx .cp-deckfx .knob {
+  flex-direction: row;
+  gap: 5px;
+  padding: 0;
+}
+.app .mixer .cp-part-fx {
+  gap: 8px;
+}
+.app .mixer .cp-part-fx .cp-two {
+  gap: 14px;
+}
+.app .mixer .cp-part-fx .cp-auxband:first-of-type,
+.app .mixer .cp-part-fx .cp-two + .cp-auxband {
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer .cp-part-fx .cp-deckfx {
+  grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'pick pick pick pick pick'
+    'tag knob on . throw';
+}
+.app .mixer .cp-part-fx .cp-deckfx .cp-fxpick button {
+  letter-spacing: 0;
+}
+.app .mixer .cp-part-fx .cp-deckfx .knob {
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 3px;
+}
+.app .mixer .cp-part-fx .cp-deckfx .cp-throw {
+  padding: 0 10px;
+}
+.app .mixer .cp-part-fx .cp-deckfx > .cp-row:first-child > .cp-b {
+  padding: 0 8px;
+}
+.app .mixer .cp-part-fx .cp-deckfx {
+  column-gap: 4px;
+}
+.app .mixer .cp-part-fx .cp-deckfx .cp-fxpick button {
+  padding: 0;
+  min-width: 0;
+}
+.app .mixer .cp-part-fx .cp-deckfx .cp-throw {
+  padding: 0 7px;
+}
+.app .mixer .cp-part-fx .cp-deckfx > .cp-row:first-child > .cp-b {
+  padding: 0 6px;
+}
+
+/* ═════════ FX page: deck A | MASTER | deck B ═════════
+   Each side is one deck's own things only: its effect and THROW, then its stems' sends into AUX 1 and
+   AUX 2 (the AUX effect's name on each band, ⋯ opens the Plugin tab where it is set). The master sits
+   between them, like on MIXER. */
+.app .mixer.centre-fx {
+  grid-template-columns: minmax(0, 1fr) 104px minmax(0, 1fr);
+  grid-template-areas:
+    't t t'
+    'a m b'
+    'x x x';
+}
+.app .mixer.centre-fx .fx-a { grid-area: a; }
+.app .mixer.centre-fx .fx-b { grid-area: b; }
+.app .mixer.centre-fx .mx-master { grid-area: m; }
+.app .mixer.centre-fx .mx-master-side,
+.app .mixer.centre-fx .mx-tr { display: none; }
+.app .mixer.centre-fx .mx-out { width: 104px; }
+.app .ctr-page.fx-a,
+.app .ctr-page.fx-b {
+  overflow-y: hidden;
+  min-width: 0;
+}
+.app .cp-fxside {
+  gap: 8px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  height: 100%;
+}
+.app .cp-sendrow {
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .cp-sendrow .cp-row {
+  gap: 6px;
+}
+.app .cp-sendrow .cp-lab {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+.app .cp-sendknobs {
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+.app .cp-sendknobs .knob {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.app .cp-sendknobs .knob-dial {
+  width: 22px;
+  height: 22px;
+}
+.app .cp-sendknobs .knob span {
+  font-size: 9px;
+  letter-spacing: 0;
+}
+.app .cp-fxside.a .cp-tag {
+  color: var(--a);
+}
+.app .cp-fxside.b .cp-tag {
+  color: var(--b);
+}
+.app .cp-fxside {
+  gap: 6px;
+  padding: 6px 8px;
+}
+.app .cp-sendrow {
+  padding-top: 4px;
+}
+.app .cp-fxside .cp-fxpick button {
+  height: 22px;
+}
+.app .cp-fxside .cp-throw,
+.app .cp-fxside > .cp-row > .cp-b {
+  height: 22px;
+}
+.app .cp-sendknobs .knob-dial {
+  width: 20px;
+  height: 20px;
+}
+.app .cp-sendrow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 6px;
+}
+.app .cp-sendrow > .cp-row {
+  display: contents;
+}
+.app .cp-sendrow > .cp-row > .cp-lab {
+  white-space: nowrap;
+}
+.app .cp-sendrow > .cp-row > span[style] {
+  display: none;
+}
+.app .cp-sendrow > .cp-row > .mx-sec-more {
+  justify-self: end;
+}
+.app .cp-sendrow > .cp-sendknobs {
+  grid-column: 1 / -1;
+}
+.app .cp-fxside {
+  gap: 4px;
+  padding: 4px 8px;
+}
+.app .cp-fxside .cp-deckfx {
+  row-gap: 4px;
+}
+.app .cp-sendrow {
+  padding-top: 3px;
+}
+.app .cp-sendknobs .knob {
+  padding-top: 0;
+}
+
+.app .cp-auxstrip {
+  gap: 6px;
+  padding: 4px 6px;
+  height: 100%;
+  box-sizing: border-box;
+}
+.app .cp-auxcol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 0 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .cp-auxcol:last-child {
+  border-bottom: 0;
+}
+.app .cp-auxcol .cp-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #d9d2c3;
+}
+.app .cp-auxcol .cp-seg button {
+  height: 20px;
+  padding: 0 2px;
+  font-size: 8px;
+}
+.app .cp-auxknobs2 {
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+.app .cp-auxknobs2 .knob {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.app .cp-auxknobs2 .knob-dial {
+  width: 22px;
+  height: 22px;
+}
+.app .cp-auxknobs2 .knob span {
+  font-size: 8px;
+  letter-spacing: 0;
+}
+.app .cp-auxcol .cp-b {
+  height: 20px;
+  font-size: 8px;
+}
+
+/* AUX strip: four-letter-ish effect chips in their own row, knobs under them. */
+.app .cp-auxcol .cp-seg {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+}
+.app .cp-auxcol .cp-seg button {
+  padding: 0;
+  min-width: 0;
+  letter-spacing: 0;
+}
+
+/* FX sides: AMOUNT sits clearly below the effect chips (it was touching them), and the gap that the
+   removed centre strip left is closed, so the AUX bands follow the deck without a hole. */
+.app .cp-fxside .cp-deckfx {
+  row-gap: 8px;
+  padding-top: 2px;
+}
+.app .cp-fxside .cp-deckfx .knob {
+  margin-top: 2px;
+}
+.app .cp-fxside .cp-sendrow {
+  margin-top: 0;
+  padding-top: 4px;
+}
+.app .cp-fxside {
+  gap: 6px;
+}
+.app .cp-fxside .cp-deckfx {
+  row-gap: 6px;
+  align-content: start;
+}
+.app .cp-fxside .cp-sendrow {
+  align-self: start;
+}
+.app .cp-fxside {
+  justify-content: flex-start;
+}
+
+/* The AMOUNT row is only as tall as its knob (it was stretched to the chips' 2-line height, which is
+   what left the hole). The effect chips keep their 2 rows. */
+.app .cp-fxside .cp-deckfx {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.app .cp-fxside .cp-deckfx > .cp-row:last-of-type {
+  align-items: center;
+  min-height: 0;
+  height: auto;
+}
+.app .cp-fxside .cp-deckfx .knob {
+  flex: none;
+}
+.app .cp-fxside .cp-fxpick {
+  flex: none;
+}
+.app .cp-fxside .cp-deckfx > .cp-row:last-of-type .knob-dial {
+  width: 24px;
+  height: 24px;
+}
+.app .cp-fxside .cp-deckfx > .cp-row:last-of-type .knob span {
+  font-size: 9px;
+  line-height: 10px;
+}
+.app .cp-fxside .cp-deckfx > .cp-row:last-of-type {
+  height: 40px;
+}
+.app .cp-fxside .cp-sendrow {
+  margin-top: -2px;
+}
+
+/* FX page: the master is centred between the two decks; no empty column. */
+.app .mixer.centre-fx .mx-master { grid-area: m; }
+
+/* AUX send knobs: five equal columns across the band, same gap between each, labels centred under them. */
+.app .cp-sendknobs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  justify-items: center;
+  gap: 0 4px;
+  width: 100%;
+}
+.app .cp-sendknobs .knob {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+}
+.app .cp-sendknobs .knob span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  max-width: 100%;
+  font-size: 8px;
+  letter-spacing: 0;
+}
+
+/* AUX bands on the FX sides take the full width of their deck column. */
+.app .cp-fxside .cp-sendrow {
+  width: 100%;
+  box-sizing: border-box;
+  justify-items: stretch;
+  align-items: stretch;
+}
+.app .cp-fxside .cp-sendrow > .cp-sendknobs {
+  width: 100%;
+}
+
+/* AMOUNT / THROW row sits lower, with clear air under the effect chips. */
+.app .cp-fxside .cp-deckfx > .cp-row:last-of-type {
+  margin-top: 8px;
+}
+.app .cp-fxside .cp-sendrow {
+  padding-top: 2px;
+}
+.app .cp-fxside .cp-sendrow:last-of-type {
+  padding-bottom: 0;
+}
+
+/* ═════════ DECK DUB page, house pattern ═════════
+   Title left with RESET / ALL SETTINGS right; then three groups split by hairlines with the same
+   10 px above and below: presets (one row of five), the six knobs (evenly spread), the three switches
+   (three equal pairs, one row). */
+.app .mixer .cp-part-echo {
+  padding: 8px 10px 10px;
+  gap: 0;
+}
+.app .mixer .cp-part-echo > .cp-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:first-child .cp-lab {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #d9d2c3;
+}
+.app .mixer .cp-part-echo .cp-b,
+.app .mixer .cp-part-echo .cp-presets button,
+.app .mixer .cp-part-echo .cp-seg button {
+  height: 24px;
+  min-height: 0;
+  font-size: 9px;
+}
+.app .mixer .cp-part-echo .cp-presets {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+.app .mixer .cp-part-echo .cp-presets button {
+  padding: 0 2px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.app .mixer .cp-part-echo .cp-knobs {
+  justify-content: space-between;
+  padding: 10px 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  background: none;
+  box-shadow: none;
+}
+.app .mixer .cp-part-echo .cp-knobs .knob-dial {
+  width: 26px;
+  height: 26px;
+}
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+}
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg button {
+  padding: 0 2px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* ═════════ TAPE page, house pattern ═════════
+   THROW across the top, then TIME | TAPE and SPRING | OUTPUT in two even columns; every group a left
+   title over its controls, hairlines between the rows, same 10 px spacing. */
+.app .mixer .cp-part-tape {
+  padding: 8px 10px 10px;
+  gap: 0;
+}
+.app .mixer .cp-part-tape > .cp-tape {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.app .mixer .cp-part-tape > .cp-tape > .cp-lab {
+  display: none;
+}
+.app .mixer .cp-part-tape .echo-desk {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px 16px;
+}
+.app .mixer .cp-part-tape .echo-desk > .mx-sec {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  min-width: 0;
+}
+.app .mixer .cp-part-tape .echo-desk > .echo-throw {
+  grid-column: 1 / -1;
+}
+.app .mixer .cp-part-tape .echo-desk > .mx-sec:not(.echo-throw) {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer .cp-part-tape .mx-sec-head {
+  justify-content: flex-start;
+  margin: 0 0 6px;
+}
+.app .mixer .cp-part-tape .mx-sec-head span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #d9d2c3;
+}
+.app .mixer .cp-part-tape .mx-sec-body {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.app .mixer .cp-part-tape .echo-throws {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+.app .mixer .cp-part-tape .ru-throw,
+.app .mixer .cp-part-tape .ru-tap,
+.app .mixer .cp-part-tape .ru-crash,
+.app .mixer .cp-part-tape .ru-select,
+.app .mixer .cp-part-tape .seg button {
+  height: 24px;
+  min-height: 0;
+  font-size: 9px;
+  padding: 0 8px;
+}
+.app .mixer .cp-part-tape .echo-mode {
+  display: flex;
+  flex-direction: row;
+}
+.app .mixer .cp-part-tape .knob-dial {
+  width: 26px;
+  height: 26px;
+}
+/* Switches: one per row, a short caption on the left and the pair on the right (full words fit). */
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg {
+  grid-template-columns: 96px 1fr 1fr;
+  align-items: center;
+  gap: 0;
+}
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg::before {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #8a8373;
+}
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg:nth-child(1)::before { content: 'DUB BUTTON'; }
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg:nth-child(2)::before { content: 'MUSIC'; }
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg:nth-child(3)::before { content: 'ON RELEASE'; }
+/* The caption is not a key: the pair's outer corners are the 2nd and 3rd cells. */
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg button:first-of-type {
+  border-radius: 6px 0 0 6px;
+}
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg button:last-of-type {
+  border-radius: 0 6px 6px 0;
+}
+.app .mixer .cp-part-tape .echo-time .mx-sec-body {
+  gap: 6px;
+}
+.app .mixer .cp-part-tape .echo-time .ru-select {
+  width: 46px;
+  padding: 0 4px;
+}
+.app .mixer .cp-part-tape .echo-time .ru-tap {
+  padding: 0 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* ═════════ MIC page, house pattern ═════════
+   Rows: MIC (TALK · LEVEL · DUCK) · PRESETS · MIC ECHO · COLOUR | SPRING | OUTPUT. Left titles, hairlines
+   between rows, same 10 px spacing, 24 px keys; fits without scrolling. */
+.app .mixer .cp-mic {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 8px 10px 10px;
+  overflow: hidden;
+}
+.app .mixer .cp-mic .voice-desk {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    'air air air'
+    'pre pre pre'
+    'echo echo echo'
+    'col spr out';
+  gap: 8px 14px;
+}
+.app .mixer .cp-mic .voice-air { grid-area: air; }
+.app .mixer .cp-mic .voice-presets { grid-area: pre; }
+.app .mixer .cp-mic .voice-echo { grid-area: echo; }
+.app .mixer .cp-mic .voice-colour { grid-area: col; }
+.app .mixer .cp-mic .voice-spring { grid-area: spr; }
+.app .mixer .cp-mic .voice-out { grid-area: out; }
+.app .mixer .cp-mic .voice-desk > .mx-sec {
+  width: auto;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.app .mixer .cp-mic .voice-desk > .mx-sec:not(.voice-air) {
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer .cp-mic .mx-sec-head {
+  justify-content: flex-start;
+  margin: 0 0 4px;
+}
+.app .mixer .cp-mic .mx-sec-head span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #d9d2c3;
+}
+.app .mixer .cp-mic .mx-sec-body {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.app .mixer .cp-mic .voice-air .mx-sec-body {
+  justify-content: flex-start;
+  gap: 18px;
+}
+.app .mixer .cp-mic .voice-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+}
+.app .mixer .cp-mic button,
+.app .mixer .cp-mic select {
+  height: 24px;
+  min-height: 0;
+  font-size: 9px;
+}
+.app .mixer .cp-mic .mx-talk {
+  height: 28px;
+  padding: 0 16px;
+  font-size: 10px;
+}
+.app .mixer .cp-mic .knob-dial {
+  width: 24px;
+  height: 24px;
+}
+.app .mixer .cp-mic .knob span {
+  font-size: 9px;
+}
+
+/* Sampler without its side menu (Drops moved to the Voice tab): the pads take the whole width. */
+.app .sp:has(> .side-nav[hidden]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ═════════ Voice › Drops, house pattern ═════════
+   Three columns split by hairlines, each with a left title (VOICE · STYLE · DROP); raised 24 px keys,
+   6 px corners, 9 px bold labels; the active choice lit yellow; fields 24 px; MAKE DROP the one solid
+   yellow action. */
+.app .dr {
+  gap: 0;
+  padding: 0;
+}
+.app .dr > .dr-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 26px 14px 12px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  min-width: 0;
+}
+.app .dr > .dr-col + .dr-col {
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .dr > .dr-col::before {
+  position: absolute;
+  top: 8px;
+  left: 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #d9d2c3;
+}
+.app .dr > .dr-col:nth-child(1)::before { content: 'VOICE'; }
+.app .dr > .dr-col:nth-child(2)::before { content: 'STYLE'; }
+.app .dr > .dr-col:nth-child(3)::before { content: 'DROP'; }
+
+/* Keys. */
+.app .dr button,
+.app .dr .btn,
+.app .dr .row-btn {
+  height: 24px;
+  min-height: 0;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.app .dr button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (hover: hover) {
+  .app .dr button:not(:disabled):not(.now):not(.on):hover {
+    background: linear-gradient(180deg, #34302a 0%, #26231e 100%);
+  }
+}
+.app .dr button.now,
+.app .dr button.on {
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 10px rgba(242, 194, 48, 0.3);
+  color: var(--on-ink);
+}
+
+/* Source tabs (Write · My voice · From a track) and styles: segmented / even grids. */
+.app .dr .dr-source {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border: 0;
+  background: none;
+}
+.app .dr .dr-source button {
+  border-radius: 0;
+  padding: 0 4px;
+}
+.app .dr .dr-source button:first-child { border-radius: 6px 0 0 6px; }
+.app .dr .dr-source button:last-child { border-radius: 0 6px 6px 0; }
+.app .dr .dr-styles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  border: 0;
+  background: none;
+}
+.app .dr .dr-styles button {
+  padding: 0 4px;
+}
+.app .dr .dr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.app .dr .dr-chips button {
+  height: 22px;
+  padding: 0 8px;
+  text-transform: none;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Fields. */
+.app .dr input[type='text'],
+.app .dr input:not([type]),
+.app .dr .dr-text,
+.app .dr .dr-mine-edit,
+.app .dr select {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid #3a352d;
+  border-radius: 6px;
+  background: #12100c;
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+}
+.app .dr .dr-text {
+  height: 28px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.app .dr .dr-voice,
+.app .dr .dr-row,
+.app .dr .dr-place,
+.app .dr .dr-save {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.app .dr .dr-voice select,
+.app .dr .dr-row select,
+.app .dr .dr-place select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.app .dr label,
+.app .dr .dr-listen,
+.app .dr .dr-note {
+  font-size: 10px;
+  color: #8a8373;
+}
+
+/* Knobs. */
+.app .dr .dr-knobs {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 4px 0;
+}
+.app .dr .dr-knobs .knob-dial {
+  width: 26px;
+  height: 26px;
+}
+.app .dr .dr-knobs .knob span {
+  font-size: 9px;
+}
+
+/* The one main action. */
+.app .dr .dr-make {
+  width: 100%;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 12px rgba(242, 194, 48, 0.3);
+  color: var(--on-ink);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+.app .dr .dr-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: #12100c;
+}
+.app .dr .dr-preview .dr-play {
+  width: 24px;
+  padding: 0;
+}
+
+/* My drops: a titled list. */
+.app .dr .dr-mine h5 {
+  margin: 4px 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d9d2c3;
+}
+
+/* ═════════ Drops, reworked: three numbered steps, then My drops across the bottom ═════════ */
+.app .dr.dr2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: start;
+}
+.app .dr.dr2 > .dr-col {
+  padding: 10px 14px 12px;
+}
+.app .dr.dr2 > .dr-col::before {
+  content: none;
+}
+.app .dr-step-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ece6d8;
+}
+.app .dr-step-title b {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--on-c);
+  color: var(--on-ink);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+/* The main action of step 1, right under the text. */
+.app .dr.dr2 .dr-make {
+  height: 34px;
+  margin-top: 2px;
+  font-size: 11px;
+}
+.app .dr.dr2 .dr-rec.on {
+  background: linear-gradient(180deg, #ff6f5e, #e5484d);
+  color: #fff;
+}
+.app .dr.dr2 .dr-mic {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* Fine tune, folded. */
+.app .dr .dr-fine {
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  padding-top: 8px;
+}
+.app .dr .dr-fine summary {
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #b9b2a3;
+  list-style: none;
+}
+.app .dr .dr-fine summary::before {
+  content: '▸ ';
+}
+.app .dr .dr-fine[open] summary::before {
+  content: '▾ ';
+}
+.app .dr .dr-fine[open] .dr-knobs {
+  margin: 8px 0 6px;
+}
+/* Step 3. */
+.app .dr.dr2 .dr-put {
+  flex: none;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #3a352d 0%, #2b2823 100%);
+}
+.app .dr.dr2 .dr-save input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.app .dr.dr2 .dr-preview {
+  min-height: 40px;
+}
+.app .dr.dr2 .dr-preview .dr-play {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+/* My drops across the whole width, as a compact grid of rows. */
+.app .dr.dr2 > .dr-strip {
+  grid-column: 1 / -1;
+  padding: 10px 14px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .dr.dr2 > .dr-strip ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.app .dr.dr2 > .dr-strip li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.app .dr.dr2 > .dr-strip .dr-mine-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.app .dr.dr2 > .dr-strip .dr-mine-play,
+.app .dr.dr2 > .dr-strip .row-btn {
+  width: 24px;
+  padding: 0;
+}
+.app .dr.dr2 > .dr-strip .dr-mine-pad {
+  width: 110px;
+  flex: none;
+}
+
+/* From a track: what to cut from — Full · Vocals · Drums · Bass · Music — one segmented row. */
+.app .dr .dr-clip-parts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  margin: 2px 0;
+}
+.app .dr .dr-clip-parts button {
+  border-radius: 0;
+  padding: 0 2px;
+  min-width: 0;
+}
+.app .dr .dr-clip-parts button:first-child { border-radius: 6px 0 0 6px; }
+.app .dr .dr-clip-parts button:last-child { border-radius: 0 6px 6px 0; }
+.app .dr .dr-clip-parts button {
+  width: 100%;
+}
+
+/* ═════════ Sampler, house pattern ═════════
+   PADS (eight raised pads, 4 × 2) on the left, EFFECTS (volume, STOP, the sound bank) on the right,
+   a hairline between them; titles left, 9–11 px type, the playing pad lit yellow. */
+.app .sp > .side-nav[hidden] {
+  display: none !important;
+}
+.app .sampler .sp-pads {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 0;
+  height: 100%;
+}
+.app .sampler .sampler-pads,
+.app .sampler .sp-bank {
+  position: relative;
+  padding: 30px 14px 12px;
+  min-width: 0;
+}
+.app .sampler .sp-bank {
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .sampler .sampler-pads::before {
+  content: 'PADS';
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #d9d2c3;
+}
+.app .sampler .sampler-pads {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.app .sampler .sample {
+  position: relative;
+  min-height: 64px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.app .sampler .sample:not(.loaded) {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.app .sampler .sample.playing {
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 12px rgba(242, 194, 48, 0.35);
+}
+.app .sampler .sample.playing * {
+  color: var(--on-ink) !important;
+}
+.app .sampler .sample-hit {
+  width: 100%;
+  height: 100%;
+  min-height: 64px;
+  border: 0;
+  background: none;
+  color: #e3dccd;
+  font: inherit;
+  cursor: pointer;
+}
+.app .sampler .sample-hit b {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8a8373;
+}
+.app .sampler .sample-hit span {
+  font-size: 12px;
+  font-weight: 700;
+}
+.app .sampler .sample-hit small {
+  font-size: 9px;
+  color: #8a8373;
+}
+.app .sampler .sample-clear {
+  border-radius: 4px;
+}
+/* Effects bank. */
+.app .sampler .sp-bank-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.app .sampler .sp-bank-head > :first-child {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #d9d2c3;
+}
+.app .sampler .sampler-vol {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  font-size: 10px;
+  color: #8a8373;
+}
+.app .sampler .sampler-vol input {
+  flex: 1 1 auto;
+}
+.app .sampler .sp-stop,
+.app .sampler .sfx {
+  height: 24px;
+  min-height: 0;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+.app .sampler .sp-stop {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.app .sampler .sfx-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.app .sampler .sfx.used {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--on-c) 60%, transparent);
+}
+.app .sampler .sfx.on {
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  color: var(--on-ink);
+}
+
+/* From a track: where the track comes from (Deck A · Deck B · Library · File…), library search list,
+   Split stems. */
+.app .dr .dr-clip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.app .dr .dr-clip-from {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+}
+.app .dr .dr-clip-from button {
+  width: 100%;
+  border-radius: 0;
+  padding: 0 4px;
+  min-width: 0;
+}
+.app .dr .dr-clip-from button:first-child { border-radius: 6px 0 0 6px; }
+.app .dr .dr-clip-from button:last-child { border-radius: 0 6px 6px 0; }
+.app .dr .dr-clip-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.app .dr .dr-clip-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+.app .dr .link {
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--on-c);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.app .dr .dr-clip-lib {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.app .dr .dr-clip-lib input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.app .dr .dr-clip-lib ul {
+  max-height: 150px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+.app .dr .dr-clip-lib li button {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 4px;
+  background: none;
+  box-shadow: none;
+  text-transform: none;
+  letter-spacing: 0;
+  text-align: left;
+}
+@media (hover: hover) {
+  .app .dr .dr-clip-lib li button:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+.app .dr .dr-clip-lib li span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ece6d8;
+}
+.app .dr .dr-clip-lib li small {
+  flex: none;
+  font-size: 9px;
+  font-weight: 600;
+  color: #8a8373;
+}
+.app .dr .dr-clip-split button {
+  width: 100%;
+}
+
+/* ═════════ Bottom tabs, shared house keys: Dub Box · Tape echo · Voice › Live mic ═════════ */
+.app .bottom .dbp button,
+.app .bottom .echo-panel button,
+.app .bottom .echo-panel select,
+.app .bottom .dbp select {
+  height: 24px;
+  min-height: 0;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.app .bottom .dbp select,
+.app .bottom .echo-panel select {
+  border-color: #3a352d;
+  background: #12100c;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.app .bottom .dbp button:disabled,
+.app .bottom .echo-panel button:disabled {
+  opacity: 0.4;
+}
+@media (hover: hover) {
+  .app .bottom .dbp button:not(:disabled):not(.on):not(.active):hover,
+  .app .bottom .echo-panel button:not(:disabled):not(.on):hover {
+    background: linear-gradient(180deg, #34302a 0%, #26231e 100%);
+  }
+}
+.app .bottom .dbp button.on,
+.app .bottom .echo-panel button.on,
+.app .bottom .dbp .sub-tabs button.on,
+.app .bottom .dbp .sub-tabs button[aria-selected='true'] {
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 10px rgba(242, 194, 48, 0.3);
+  color: var(--on-ink);
+}
+.app .bottom .dbp .knob-dial,
+.app .bottom .echo-panel .knob-dial {
+  width: 28px;
+  height: 28px;
+}
+.app .bottom .dbp .knob span,
+.app .bottom .echo-panel .knob span {
+  font-size: 9px;
+}
+.app .bottom .dbp .mx-sec-head span,
+.app .bottom .echo-panel .mx-sec-head span,
+.app .bottom .dbp .side-nav h5,
+.app .bottom .dbp-side h5 {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d9d2c3;
+}
+
+/* ── Tape echo: one row of groups, no boxes, hairlines between them, titles left ── */
+.app .bottom .echo-panel > .echo-desk:not(.voice-desk) {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
+  padding: 12px 6px;
+}
+.app .bottom .echo-panel > .echo-desk:not(.voice-desk) > .mx-sec {
+  padding: 0 18px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.app .bottom .echo-panel > .echo-desk:not(.voice-desk) > .mx-sec + .mx-sec {
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .bottom .echo-panel .mx-sec-head {
+  justify-content: flex-start;
+  margin: 0 0 8px;
+}
+.app .bottom .echo-panel .mx-sec-body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.app .bottom .echo-panel .echo-throws {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.app .bottom .echo-panel .echo-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.app .bottom .echo-panel .ru-tap {
+  padding: 0 10px;
+}
+
+/* ── Voice › Live mic (bottom): the same groups-in-a-row ── */
+.app .bottom .echo-panel > .voice-desk {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  padding: 12px 6px;
+}
+.app .bottom .echo-panel > .voice-desk > .mx-sec {
+  padding: 0 18px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.app .bottom .echo-panel > .voice-desk > .mx-sec + .mx-sec {
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .bottom .voice-desk .voice-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+/* ── Dub Box: SOUNDS list | editor | QUICK PADS, hairlines between, no boxes ── */
+.app .bottom .dbp {
+  gap: 0;
+}
+.app .bottom .dbp > * {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.app .bottom .dbp > .dbp-main {
+  padding: 12px 18px;
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .bottom .dbp > .dbp-side {
+  padding: 12px 14px;
+}
+.app .bottom .dbp .dbp-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.app .bottom .dbp .dbx-fire {
+  color: #ff6f5e;
+  padding: 0 16px;
+}
+.app .bottom .dbp .dbx-fire.on {
+  background: linear-gradient(180deg, #ff6f5e, #e5484d);
+  color: #fff;
+}
+.app .bottom .dbp .dbp-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ece6d8;
+}
+.app .bottom .dbp .seg {
+  display: flex;
+  gap: 0;
+  border: 0;
+  background: none;
+}
+.app .bottom .dbp .seg button {
+  border-radius: 0;
+}
+.app .bottom .dbp .seg button:first-child { border-radius: 6px 0 0 6px; }
+.app .bottom .dbp .seg button:last-child { border-radius: 0 6px 6px 0; }
+.app .bottom .dbp .sub-tabs {
+  display: flex;
+  gap: 2px;
+  margin: 0 0 12px;
+  padding: 0 0 10px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  background: none;
+}
+.app .bottom .dbp .rw-grid {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  gap: 18px;
+}
+.app .bottom .dbp .dbx-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+}
+.app .bottom .dbp .dbx-slot-row .num {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8a8373;
+}
+.app .bottom .dbp .dbx-slot-row .name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 700;
+}
+.app .bottom .dbp .row-btn {
+  width: 24px;
+  padding: 0;
+  border-radius: 4px;
+}
+.app .bottom .dbp .dbx-save {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.app .bottom .dbp .dbx-save input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid #3a352d;
+  border-radius: 6px;
+  background: #12100c;
+  color: var(--text);
+  font-size: 11px;
+}
+.app .bottom .echo-panel select {
+  min-width: 58px;
+  padding: 0 6px;
+}
+/* The SOUNDS list stays a list (like the library's lists), not a column of keys. */
+.app .bottom .dbp .side-nav .side-item {
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  box-shadow: none;
+  color: #cfc8b8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
+}
+.app .bottom .dbp .side-nav .side-item.active,
+.app .bottom .dbp .side-nav .side-item[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--on-c) 22%, #14120e);
+  color: #fff;
+}
+@media (hover: hover) {
+  .app .bottom .dbp .side-nav .side-item:not(.active):hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+.app .bottom .dbp .side-nav {
+  padding: 12px 8px;
+}
+
+/* Bottom tabs (Voice, Dub Box, Tape echo): side room around every knob and key. The scale dots sit
+   4 px outside each dial, so knobs get their own 6 px margin plus an 14 px gap between controls. */
+.app .bottom .echo-panel .mx-sec-body,
+.app .bottom .dbp .rw-grid {
+  column-gap: 14px !important;
+}
+.app .bottom .echo-panel .knob,
+.app .bottom .dbp .knob {
+  padding: 0 6px;
+  min-width: 44px;
+  box-sizing: border-box;
+}
+.app .bottom .echo-panel .mx-sec-body > button,
+.app .bottom .echo-panel .mx-sec-body > select,
+.app .bottom .echo-panel .mx-sec-body > .echo-throws,
+.app .bottom .echo-panel .mx-sec-body > .echo-mode {
+  margin-right: 4px;
+}
+
+/* ═════════ Master tab, house pattern ═════════
+   LOUDNESS MATCH | COMPRESSOR | LIMITER as three groups on one surface: no boxes, hairlines between,
+   each header = on/off key with its light + title + a quiet readout; presets as one segmented group,
+   knobs with side room, raised 24 px keys. */
+.app .bottom .mf2 {
+  gap: 0;
+  padding: 12px 6px;
+  align-items: flex-start;
+}
+.app .bottom .mf2 > .mf2-unit {
+  padding: 0 18px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.app .bottom .mf2 > .mf2-unit + .mf2-unit {
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .bottom .mf2 .mf2-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.app .bottom .mf2 .mf2-head .mx-dyn-btn {
+  height: 24px;
+  padding: 0 10px;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.app .bottom .mf2 .mf2-sub,
+.app .bottom .mf2 .mf2-read {
+  font-size: 10px;
+  color: #8a8373;
+}
+.app .bottom .mf2 .mf2-read {
+  color: #cfc8b8;
+  font-variant-numeric: tabular-nums;
+}
+.app .bottom .mf2 .mf2-presets {
+  display: flex;
+  gap: 0;
+  border: 0;
+  background: none;
+}
+.app .bottom .mf2 .mf2-presets button {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.app .bottom .mf2 .mf2-presets button:first-child { border-radius: 6px 0 0 6px; }
+.app .bottom .mf2 .mf2-presets button:last-child { border-radius: 0 6px 6px 0; }
+.app .bottom .mf2 .mf2-presets button.now {
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 10px rgba(242, 194, 48, 0.3);
+  color: var(--on-ink);
+}
+.app .bottom .mf2 .mf2-body {
+  display: flex;
+  align-items: flex-start;
+  column-gap: 14px;
+}
+.app .bottom .mf2 .knob {
+  padding: 0 6px;
+  min-width: 44px;
+  box-sizing: border-box;
+}
+.app .bottom .mf2 .knob-dial {
+  width: 28px;
+  height: 28px;
+}
+.app .bottom .mf2 .knob span {
+  font-size: 9px;
+}
+.app .bottom .mf2 .mf2-gain button {
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font-size: 9px;
+  font-weight: 800;
+}
+.app .bottom .mf2 .mf2-gain button.on {
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  color: var(--on-ink);
+}
+.app .bottom .mf2 .mf-gr-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #12100c;
+}
+
+/* ═════════ Spotify tab, house pattern ═════════ */
+.app .bottom .spot-setup {
+  max-width: 520px;
+  padding: 14px 18px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.app .bottom .spot-setup h5 {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d9d2c3;
+}
+.app .bottom .spot-setup p,
+.app .bottom .spot-setup li {
+  font-size: 11px;
+  color: #8a8373;
+}
+.app .bottom .spot .btn,
+.app .bottom .spot .row-btn {
+  height: 24px;
+  min-height: 0;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  width: auto;
+}
+/* The one thing to do when not connected: a solid yellow key, sized to its words. */
+.app .bottom .spot-setup > .btn:last-child {
+  margin-top: 10px;
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  color: var(--on-ink);
+}
+.app .bottom .spot .row-btn {
+  width: 24px;
+  padding: 0;
+  border-radius: 4px;
+}
+.app .bottom .spot-side {
+  padding: 12px 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .bottom .spot-main {
+  padding: 12px 14px;
+}
+.app .bottom .spot-setup > .btn,
+.app .bottom .spot .btn {
+  align-self: flex-start;
+  justify-self: start;
 }

@@ -1,15 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { sampler } from '../engine/sampler'
 import { SFX } from '../engine/soundsystem'
-import { DropsPanel } from './DropsPanel'
 import { useStore } from '../store'
 import { ui } from '../ui'
 
 type View = 'pads' | 'drops'
-const VIEWS: { id: View; label: string; hint: string }[] = [
-  { id: 'pads', label: 'Pads', hint: 'Eight pads of jingles and effects' },
-  { id: 'drops', label: 'Drops', hint: 'Make drops and jingles with a voice, for the pads' },
-]
+// Drops (jingles made with a voice) moved to the Voice tab, beside the live mic.
+const VIEWS: { id: View; label: string; hint: string }[] = [{ id: 'pads', label: 'Pads', hint: 'Eight pads of jingles and effects' }]
 const LS_VIEW = 'vx_sampler_view'
 
 /** 2.4 → "2.4s", 75 → "1:15" */
@@ -22,7 +19,7 @@ const typing = (el: EventTarget | null) =>
 
 /**
  * Eight pads for jingles and effects: click an empty pad (or drop a file on it) to load, click to play.
- * Drops (jingles made with a voice) are made on the page beside it.
+ * Drops (jingles made with a voice) are made in the Voice tab and land here.
  */
 export function SamplerPanel() {
   const s = useStore(sampler)
@@ -31,7 +28,7 @@ export function SamplerPanel() {
   const [view, setView] = useState<View>(() => {
     try {
       const saved = localStorage.getItem(LS_VIEW) as View | null
-      return VIEWS.some((v) => v.id === saved) ? saved! : 'pads'
+      return VIEWS.some((v) => v.id === saved) ? saved! : 'pads' // an old "drops" view opens the pads
     } catch {
       return 'pads'
     }
@@ -77,7 +74,7 @@ export function SamplerPanel() {
 
   return (
     <div className="sampler sp">
-      <nav className="side-nav" aria-label="Sampler sections">
+      <nav className="side-nav" aria-label="Sampler sections" hidden={VIEWS.length < 2}>
         {VIEWS.map((v) => (
           <button
             key={v.id}
@@ -90,7 +87,6 @@ export function SamplerPanel() {
           </button>
         ))}
       </nav>
-      {view === 'drops' && <DropsPanel />}
       {view === 'pads' && (
         <div className="sp-pads">
           <div className="sampler-pads">
