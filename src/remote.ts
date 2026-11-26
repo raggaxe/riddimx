@@ -79,53 +79,13 @@ class Remote extends Store<RemoteState> {
   }
 
   private message(msg: Record<string, unknown>, client: number): void {
-    const t = msg.t
-    if (t === 'hello') {
-      // The first message also carries what never changes while the page is open: the transitions.
-      const moves = (Object.keys(MOVES) as Move[]).map((m) => ({ id: 'moves.' + m, label: MOVES[m].label }))
-      desktop?.remoteReply?.(client, JSON.stringify({ ...snapshot(), moves, panels: panelLayout() }))
-      return
-    }
-    // The platter on the phone: hand on the record, and how far it turned (degrees, like the screen's platter).
-    const deck = msg.d === 'A' ? decks[0] : msg.d === 'B' ? decks[1] : null
-    if (t === 'touch' && deck) return deck.jogTouch(!!msg.on)
-    if (t === 'turn' && deck && typeof msg.deg === 'number' && Number.isFinite(msg.deg)) {
-      const deg = Math.max(-720, Math.min(720, msg.deg))
-      return deck.get().playing && !msg.held ? deck.jog(deg / 6) : deck.scratch(deg / 6)
-    }
     // The phone's microphone: its call comes in over this socket, the answer goes back the same way.
-    if (t === 'rtc' && typeof msg.sdp === 'string' && msg.sdp.length < 30000) {
+    if (msg.t === 'rtc' && typeof msg.sdp === 'string' && msg.sdp.length < 30000) {
       void phoneOffer(msg.sdp, client).then((sdp) => desktop?.remoteReply?.(client, JSON.stringify(sdp ? { t: 'rtc', sdp } : { t: 'rtc-fail' })))
       return
     }
-    if (t === 'rtc-stop') return phoneHangUp(client)
-    // The library, browsed from the phone: a search gives the tracks back, a tap loads one on a deck.
-    if (t === 'lib') {
-      desktop?.remoteReply?.(client, JSON.stringify({ t: 'lib', items: libraryItems(typeof msg.q === 'string' ? msg.q : '') }))
-      return
-    }
-    if (t === 'load' && deck && typeof msg.id === 'string') {
-      const entry = library.byId(msg.id)
-      if (!entry) return
-      if (deck.get().playing) {
-        desktop?.remoteReply?.(client, JSON.stringify({ t: 'load', ok: false, error: 'Deck ' + deck.name + ' is playing: stop it first.' }))
-        return
-      }
-      library.load(entry, deck)
-      const ok = library.playable(entry)
-      desktop?.remoteReply?.(client, JSON.stringify({ t: 'load', ok, error: ok ? '' : library.get().error ?? 'Not ready yet.' }))
-      if (ok) midi.say('Phone · ' + entry.title + ' → deck ' + deck.name)
-      return
-    }
-    if (t === 'p' && typeof msg.k === 'string') {
-      setPanel(msg.k, msg.v)
-      return
-    }
-    if (t === 'a' && typeof msg.id === 'string') {
-      const action = runAction(msg.id, Number(msg.v))
-      if (action && (action.type === 'button' || (action.type === 'hold' && Number(msg.v) > 0)))
-        midi.say('Phone · ' + action.label)
-    }
+    if (msg.t === 'rtc-stop') return phoneHangUp(client)
+    controlMessage(msg, (text) => desktop?.remoteReply?.(client, text), 'Phone')
   }
 
   /** The decks' state to the phones: about 12 times a second while one is connected, only when it changed. */
@@ -138,6 +98,55 @@ class Remote extends Store<RemoteState> {
       this.lastSent = text
       desktop?.remoteState?.(text)
     }, 80)
+  }
+}
+
+/**
+ * One message from a controller (the phone's page, or a guest co-DJ's app): the same action ids a MIDI
+ * controller uses, the platter, the library. `only` keeps a guest to its own deck: anything for the
+ * other deck, the mixer or the panels is ignored. `reply` answers that controller alone.
+ */
+export function controlMessage(msg: Record<string, unknown>, reply: (text: string) => void, who: string, only?: 'A' | 'B'): void {
+  const t = msg.t
+  if (t === 'hello') {
+    // The first message also carries what never changes while the page is open: the transitions.
+    const moves = (Object.keys(MOVES) as Move[]).map((m) => ({ id: 'moves.' + m, label: MOVES[m].label }))
+    reply(JSON.stringify({ ...snapshot(), moves, panels: panelLayout() }))
+    return
+  }
+  // The platter on the phone: hand on the record, and how far it turned (degrees, like the screen's platter).
+  const deck = only && msg.d !== only ? null : msg.d === 'A' ? decks[0] : msg.d === 'B' ? decks[1] : null
+  if (t === 'touch' && deck) return deck.jogTouch(!!msg.on)
+  if (t === 'turn' && deck && typeof msg.deg === 'number' && Number.isFinite(msg.deg)) {
+    const deg = Math.max(-720, Math.min(720, msg.deg))
+    return deck.get().playing && !msg.held ? deck.jog(deg / 6) : deck.scratch(deg / 6)
+  }
+  // The library, browsed from the phone: a search gives the tracks back, a tap loads one on a deck.
+  if (t === 'lib') {
+    reply(JSON.stringify({ t: 'lib', items: libraryItems(typeof msg.q === 'string' ? msg.q : '') }))
+    return
+  }
+  if (t === 'load' && deck && typeof msg.id === 'string') {
+    const entry = library.byId(msg.id)
+    if (!entry) return
+    if (deck.get().playing) {
+      reply(JSON.stringify({ t: 'load', ok: false, error: 'Deck ' + deck.name + ' is playing: stop it first.' }))
+      return
+    }
+    library.load(entry, deck)
+    const ok = library.playable(entry)
+    reply(JSON.stringify({ t: 'load', ok, error: ok ? '' : library.get().error ?? 'Not ready yet.' }))
+    if (ok) midi.say(who + ' · ' + entry.title + ' → deck ' + deck.name)
+    return
+  }
+  if (t === 'p' && typeof msg.k === 'string' && !only) {
+    setPanel(msg.k, msg.v)
+    return
+  }
+  if (t === 'a' && typeof msg.id === 'string' && (!only || msg.id.startsWith('deck' + only + '.'))) {
+    const action = runAction(msg.id, Number(msg.v))
+    if (action && (action.type === 'button' || (action.type === 'hold' && Number(msg.v) > 0)))
+      midi.say(who + ' · ' + action.label)
   }
 }
 
@@ -179,7 +188,8 @@ function pitchRange(name: string): number {
   }
 }
 
-function snapshot() {
+/** The decks' state, as the phone's page and a guest's app draw it. */
+export function snapshot() {
   const modes = padModes.get()
   const deck = (i: 0 | 1) => {
     const d = decks[i]

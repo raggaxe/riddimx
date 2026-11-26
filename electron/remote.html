@@ -250,8 +250,11 @@ const updaters = []
 
 // ───────── connection ─────────
 let retry = 500
+// From anywhere (served by the RiddimX server): phone-bridge.js gives a socket that goes through it.
+const RELAY = typeof window.RxSocket === 'function'
+if (RELAY) window.RxOffline = (why) => { off.querySelector('div').innerHTML = '<b>Connecting to RiddimX…</b>'; off.querySelector('div').append(why || 'The app must be open on the Mac, with Phone turned on in Settings.') }
 function connect() {
-  ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?k=' + encodeURIComponent(KEY))
+  ws = RELAY ? new window.RxSocket(KEY) : new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?k=' + encodeURIComponent(KEY))
   ws.onopen = () => { retry = 500; dot.classList.add('on'); off.classList.remove('show'); ws.send(JSON.stringify({ t: 'hello' })) }
   ws.onmessage = (e) => {
     let m
@@ -742,6 +745,7 @@ function micPage() {
 }
 function micStatus(text) { micUi.status.textContent = text }
 async function phoneMicStart() {
+  if (RELAY) return phoneMicRelay()
   if (location.protocol !== 'https:') {
     let port = 0
     try { port = (await (await fetch('/info?k=' + encodeURIComponent(KEY))).json()).securePort } catch {}
@@ -780,8 +784,25 @@ function phoneMicAnswer(m) {
   if (m.t === 'rtc-fail' || !m.sdp) return phoneMicStop(true, 'The Mac did not take the call. Try again.')
   micPc.setRemoteDescription({ type: 'answer', sdp: m.sdp }).catch(() => phoneMicStop(true, 'The Mac did not take the call. Try again.'))
 }
+// Through the RiddimX server: the microphone goes up as a track; the Mac picks it up from there.
+async function phoneMicRelay() {
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } })
+  } catch (e) {
+    return micStatus(e && e.name === 'NotAllowedError' ? 'The microphone was not allowed. Allow it in the browser\'s site settings and try again.' : 'No microphone on this phone could be opened.')
+  }
+  micUi.go.textContent = 'STOP PHONE MIC'
+  micUi.go.classList.add('on')
+  micStatus('Connecting the microphone…')
+  try { micLock = await navigator.wakeLock.request('screen') } catch {}
+  try {
+    await ws.publishMic(micStream)
+    micPc = { close: () => ws && ws.unpublishMic && ws.unpublishMic() } // so the rest treats it as on
+    micStatus('On air path ready: this phone is the mic. TALK puts it on the speakers.'); buzz()
+  } catch (e) { phoneMicStop(true, 'The microphone could not reach the Mac. Try again.') }
+}
 function phoneMicStop(quiet, why) {
-  if (!quiet) send({ t: 'rtc-stop' })
+  if (!quiet && !RELAY) send({ t: 'rtc-stop' })
   if (micPc) micPc.close()
   if (micStream) micStream.getTracks().forEach((t) => t.stop())
   if (micLock) micLock.release().catch(() => {})

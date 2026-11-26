@@ -1,0 +1,9 @@
+{
+  "name": "riddimx-relay",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "RiddimX relay: room tokens and the listener page, next to LiveKit",
+  "scripts": { "start": "node index.mjs" },
+  "dependencies": { "livekit-client": "2.25.0" }
+}

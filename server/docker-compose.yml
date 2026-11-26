@@ -1,0 +1,38 @@
+# RiddimX relay on one small Linux server (1 vCPU / 1 GB is enough for a few hundred listeners).
+# Start with:  ./install.sh   (once)   then   docker compose up -d
+services:
+  livekit:
+    image: livekit/livekit-server:v1.13.11
+    command: --config /etc/livekit.yaml
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+
+  relay:
+    build: ./relay
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      HOST: "127.0.0.1"
+      PUBLIC_URL: "https://${DOMAIN}"
+      LIVEKIT_WS: "wss://${DOMAIN}"
+      LIVEKIT_API_KEY: "${LIVEKIT_API_KEY}"
+      LIVEKIT_API_SECRET: "${LIVEKIT_API_SECRET}"
+      RELAY_KEY: "${RELAY_KEY}"
+
+  caddy:
+    image: caddy:2.8-alpine
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      DOMAIN: "${DOMAIN}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+
+volumes:
+  caddy-data:

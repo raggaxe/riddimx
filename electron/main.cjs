@@ -14,8 +14,10 @@ const http = require('node:http')
 const path = require('node:path')
 const { setupUpdater } = require('./updater.cjs')
 const { createRemote } = require('./remote.cjs')
+const { createLive } = require('./live.cjs')
 
-const ORIGIN = 'http://127.0.0.1:5173'
+// VX_ORIGIN (from source only) points a test run at another dev server, so it never touches the DJ's app on 5173.
+const ORIGIN = (!app.isPackaged && process.env.VX_ORIGIN) || 'http://127.0.0.1:5173'
 const DECK_PAGE = ORIGIN + '/ytdeck.html'
 
 // Deck pages are driven remotely (no click happens inside them), so they must be allowed to start playback.
@@ -28,6 +30,7 @@ app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer')
 // (library, stems, lyrics), so renaming it to RiddimX loses nothing.
 // VX_USER_DATA points a test run at a throw-away folder instead.
 if (app.isPackaged) app.setPath('userData', process.env.VX_USER_DATA || path.join(app.getPath('appData'), 'VirtualX'))
+else if (process.env.VX_USER_DATA) app.setPath('userData', process.env.VX_USER_DATA)
 app.userAgentFallback = app.userAgentFallback.replace(/\s(Electron|virtualx)\/\S+/gi, '')
 
 // A DJ app must keep exact timing while its window is covered or in the background.
@@ -330,6 +333,16 @@ app.whenReady().then(async () => {
   ipcMain.on('vx:remote-state', (event, text) => mine(event) && typeof text === 'string' && remote.broadcast(text))
   ipcMain.on('vx:remote-reply', (event, client, text) => mine(event) && typeof text === 'string' && remote.send(client, text))
   app.on('will-quit', () => remote.stop())
+
+  // GO LIVE (top bar): the listen link and the guest invite. Off until the DJ turns it on.
+  const live = createLive({ onSignal: (ev) => !win.isDestroyed() && win.webContents.send('vx:live', ev) })
+  ipcMain.handle('vx:live-start', (event) => (mine(event) ? live.start() : null))
+  ipcMain.handle('vx:live-stop', (event) => (mine(event) ? live.stop() : null))
+  ipcMain.handle('vx:live-info', (event) => (mine(event) ? live.info() : null))
+  ipcMain.on('vx:live-send', (event, id, text) => mine(event) && typeof text === 'string' && live.send(id, text))
+  ipcMain.on('vx:live-kick', (event, id) => mine(event) && live.kick(id))
+  ipcMain.handle('vx:live-reset', (event) => (mine(event) ? live.dropAll() : null))
+  app.on('will-quit', () => live.stop())
 
   // One scale for the whole interface, like a DJ skin: the layout is drawn for a 1440×900 window and a
   // bigger window enlarges it as one piece (never below 1, so a laptop keeps text at 10 px and up).

@@ -8,6 +8,7 @@ import { EchoUnit } from './Rack'
 import { VoicePanel } from './VoicePanel'
 import { deckA, deckB, type Deck } from '../engine/deck'
 import { dubBox, FACTORY, PATCH_LIMITS } from '../engine/dubbox'
+import { aiFire } from '../engine/aifire'
 import { outboard } from '../engine/outboard'
 import { DUB_BEATS, DUB_LIMITS, DUB_PRESETS, dubSettings } from '../engine/dub'
 import { FX, type FxType } from '../engine/fx'
@@ -67,6 +68,37 @@ function Hold({
  * DUB page: the Dub Box played live. The sound and its knobs on top, the sounds as coloured pads
  * (quick pads 1–4, then the factory sounds), and DROP, FIRE and FX as the big buttons.
  */
+/** What AI FIRE is about to do, laid over the top of the big keys (no room taken). */
+function AiFireSay() {
+  const a = useStore(aiFire)
+  if (!a.say) return null
+  return (
+    <span className={'cp-aisay' + (a.firing ? ' firing' : '')} role="status">
+      {a.say}
+    </span>
+  )
+}
+
+/** AI FIRE: arms one Dub Box shot for the next good moment of the deck on air (see engine/aifire). */
+function AiFireKey() {
+  const a = useStore(aiFire)
+  const on = a.armed || a.firing
+  return (
+    <button
+      className={'cp-b cp-aifire' + (on ? ' on' : '')}
+      aria-pressed={on}
+      onClick={() => aiFire.toggle()}
+      title={
+        on
+          ? (a.say ? a.say + '. ' : '') + 'Press again to cancel: the FIRE sound and its echo stay as they were'
+          : 'AI FIRE: listens to the deck on air and fires a Dub Box sound at the next good moment (phrase end, vocal gap, break). Once; press again to cancel'
+      }
+    >
+      AI FIRE{a.armed && a.left !== null ? <b className="cp-count">{a.left}</b> : null}
+    </button>
+  )
+}
+
 export function DubPage() {
   const d = useStore(dubBox)
   const o = useStore(outboard)
@@ -76,51 +108,39 @@ export function DubPage() {
   const p = d.patch
   const [pLo, pHi] = PATCH_LIMITS.pitch
   const [rLo, rHi] = PATCH_LIMITS.lfoRate
-  const factory = FACTORY.filter((x) => !d.slots.some((s) => s?.name === x.name)).slice(0, 8 - d.slots.length)
 
   return (
     <div className="cp cp-dub">
-      <div className="cp-row">
-        <span className="cp-lab">Dub Box</span>
-        <button className="cp-b cp-sq" onClick={() => dubBox.stepPreset(-1)} aria-label="Previous sound" title="Previous sound">
+      {/* FIRE: the sound the FIRE key plays (‹ menu ›) and how the key is held. */}
+      <div className="cp-row cp-firehead">
+        <span className="cp-grp fire" title="The FIRE key below plays this sound">FIRE</span>
+        <button className="cp-b cp-sq" onClick={() => dubBox.stepPreset(-1)} aria-label="Previous FIRE sound" title="Previous sound">
           ‹
         </button>
         <div className="cp-menu">
           <DubSoundMenu />
         </div>
-        <button className="cp-b cp-sq" onClick={() => dubBox.stepPreset(1)} aria-label="Next sound" title="Next sound">
+        <button className="cp-b cp-sq" onClick={() => dubBox.stepPreset(1)} aria-label="Next FIRE sound" title="Next sound">
           ›
         </button>
         {pro && (
-          <>
-            <button
-              className="cp-b"
-              onClick={() => dubBox.surprise()}
-              title="A random take on this sound, within values that sound good"
-            >
-              SURPRISE
-            </button>
-            <button
-              className={'cp-b' + (d.rehearse ? ' on' : '')}
-              aria-pressed={d.rehearse}
-              onClick={() => dubBox.setRehearse(!d.rehearse)}
-              title="Hear the Dub Box in the headphones only, not on the floor"
-            >
-              REHEARSE
-            </button>
-          </>
+          <button className="cp-b" onClick={() => dubBox.surprise()} title="A random take on this sound, within values that sound good">
+            SURPRISE
+          </button>
         )}
-        <button
-          className={'cp-b' + (d.pfl ? ' on' : '')}
-          aria-pressed={d.pfl}
-          onClick={() => dubBox.togglePfl()}
-          title="Pre-listen: hear the Dub Box in the headphones"
-        >
-          CUE
-        </button>
+        {!pro && <AiFireKey />}
+        <div className="cp-seg" role="radiogroup" aria-label="FIRE key" title="FIRE key: HOLD sounds while held, LATCH stays on until pressed again">
+          <button role="radio" aria-checked={d.mode === 'hold'} className={d.mode === 'hold' ? 'on' : ''} onClick={() => dubBox.setMode('hold')}>
+            HOLD
+          </button>
+          <button role="radio" aria-checked={d.mode === 'latch'} className={d.mode === 'latch' ? 'on' : ''} onClick={() => dubBox.setMode('latch')}>
+            LATCH
+          </button>
+        </div>
       </div>
 
       <div className="cp-big">
+        <AiFireSay />
         <button
           className={'cp-drop' + (o.dropping ? ' on' : '')}
           onClick={() => outboard.drop()}
@@ -174,27 +194,42 @@ export function DubPage() {
           />
           <Knob label="FILTER" value={d.filter} format={filterText} onChange={(v) => dubBox.setFilter(v)} />
           <Knob label="LEVEL" value={d.level} min={0} max={1} reset={0.8} format={pct} onChange={(v) => dubBox.setLevel(v)} />
+          <AiFireKey />
         </div>
       )}
 
-      <div className="cp-seg" role="radiogroup" aria-label="Pads show">
+      {/* The pads: each one plays its own sound the moment it is pressed, apart from FIRE. */}
+      <div className="cp-padhead">
+        <span className="cp-grp" title="Each pad plays its own sound while pressed, apart from FIRE">PADS</span>
+        <div className="cp-seg" role="radiogroup" aria-label="Pads play">
+          <button role="radio" aria-checked={!sounds} className={!sounds ? 'on' : ''} onClick={() => setSounds(false)} title="Pads play the Dub Box sounds">
+            SOUNDS
+          </button>
+          <button role="radio" aria-checked={sounds} className={sounds ? 'on' : ''} onClick={() => setSounds(true)} title="Pads play the sampler">
+            SAMPLER
+          </button>
+        </div>
+        <span style={{ flex: 1 }} />
+        {pro && (
+          <button
+            className={'cp-b' + (d.rehearse ? ' on' : '')}
+            aria-pressed={d.rehearse}
+            onClick={() => dubBox.setRehearse(!d.rehearse)}
+            title="Hear the Dub Box (FIRE and pads) in the headphones only, not on the floor"
+          >
+            REHEARSE
+          </button>
+        )}
         <button
-          role="radio"
-          aria-checked={!sounds}
-          className={!sounds ? 'on' : ''}
-          onClick={() => setSounds(false)}
-          title="Pads play the Dub Box sounds"
+          className={'cp-b' + (d.pfl ? ' on' : '')}
+          aria-pressed={d.pfl}
+          onClick={() => dubBox.togglePfl()}
+          title="Pre-listen: hear the Dub Box (FIRE and pads) in the headphones"
         >
-          SOUNDS
+          CUE
         </button>
-        <button
-          role="radio"
-          aria-checked={sounds}
-          className={sounds ? 'on' : ''}
-          onClick={() => setSounds(true)}
-          title="Pads play the sampler"
-        >
-          SAMPLER
+        <button className="cp-b cp-more" onClick={() => ui.open('dubbox')} title="Every Dub Box setting (Dub Box tab)" aria-label="All Dub Box settings">
+          ⋯
         </button>
       </div>
 
@@ -204,71 +239,32 @@ export function DubPage() {
         </div>
       ) : (
         <div className="cp-sounds">
-          {d.slots.map((slot, i) => (
-            <button
-              key={'s' + i}
-              className={'cp-sound k-' + (slot ? soundKind(slot.name) : 'empty') + (d.slotPlaying === i ? ' on' : '')}
-              disabled={!slot}
-              onPointerDown={(e) => {
-                e.currentTarget.setPointerCapture(e.pointerId)
-                dubBox.fireSlot(i, true)
-              }}
-              onPointerUp={() => dubBox.fireSlot(i, false)}
-              onPointerCancel={() => dubBox.fireSlot(i, false)}
-              title={
-                slot
-                  ? 'Quick pad ' + (i + 1) + ': ' + slot.name
-                  : 'Quick pad ' + (i + 1) + ': empty (save a sound in the Dub Box tab)'
-              }
-            >
-              <small>PAD {i + 1}</small>
-              <span>{slot?.name ?? 'empty'}</span>
-            </button>
-          ))}
-          {factory.map((x) => (
-            <button
-              key={x.name}
-              className={'cp-sound k-' + soundKind(x.name) + (d.preset === x.name ? ' now' : '')}
-              onClick={() => dubBox.usePreset(x.name)}
-              title={'Use ' + x.name + ' as the FIRE sound'}
-            >
-              <small>SOUND</small>
-              <span>{x.name}</span>
-            </button>
-          ))}
+          {[0, 1, 2, 3].map((i) => {
+            const slot = d.slots[i] ?? null
+            return (
+              <button
+                key={'s' + i}
+                className={'cp-sound k-' + (slot ? soundKind(slot.name) : 'empty') + (d.slotPlaying === i ? ' on' : '')}
+                disabled={!slot}
+                onPointerDown={(e) => {
+                  e.currentTarget.setPointerCapture(e.pointerId)
+                  dubBox.fireSlot(i, true)
+                }}
+                onPointerUp={() => dubBox.fireSlot(i, false)}
+                onPointerCancel={() => dubBox.fireSlot(i, false)}
+                title={
+                  slot
+                    ? 'Pad ' + (i + 1) + ': plays ' + slot.name + ' while pressed'
+                    : 'Pad ' + (i + 1) + ': empty (save a sound in the Dub Box tab)'
+                }
+              >
+                <small>PAD {i + 1}</small>
+                <span>{slot?.name ?? 'empty'}</span>
+              </button>
+            )
+          })}
         </div>
       )}
-
-      <div className="cp-row">
-        <span className="cp-lab">FIRE button</span>
-        <div
-          className="cp-seg"
-          role="radiogroup"
-          aria-label="FIRE button"
-          title="FIRE button: HOLD sounds while held, LATCH stays on until pressed again"
-        >
-          <button
-            role="radio"
-            aria-checked={d.mode === 'hold'}
-            className={d.mode === 'hold' ? 'on' : ''}
-            onClick={() => dubBox.setMode('hold')}
-          >
-            HOLD
-          </button>
-          <button
-            role="radio"
-            aria-checked={d.mode === 'latch'}
-            className={d.mode === 'latch' ? 'on' : ''}
-            onClick={() => dubBox.setMode('latch')}
-          >
-            LATCH
-          </button>
-        </div>
-        <span style={{ flex: 1 }} />
-        <button className="cp-b" onClick={() => ui.open('dubbox')} title="Every Dub Box setting (Dub Box tab)">
-          ALL SETTINGS
-        </button>
-      </div>
     </div>
   )
 }
@@ -358,11 +354,15 @@ function EffectsPage({ part }: { part: 'fx' | 'echo' | 'tape' }) {
       )}
       {part === 'fx' && pro && <AuxBands />}
       {part === 'echo' && (
-        <section className="cp-sec" aria-label="Deck DUB button">
-          <div className="cp-row">
-            <span className="cp-lab" style={{ flex: 1 }}>
-              Deck DUB button · both decks
+        <section className="cp-sec cp-echo" aria-label="Deck DUB button">
+          {/* The echo itself: how it sounds (presets and knobs), shared by both decks' DUB keys. */}
+          <div className="cp-row cp-ghead">
+            <span className="cp-grp">DUB ECHO</span>
+            <span className="cp-both" title="One echo, shared by the DUB key of both decks">
+              <i className="a">A</i>
+              <i className="b">B</i>
             </span>
+            <span style={{ flex: 1 }} />
             <button
               className="cp-b"
               onClick={() => dubSettings.update({ ...DUB_PRESETS[0].settings })}
@@ -370,8 +370,8 @@ function EffectsPage({ part }: { part: 'fx' | 'echo' | 'tape' }) {
             >
               RESET
             </button>
-            <button className="cp-b" onClick={() => ui.openSettings('decks')} title="Every DUB setting (Settings › Decks)">
-              ALL SETTINGS
+            <button className="cp-b cp-more" onClick={() => ui.openSettings('decks')} title="Every DUB setting (Settings › Decks)" aria-label="All DUB settings">
+              ⋯
             </button>
           </div>
           <div className="cp-fxpick cp-presets" role="radiogroup" aria-label="DUB presets">
@@ -449,7 +449,12 @@ function EffectsPage({ part }: { part: 'fx' | 'echo' | 'tape' }) {
               onChange={(v) => dubSettings.update({ level: v })}
             />
           </div>
-          <div className="cp-row" style={{ flexWrap: 'wrap' }}>
+          {/* The DUB key on each deck: how it is held, what the music does meanwhile and after. */}
+          <div className="cp-row cp-ghead cp-gsep">
+            <span className="cp-grp">DUB KEY</span>
+            <span className="cp-note">on each deck</span>
+          </div>
+          <div className="cp-row cp-keyrows" style={{ flexWrap: 'wrap' }}>
             <div className="cp-seg" role="radiogroup" aria-label="DUB button">
               <button
                 role="radio"
@@ -509,7 +514,14 @@ function EffectsPage({ part }: { part: 'fx' | 'echo' | 'tape' }) {
       )}
       {part === 'tape' && (
         <section className="cp-sec cp-tape" aria-label="Tape echo">
-          <span className="cp-lab">Tape echo · master</span>
+          <div className="cp-row cp-ghead">
+            <span className="cp-grp">TAPE ECHO</span>
+            <span className="cp-note">on the master</span>
+            <span style={{ flex: 1 }} />
+            <button className="cp-b cp-more" onClick={() => ui.open('echo')} title="Every tape echo setting (Tape echo tab)" aria-label="All tape echo settings">
+              ⋯
+            </button>
+          </div>
           <EchoUnit />
         </section>
       )}
@@ -748,6 +760,9 @@ export function AuxStrip() {
 export function MicPage() {
   return (
     <div className="cp cp-mic">
+      <button className="cp-b cp-more cp-mic-more" onClick={() => ui.open('voice')} title="Live mic and drops (Voice tab)" aria-label="All voice settings">
+        ⋯
+      </button>
       <VoicePanel />
     </div>
   )

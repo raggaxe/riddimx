@@ -4,6 +4,7 @@ import { deckA, deckB } from './engine/deck'
 import { spotify } from './engine/spotify'
 import './midi' // MIDI, gamepad and keyboard shortcuts start with the app
 import './remote' // the phone controller's server comes back on if it was left on
+import './phoneRelay' // …and its link from anywhere, through the RiddimX server
 import { library } from './library'
 import { useStore } from './store'
 import { DeckView } from './components/DeckView'
@@ -19,6 +20,7 @@ import { DubBoxPanel } from './components/DubBoxPanel'
 import { SamplerPanel } from './components/SamplerPanel'
 import { TrackView } from './components/TrackView'
 import { TopBar } from './components/TopBar'
+import { GuestPanel } from './components/GuestPanel'
 import { VoiceTab } from './components/VoiceTab'
 
 import { SIMPLE_TABS, ui, type Tab } from './ui'
@@ -111,6 +113,7 @@ export function App() {
         </div>
       </section>
       <SettingsModal />
+      <GuestPanel />
     </div>
   )
 }

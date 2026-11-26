@@ -1,0 +1,18 @@
+# LiveKit (SFU + TURN) for the RiddimX relay. install.sh fills in DOMAIN; keys come from .env.
+port: 7880
+bind_addresses: ["127.0.0.1"]   # only Caddy (https) talks to it from outside
+rtc:
+  tcp_port: 7881                # media over TCP when UDP is blocked
+  port_range_start: 50000
+  port_range_end: 50200
+  use_external_ip: true
+room:
+  empty_timeout: 300
+  max_participants: 500
+turn:
+  enabled: true
+  domain: __DOMAIN__
+  udp_port: 3478                # TURN for listeners behind strict NAT (phones on 4G, offices)
+  tls_port: 0
+logging:
+  level: info

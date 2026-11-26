@@ -6,7 +6,7 @@ import { Knob } from './Knob'
 import { DB_MARKS, FADER_MARKS, Meter, Scale } from './Meter'
 import { DUB_PRESET_DRAG, PATCH_LIMITS, dubBox } from '../engine/dubbox'
 import { sampler } from '../engine/sampler'
-import { ui, type Centre } from '../ui'
+import { SIMPLE_CENTRES, ui, type Centre } from '../ui'
 import { DubPage, EchoPage, FxSide, MicPage, TapePage } from './CentrePages'
 import { DubSoundMenu } from './DubSoundMenu'
 import { useState } from 'react'
@@ -479,12 +479,13 @@ const PAGES: { id: Centre; label: string; hint: string }[] = [
  */
 export function MixerView() {
   const m = useStore(mixer)
-  const centre = useStore(ui).centre
+  const { centre, mode } = useStore(ui)
+  const pages = mode === 'pro' ? PAGES : PAGES.filter((p) => SIMPLE_CENTRES.includes(p.id))
   const onMixer = centre === 'mixer'
   return (
     <section className={'mixer centre-' + centre} aria-label="Centre">
       <nav className="ctr-tabs" role="tablist" aria-label="Centre pages">
-        {PAGES.map((p) => (
+        {pages.map((p) => (
           <button
             key={p.id}
             role="tab"

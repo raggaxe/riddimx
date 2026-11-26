@@ -106,6 +106,10 @@ export async function createStems(ctx: BaseAudioContext): Promise<AudioWorkletNo
   })
 }
 
-export function setStems(node: AudioWorkletNode, stems: StemState): void {
-  node.port.postMessage(STEMS.map((s) => (stems[s] ? 1 : 0)))
+/** Each stem's level, 0..1 (a muted stem is 0); the worklet glides there in a few ms, no click. */
+export function setStems(node: AudioWorkletNode, levels: Record<Stem, number>): void {
+  node.port.postMessage(STEMS.map((s) => levels[s]))
 }
+
+export type StemLevels = Record<Stem, number>
+export const FULL_LEVELS: StemLevels = { vocal: 1, instr: 1, bass: 1, kick: 1, hat: 1 }

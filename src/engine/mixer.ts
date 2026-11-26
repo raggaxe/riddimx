@@ -4,6 +4,8 @@ import { MasterDynamics, cleanDynamics, type Dynamics } from './dynamics'
 export interface OutputDevice {
   id: string
   label: string
+  /** The system gave its real name (a made-up "Output 2" is never used to find a device again). */
+  named?: boolean
 }
 
 export interface MixerState {
@@ -19,6 +21,8 @@ export interface MixerState {
   inputs: OutputDevice[] // sound inputs (microphones, the interface's inputs)
   inputDevice: string // input used by the microphone, '' = system default
   splitAvailable: boolean // the master device has at least 4 output channels
+  /** Names of the chosen outputs that are not connected right now (sound goes to the system default meanwhile). */
+  missing: string[]
   audioError: string | null
   recording: boolean
   recordedAt: number // performance.now() when the recording started
@@ -32,7 +36,16 @@ interface MixerChannel {
 }
 
 const LS = 'vx_audio'
-type Saved = Pick<MixerState, 'cueMix' | 'hpVolume' | 'masterDevice' | 'hpDevice' | 'inputDevice' | 'xfCurve' | 'dynamics' | 'loudMatch'>
+type Saved = Pick<MixerState, 'cueMix' | 'hpVolume' | 'masterDevice' | 'hpDevice' | 'inputDevice' | 'xfCurve' | 'dynamics' | 'loudMatch'> & {
+  masterLabel?: string
+  hpLabel?: string
+}
+
+/** The output the DJ picked, kept even while it is unplugged (its id can change, its name rarely does). */
+interface Wanted {
+  id: string // '' = system default / off, 'split' = channels 3-4 (headphones only)
+  label: string
+}
 
 function saved(): Partial<Saved> {
   try {
@@ -68,6 +81,8 @@ class Mixer extends Store<MixerState> {
   private split: AudioNode[] = [] // nodes of the 4-channel routing, when active
   private channels: MixerChannel[] = []
   private recorder: MediaRecorder | null = null
+  private wantMaster: Wanted
+  private wantHp: Wanted
 
   constructor() {
     const s = saved()
@@ -83,6 +98,7 @@ class Mixer extends Store<MixerState> {
       inputs: [],
       inputDevice: s.inputDevice ?? '',
       splitAvailable: false,
+      missing: [],
       audioError: null,
       recording: false,
       recordedAt: 0,
@@ -90,6 +106,8 @@ class Mixer extends Store<MixerState> {
       fading: null,
       loudMatch: s.loudMatch !== false,
     })
+    this.wantMaster = { id: s.masterDevice ?? '', label: s.masterLabel ?? '' }
+    this.wantHp = { id: s.hpDevice ?? '', label: s.hpLabel ?? '' }
     const ctx = (this.ctx = new AudioContext({ latencyHint: 'interactive' }))
     this.masterGain = ctx.createGain()
     this.masterGain.gain.value = this.state.master
@@ -108,24 +126,85 @@ class Mixer extends Store<MixerState> {
     this.hpMaster.connect(this.hpOut)
     this.masterOut.connect(ctx.destination)
     this.applyHeadphoneLevels()
-    navigator.mediaDevices?.addEventListener?.('devicechange', () => void this.refreshDevices())
-    void this.restore()
+    // Interface plugged in or out: follow it (back to the chosen one as soon as it is there again).
+    navigator.mediaDevices?.addEventListener?.('devicechange', () => void this.rescan())
+    void this.applyWanted(true)
   }
 
-  private async restore(): Promise<void> {
+  /**
+   * Where a chosen output is now: its id, the same device under a new id (matched by name: ids change
+   * with app updates and permissions), or null when it is not connected.
+   */
+  private locate(want: Wanted): string | null {
+    if (!want.id || want.id === 'split') return want.id
+    if (this.state.devices.some((d) => d.id === want.id)) return want.id
+    const same = want.label ? this.state.devices.find((d) => d.named && d.label === want.label) : undefined
+    if (same) {
+      want.id = same.id
+      return same.id
+    }
+    return null
+  }
+
+  /**
+   * Routes the sound to the outputs the DJ picked, or to the system default while one is missing,
+   * WITHOUT forgetting the choice: it comes back by itself when the interface is plugged in again.
+   */
+  private async applyWanted(force = false): Promise<void> {
     await this.refreshDevices()
-    const has = (id: string): boolean => this.state.devices.some((d) => d.id === id)
-    const { masterDevice, hpDevice } = this.state
-    await this.setMasterDevice(masterDevice && has(masterDevice) ? masterDevice : '')
-    await this.setHeadphoneDevice(hpDevice === 'split' || has(hpDevice) ? hpDevice : '')
+    const master = this.locate(this.wantMaster)
+    const hp = this.locate(this.wantHp)
+    const missing = [master === null && this.wantMaster, hp === null && this.wantHp]
+      .filter((w): w is Wanted => !!w)
+      .map((w) => w.label || 'the chosen output')
+    this.set({ missing })
+    if (force || (master ?? '') !== this.state.masterDevice) await this.useMaster(master ?? '')
+    if (force || (hp ?? '') !== this.state.hpDevice) await this.useHeadphones(hp ?? '')
+    this.persist()
+  }
+
+  /** Looks for the sound devices again and follows the chosen ones (REFRESH, plugging in or out). */
+  rescan(): Promise<void> {
+    return this.applyWanted()
+  }
+
+  /** Forgets every audio setting (outputs, headphones, mic, curve, compressor) and starts clean on the system default. */
+  async resetAudio(): Promise<void> {
+    try {
+      localStorage.removeItem(LS)
+    } catch {
+      /* nothing saved */
+    }
+    this.wantMaster = { id: '', label: '' }
+    this.wantHp = { id: '', label: '' }
+    this.set({ cueMix: 0, hpVolume: 0.8, inputDevice: '', xfCurve: 'smooth', dynamics: cleanDynamics(undefined), loudMatch: true })
+    this.dynamics.apply(this.state.dynamics)
+    this.applyHeadphoneLevels()
+    await this.reopen()
+  }
+
+  private label(id: string): string {
+    const d = this.state.devices.find((x) => x.id === id)
+    return d?.named ? d.label : ''
   }
 
   private persist(): void {
-    const { cueMix, hpVolume, masterDevice, hpDevice, inputDevice, xfCurve, dynamics, loudMatch } = this.state
+    const { cueMix, hpVolume, inputDevice, xfCurve, dynamics, loudMatch } = this.state
     try {
       localStorage.setItem(
         LS,
-        JSON.stringify({ cueMix, hpVolume, masterDevice, hpDevice, inputDevice, xfCurve, dynamics, loudMatch } satisfies Saved),
+        JSON.stringify({
+          cueMix,
+          hpVolume,
+          masterDevice: this.wantMaster.id,
+          masterLabel: this.wantMaster.label,
+          hpDevice: this.wantHp.id,
+          hpLabel: this.wantHp.label,
+          inputDevice,
+          xfCurve,
+          dynamics,
+          loudMatch,
+        } satisfies Saved),
       )
     } catch {
       /* not remembered */
@@ -310,7 +389,7 @@ class Mixer extends Store<MixerState> {
       const list = (kind: MediaDeviceKind, name: string): OutputDevice[] =>
         all
           .filter((d) => d.kind === kind && d.deviceId !== 'default' && d.deviceId !== 'communications')
-          .map((d, i) => ({ id: d.deviceId, label: d.label || name + ' ' + (i + 1) }))
+          .map((d, i) => ({ id: d.deviceId, label: d.label || name + ' ' + (i + 1), named: !!d.label }))
       this.set({ devices: list('audiooutput', 'Output'), inputs: list('audioinput', 'Input') })
     } catch {
       this.set({ devices: [], inputs: [] })
@@ -334,17 +413,14 @@ class Mixer extends Store<MixerState> {
    * picks up a sample rate the interface changed under us), then check the engine is running again.
    */
   async reopen(): Promise<boolean> {
-    const { masterDevice, hpDevice } = this.state
     try {
       await this.ctx.suspend()
       // Let go of the device for a moment so it really is opened again.
-      await (this.ctx as any).setSinkId(masterDevice ? '' : { type: 'none' })
+      await (this.ctx as any).setSinkId(this.state.masterDevice ? '' : { type: 'none' })
     } catch {
       /* not supported: suspend and resume still restart the stream */
     }
-    await this.refreshDevices()
-    await this.setMasterDevice(masterDevice && this.state.devices.some((d) => d.id === masterDevice) ? masterDevice : '')
-    if (hpDevice !== 'split') await this.setHeadphoneDevice(hpDevice)
+    await this.applyWanted(true)
     this.dynamics.apply(this.state.dynamics)
     try {
       await this.ctx.resume()
@@ -357,23 +433,42 @@ class Mixer extends Store<MixerState> {
     return this.ctx.state === 'running' && this.ctx.currentTime > t0
   }
 
-  /** Speakers: '' = whatever the system uses by default. */
+  /** Speakers, picked by the DJ: '' = whatever the system uses by default. Remembered even while unplugged. */
   async setMasterDevice(id: string): Promise<void> {
+    const ok = await this.useMaster(id)
+    if (ok) {
+      this.wantMaster = { id, label: this.label(id) }
+      this.set({ missing: this.state.missing.filter((m) => m !== this.wantMaster.label) })
+    }
+    this.persist()
+  }
+
+  /** Headphones, picked by the DJ: '' off · 'split' = outputs 3-4 of the master device · otherwise another device. */
+  async setHeadphoneDevice(id: string): Promise<void> {
+    const ok = await this.useHeadphones(id)
+    if (ok) this.wantHp = { id, label: id === 'split' ? '' : this.label(id) }
+    this.persist()
+  }
+
+  /** Sends the master to that output now (the choice itself is not changed). */
+  private async useMaster(id: string): Promise<boolean> {
+    let ok = true
     try {
       await (this.ctx as any).setSinkId(id)
       this.set({ masterDevice: id, audioError: null })
     } catch {
+      ok = false
       this.set({ audioError: 'Couldn\'t use that output for the master.' })
     }
     const splitAvailable = this.ctx.destination.maxChannelCount >= 4
     this.set({ splitAvailable })
     // The 4-channel routing depends on the master device: rebuild it, or drop it if no longer possible.
-    if (this.state.hpDevice === 'split') await this.setHeadphoneDevice(splitAvailable ? 'split' : '')
-    this.persist()
+    if (this.state.hpDevice === 'split') await this.useHeadphones(splitAvailable ? 'split' : '')
+    return ok
   }
 
-  /** Headphones: '' off · 'split' = outputs 3-4 of the master device · otherwise another device. */
-  async setHeadphoneDevice(id: string): Promise<void> {
+  /** Sends the headphone bus to that output now (the choice itself is not changed). */
+  private async useHeadphones(id: string): Promise<boolean> {
     const dest = this.ctx.destination
     // Back to the plain stereo routing first.
     const unlink = (to: AudioNode): void => {
@@ -432,7 +527,7 @@ class Mixer extends Store<MixerState> {
       }
     }
     this.set({ hpDevice: id, audioError: error })
-    this.persist()
+    return error === null
   }
 }
 

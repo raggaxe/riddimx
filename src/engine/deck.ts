@@ -22,7 +22,7 @@ import { sampler } from './sampler'
 import { spotify, type SpotifyOwner } from './spotify'
 import { bpmStore } from './bpm'
 import { stemsFor } from './ai/stems'
-import { ALL_STEMS, STEMS, createStems, setStems, type Stem, type StemState } from './stems'
+import { ALL_STEMS, FULL_LEVELS, STEMS, createStems, setStems, type Stem, type StemLevels, type StemState } from './stems'
 
 export type AiPart = 'vocals' | 'drums' | 'bass' | 'other'
 /** What a cut for a drop is taken from: the whole track or one AI stem. */
@@ -58,6 +58,7 @@ export interface DeckState {
   loop: { in: number; out: number; beats: number } | null
   peaks: Float32Array | null
   stems: StemState // false = that part of the music is muted
+  stemVol: StemLevels // each part's own volume, 0..1 (the pad above mutes it, this sets how loud)
   processed: boolean // desktop app: YouTube sound runs through this deck's EQ, filter and stems
   pfl: boolean // pre-listen: this deck is sent to the headphones, whatever its fader says
   gain: number // channel trim, -1..1 (= -12..+12 dB)
@@ -135,6 +136,8 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
   readonly auxSend: Record<Stem, GainNode>[] = []
   /** What this deck sends into each AUX, after its channel fader and the crossfader. */
   readonly auxPost: GainNode[] = []
+  /** Each stem as heard (pads applied, before the fader): what the AI dub pads listen to. */
+  stemTap!: Record<Stem, GainNode>
   private fileId: string | null = null
   private anchorTime = 0
   private anchorOffset = 0
@@ -182,6 +185,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       loop: null,
       peaks: null,
       stems: { ...ALL_STEMS },
+      stemVol: { ...FULL_LEVELS },
       processed: false,
       pfl: false,
       gain: 0,
@@ -320,6 +324,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       loop: null,
       peaks: null,
       stems: { ...ALL_STEMS },
+      stemVol: { ...FULL_LEVELS },
       aiStems: 'off',
       aiProgress: 0,
       lufs: null,
@@ -1747,12 +1752,21 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
     this.pushStems()
   }
 
+  /** One part's own volume (0..1), under its mute pad; the AUX sends hear it too. */
+  setStemVol(stem: Stem, v: number): void {
+    if (!this.canStems) return
+    this.set({ stemVol: { ...this.state.stemVol, [stem]: Math.max(0, Math.min(1, v)) } })
+    this.pushStems()
+  }
+
   private pushStems(): void {
     const ai = this.stemBuffers !== null
+    const { stems: on, stemVol: vol } = this.state
+    const level = Object.fromEntries(STEMS.map((st) => [st, on[st] ? vol[st] : 0])) as StemLevels
     // With AI stems the pads drive their own levels and the filter-based splitter passes everything.
-    if (this.stemsNode) setStems(this.stemsNode, ai ? ALL_STEMS : this.state.stems)
+    if (this.stemsNode) setStems(this.stemsNode, ai ? FULL_LEVELS : level)
     const now = mixer.ctx.currentTime
-    for (const stem of STEMS) this.aiOut[stem].gain.setTargetAtTime(!ai || this.state.stems[stem] ? 1 : 0, now, 0.008)
+    for (const stem of STEMS) this.aiOut[stem].gain.setTargetAtTime(ai ? level[stem] : 1, now, 0.008)
     // AUX taps: the AI stems when there are some (the splitter only sees their sum then), else the splitter.
     for (const stem of STEMS) {
       this.tapAi[stem].gain.setTargetAtTime(ai ? 1 : 0, now, 0.01)
@@ -1798,6 +1812,7 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       this.tapDsp[stem].connect(tap[stem])
       this.tapAi[stem].gain.value = 0
     }
+    this.stemTap = tap
     for (let aux = 0; aux < 2; aux++) {
       const post = gain()
       const sends = {} as Record<Stem, GainNode>

@@ -14,6 +14,7 @@ import { useStore } from '../store'
 import { ClockAndSet, SetWidget } from './SetTimer'
 import { NotesButton } from './NotesPanel'
 import { panic } from '../panic'
+import { LiveBar } from './LiveBar'
 
 /** Master level, left over right, as two thin horizontal bars. */
 function MasterMeter() {
@@ -194,7 +195,8 @@ export function TopBar() {
         >
           {pan.busy ? 'RESETTING…' : 'PANIC'}
         </button>
-                <HotSource />
+        <LiveBar />
+        <HotSource />
         <MasterMeter />
       </div>
       {set.beatCounter && <BeatCounter />}

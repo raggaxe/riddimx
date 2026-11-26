@@ -112,6 +112,8 @@ function savedMode(): UiMode {
 /** The centre of the stage shows one page at a time: the mixer, the Dub Box, the effects, the deck DUB echo or the tape echo. */
 export type Centre = 'mixer' | 'dub' | 'fx' | 'echo' | 'tape' | 'mic'
 const LS_CENTRE = 'vx_centre'
+/** Centre pages shown in Simple mode: the mixer, the Dub Box (FIRE) and each deck's effect. */
+export const SIMPLE_CENTRES: Centre[] = ['mixer', 'dub', 'fx']
 function savedCentre(): Centre {
   try {
     // ?centre=dub opens that page (handy for links and screenshots).
@@ -131,7 +133,8 @@ class Ui extends Store<{ tab: Tab; layout: Layout; settings: SettingsPage | null
     const tab = asked && TABS.includes(asked) && (mode === 'pro' || SIMPLE_TABS.includes(asked)) ? asked : 'library'
     applyScale()
     const prefs = savedPrefs()
-    super({ tab, layout: fit(prefs, mode), settings: null, mode, centre: savedCentre() })
+    const centre = savedCentre()
+    super({ tab, layout: fit(prefs, mode), settings: null, mode, centre: mode === 'simple' && !SIMPLE_CENTRES.includes(centre) ? 'mixer' : centre })
     this.prefs = prefs
   }
 
@@ -152,7 +155,8 @@ class Ui extends Store<{ tab: Tab; layout: Layout; settings: SettingsPage | null
 
   setMode(mode: UiMode): void {
     const tab = mode === 'simple' && !SIMPLE_TABS.includes(this.state.tab) ? 'library' : this.state.tab
-    this.set({ mode, tab })
+    const centre = mode === 'simple' && !SIMPLE_CENTRES.includes(this.state.centre) ? 'mixer' : this.state.centre
+    this.set({ mode, tab, centre })
     this.refit() // Pro's decks are a little taller
     try {
       localStorage.setItem(LS_MODE, mode)
@@ -162,6 +166,8 @@ class Ui extends Store<{ tab: Tab; layout: Layout; settings: SettingsPage | null
   }
 
   setCentre(centre: Centre): void {
+    // A Pro page asked from Simple mode (a MIDI button, a shortcut) switches to Pro so it can show.
+    if (this.state.mode === 'simple' && !SIMPLE_CENTRES.includes(centre)) this.setMode('pro')
     this.set({ centre })
     try {
       localStorage.setItem(LS_CENTRE, centre)

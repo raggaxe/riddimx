@@ -15390,87 +15390,6 @@ button.ru-ear:disabled {
   grid-row: 2 / 4;
 }
 
-/* ═════════ Plugin tab: two AUX effects fed by the stems ═════════ */
-
-.plg {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 6px;
-  padding-top: 2px;
-}
-
-.plg-aux {
-  flex: 1 1 380px;
-  min-width: 0;
-}
-
-.plg-aux.on {
-  border-color: #3a352d;
-}
-
-.plg-head {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.plg-head .seg button {
-  font-size: 10px;
-}
-
-.plg .knob-dial {
-  flex: none;
-  width: 26px;
-  height: 26px;
-}
-
-.plg .knob span {
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-/* Sends: one row per deck, one knob per stem. */
-.plg-grid {
-  display: grid;
-  grid-template-columns: 18px repeat(5, minmax(0, 1fr));
-  align-items: center;
-  gap: 4px 6px;
-}
-
-.plg-grid > b {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-align: center;
-  color: var(--dim);
-}
-
-.plg-row {
-  display: contents;
-}
-
-.plg-row em {
-  font-style: normal;
-  font-size: 10px;
-  font-weight: 800;
-  text-align: center;
-  color: var(--a);
-}
-
-.plg-row.b em {
-  color: var(--b);
-}
-
-.plg-note {
-  flex-basis: 100%;
-  margin: 0;
-  font-size: 10px;
-  color: var(--dim);
-}
-
 /* ═════════ Pitch inside the deck: beside the turntable, ending above the FX strip ═════════ */
 
 /* The stage is decks and mixer only again; each deck carries its pitch. */
@@ -19299,8 +19218,11 @@ textarea {
 }
 
 /* Six centre pages: MIXER · DUB · FX · DECK DUB · TAPE · MIC (the AUX effects live on FX). */
+/* One column per page shown (6 in Pro, 3 in Simple): the tabs always fill the mixer's width. */
 .app .mixer .ctr-tabs {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: none;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
 }
 
 /* FX · DECK DUB · TAPE pages: 10 px side margins and the same even gaps as MIXER / DUB; standard 28 px keys. */
@@ -19974,7 +19896,7 @@ textarea {
   letter-spacing: 0.08em;
   color: #8a8373;
 }
-.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg:nth-child(1)::before { content: 'DUB BUTTON'; }
+.app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg:nth-child(1)::before { content: 'PRESS'; }
 .app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg:nth-child(2)::before { content: 'MUSIC'; }
 .app .mixer .cp-part-echo > .cp-sec > .cp-row:last-child .cp-seg:nth-child(3)::before { content: 'ON RELEASE'; }
 /* The caption is not a key: the pair's outer corners are the 2nd and 3rd cells. */
@@ -21134,4 +21056,1057 @@ textarea {
 .app .bottom .spot .btn {
   align-self: flex-start;
   justify-self: start;
+}
+
+/* ═════════ Stage widths: same mixer in SIMPLE and PRO, and it grows with big screens ═════════
+   The centre pages were laid out for a mixer of at least 530 px; SIMPLE used to squeeze it to 370 px
+   and wide screens stopped it at ~600 px while the decks grew huge. Now: at least 530 px, about 38 % of
+   the window, at most 900 px, in both modes. */
+@media (min-width: 901px) {
+  .app.mode-pro .stage,
+  .app.mode-simple .stage {
+    grid-template-columns: minmax(0, 1fr) clamp(530px, 38vw, 900px) minmax(0, 1fr);
+  }
+}
+/* SIMPLE, MIXER page: no MASTER BUS column, so each channel takes its whole half of the mixer
+   (channel A · master · channel B edge to edge), with bigger knobs and the fader set apart. */
+.app.mode-simple .mixer.centre-mixer {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+.app.mode-simple .mixer.centre-mixer .strip-wrap.a,
+.app.mode-simple .mixer.centre-mixer .strip-wrap.b {
+  justify-self: stretch;
+  width: auto;
+  min-width: 0;
+}
+.app.mode-simple .mixer.centre-mixer .strip-wrap.a {
+  padding-left: 14px;
+  padding-right: 18px;
+}
+.app.mode-simple .mixer.centre-mixer .strip-wrap.b {
+  padding-left: 18px;
+  padding-right: 14px;
+}
+.app.mode-simple .mixer.centre-mixer .strip-body {
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* knobs | fader, each centred in its half */
+  column-gap: 0;
+  justify-items: center;
+}
+.app.mode-simple .mixer.centre-mixer .strip-wrap.b .strip-body {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.app.mode-simple .mixer .strip-wrap .eq-grid .knob-dial {
+  width: 30px;
+  height: 30px;
+}
+.app.mode-simple .mixer .strip-wrap .gain .knob-dial {
+  width: 28px;
+  height: 28px;
+}
+.app.mode-simple .mixer.centre-mixer .mx-master {
+  padding: 0 18px;
+}
+/* …and the crossfader runs from A to B across the whole mixer (no curve / transition controls beside it). */
+.app.mode-simple .mixer .mx-xrow .xfader {
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
+}
+
+/* ═════════ GO LIVE / JOIN (top bar) and the guest's deck panel ═════════ */
+
+.lv-bar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lv-go,
+.lv-btn,
+.lv-stop,
+.lv-chip {
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.lv-go,
+.lv-btn,
+.lv-stop {
+  cursor: pointer;
+  transition:
+    transform 120ms var(--ease-out),
+    background-color 100ms ease,
+    color 100ms ease;
+}
+
+.lv-go:not(:disabled):active,
+.lv-btn:not(:disabled):active,
+.lv-stop:active {
+  transform: scale(0.96);
+}
+
+.lv-go {
+  color: var(--text);
+  border-color: #4a4331;
+}
+
+.lv-go:disabled,
+.lv-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .lv-go:hover:not(:disabled),
+  .lv-btn:hover:not(:disabled) {
+    color: var(--text);
+    background: #1e1b15;
+  }
+  .lv-stop:hover {
+    background: #3a1814;
+  }
+}
+
+.lv-btn.on,
+.lv-chip.on {
+  background: #f2c230;
+  border-color: #f2c230;
+  color: #1a1608;
+}
+
+.lv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.lv-chip i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hot);
+}
+
+.lv-chip.held {
+  background: #3a2a0c;
+  border-color: #f2c230;
+  color: #f2c230;
+}
+
+.lv-stop {
+  border-color: #6b2a24;
+  background: #2a1411;
+  color: #ff8a7a;
+}
+
+.lv-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 4px;
+  width: 360px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+.lv-pop input,
+.gp-search {
+  min-width: 0;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+}
+
+.lv-pop .lv-go,
+.lv-pop .lv-btn {
+  height: 24px;
+  border-radius: 6px;
+}
+
+.lv-err {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #ff8a7a;
+  font-size: 11px;
+}
+
+.guest-panel {
+  --accent: var(--b);
+  position: fixed;
+  top: 40px;
+  right: 12px;
+  z-index: 50;
+  display: grid;
+  gap: 8px;
+  width: 340px;
+  max-height: calc(100vh - 56px);
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--accent);
+  background: var(--panel);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.55);
+  font-size: 11px;
+}
+
+.guest-panel.deck-a {
+  --accent: var(--a);
+}
+
+.guest-panel header {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.guest-panel header b {
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+.guest-panel header span {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gp-info {
+  display: flex;
+  gap: 12px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.gp-row {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 4px;
+}
+
+.gp-key {
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #1e1b15;
+  color: var(--text);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: transform 120ms var(--ease-out);
+}
+
+.gp-key:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+.gp-key:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.gp-key.on {
+  background: #f2c230;
+  border-color: #f2c230;
+  color: #1a1608;
+}
+
+.gp-sliders {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+
+.gp-slider {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 6px;
+  color: var(--dim);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.gp-slider input {
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.gp-other {
+  margin: 0;
+  overflow: hidden;
+  color: var(--dim);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gp-lib {
+  display: grid;
+  gap: 2px;
+  min-height: 0;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.gp-lib li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.gp-lib li span {
+  overflow: hidden;
+  color: var(--dim);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gp-lib li b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.gp-lib em {
+  color: var(--dim);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.gp-lib .gp-key {
+  height: 20px;
+  padding: 0 8px;
+}
+
+button.lv-chip {
+  cursor: pointer;
+}
+
+.lv-reach {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 440px;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.lv-reach p {
+  margin: 0;
+}
+
+.lv-ok {
+  color: var(--ok);
+}
+
+.lv-warn {
+  color: #f2c230;
+}
+
+.lv-note {
+  color: var(--dim);
+}
+
+.lv-link {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.lv-link span {
+  color: var(--dim);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.lv-link code {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 10.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  user-select: all;
+}
+
+.lv-server {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 90px auto;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.lv-server span {
+  color: var(--dim);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.lv-server input {
+  min-width: 0;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 10.5px;
+}
+
+.ph-where {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.ph-where button {
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.ph-where button.on {
+  background: #f2c230;
+  border-color: #f2c230;
+  color: #1a1608;
+}
+
+/* ═════════ FX tab (AUX 1 · AUX 2), house pattern ═════════
+   Like Master: the two units on one surface, no boxes, a hairline between them. Each header: light +
+   title, the effect as one segmented group (lit = yellow), a quiet readout, CLEAR as a raised key.
+   Body: the effect's knobs, then the stem sends, deck A (red) over deck B (blue). */
+.app .bottom .plg2 {
+  display: grid;
+  grid-template-columns: auto repeat(2, minmax(0, 1fr)) 230px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  height: 100%;
+  padding: 12px 6px 8px;
+  box-sizing: border-box;
+}
+.app .bottom .plg2-unit {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 0 18px;
+}
+.app .bottom .plg2-unit + .plg2-unit {
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .bottom .plg2-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.app .bottom .plg2-head > b {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #e3dccd;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.app .bottom .plg2-head > b i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3a352d;
+}
+.app .bottom .plg2-head > b i.on {
+  background: var(--on-c);
+  box-shadow: 0 0 6px rgba(242, 194, 48, 0.7);
+}
+.app .bottom .plg2-pick-now,
+.app .bottom .plg2-pick-list button,
+.app .bottom .plg2-key {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: linear-gradient(180deg, #2b2823 0%, #201e1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: #e3dccd;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 120ms var(--ease-out);
+}
+.app .bottom .plg2-pick-list button.on,
+.app .bottom .plg2-key.on {
+  background: linear-gradient(180deg, var(--on-hi) 0%, var(--on-c) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 10px rgba(242, 194, 48, 0.3);
+  color: var(--on-ink);
+}
+.app .bottom .plg2-pick-now,
+.app .bottom .plg2-pick-list button,
+.app .bottom .plg2-key {
+  border-radius: 6px;
+}
+.app .bottom .plg2-key.clear {
+  margin-left: auto;
+}
+.app .bottom .plg2-key:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.app .bottom .plg2-pick-now:active,
+.app .bottom .plg2-pick-list button:active,
+.app .bottom .plg2-key:not(:disabled):active {
+  transform: scale(0.96);
+}
+.app .bottom .plg2-sub {
+  min-width: 0;
+  overflow: hidden;
+  color: #8a8373;
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.app .bottom .plg2-unit {
+  min-height: 0;
+  container-type: size; /* the body below picks its layout from the room this unit has */
+}
+/* Body: the effect's knobs on top, the sends under them; the two blocks share the panel's height. */
+.app .bottom .plg2-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 12px;
+  min-height: 0;
+}
+.app .bottom .plg2 small {
+  display: block;
+  margin: 0 0 8px;
+  color: #8a8373;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+/* Knobs of one section side by side, close together (as on Master), not spread over the width. */
+.app .bottom .plg2-params {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+.app .bottom .plg2-sends {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.app .bottom .plg2-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.app .bottom .plg2-row em {
+  flex: none;
+  margin-right: 6px;
+}
+.app .bottom .plg2-row em {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--a) 22%, #1f1c17);
+  color: var(--a);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+}
+.app .bottom .plg2-row.b em {
+  background: color-mix(in srgb, var(--b) 22%, #1f1c17);
+  color: var(--b);
+}
+.app .bottom .plg2-row.a .knob-dial { --accent: var(--a); }
+.app .bottom .plg2-row.b .knob-dial { --accent: var(--b); }
+.app .bottom .plg2 .knob {
+  padding: 0 6px;
+  min-width: 44px;
+  box-sizing: border-box;
+}
+.app .bottom .plg2 .knob-dial {
+  width: 34px;
+  height: 34px;
+}
+.app .bottom .plg2 .knob span {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.app .bottom .plg2-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0 18px;
+  color: #6f685a;
+  font-size: 10px;
+}
+
+/* A short bottom panel (small window, or the library dragged up): the effect's knobs and the sends side
+   by side instead of stacked, so nothing scrolls. */
+@container (max-height: 250px) {
+  .app .bottom .plg2-body {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 22px;
+  }
+  .app .bottom .plg2-body > div + div {
+    padding-left: 22px;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .app .bottom .plg2 .knob-dial {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* The effect of an AUX: a key with the current one, opening the list of all eight. */
+.app .bottom .plg2-pick {
+  position: relative;
+  flex: none;
+}
+.app .bottom .plg2-pick-now {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 96px;
+}
+.app .bottom .plg2-pick-now.open svg {
+  transform: rotate(180deg);
+}
+.app .bottom .plg2-pick-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(88px, auto));
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+}
+
+/* DUB column: scenes and the AI dub pads, a hairline from AUX 2. */
+.app .bottom .plg2-dub {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 0 18px;
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .bottom .plg2-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+.app .bottom .plg2-grid.pads {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.app .bottom .plg2-grid .plg2-key {
+  padding: 0 4px;
+}
+.app .bottom .plg2-grid .plg2-key.wide {
+  grid-column: span 2;
+}
+.app .bottom .plg2-sub.doing {
+  color: var(--on-c);
+}
+/* The DUB column sits outside the AUX units: it asks the whole tab (shorter than ~290 px = short panel). */
+.app .bottom .plg2 {
+  container-type: size;
+}
+@container (max-height: 290px) {
+  .app .bottom .plg2-dub {
+    gap: 8px;
+  }
+}
+
+/* STEMS column (first in the FX tab): per deck, each stem's volume knob with its quick cut key under it. */
+.app .bottom .plg2-stems {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 0 18px 0 12px;
+}
+.app .bottom .plg2-stems + .plg2-unit {
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .bottom .plg2-stems .plg2-sends {
+  flex: 1 1 auto;
+  align-content: space-evenly;
+}
+.app .bottom .plg2-row.stems {
+  align-items: flex-start;
+  gap: 2px;
+}
+.app .bottom .plg2-row.stems em {
+  margin-top: 9px;
+}
+.app .bottom .plg2-stem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.app .bottom .plg2-stem .knob {
+  min-width: 42px;
+  padding: 0 3px;
+}
+.app .bottom .plg2-stem .plg2-key {
+  width: 42px;
+  height: 20px;
+  padding: 0;
+  font-size: 8px;
+}
+.app .bottom .plg2-row.stems.off .plg2-stem .knob {
+  opacity: 0.4;
+  pointer-events: none;
+}
+/* Short panel: smaller dials, keys tighter under them. */
+@container (max-height: 290px) {
+  .app .bottom .plg2-stem .knob-dial {
+    width: 28px;
+    height: 28px;
+  }
+  .app .bottom .plg2-stems .plg2-sends {
+    gap: 6px;
+  }
+}
+/* Narrow AUX unit (the STEMS column takes room on smaller screens): knobs closer, less padding. */
+@container (max-width: 480px) {
+  .app .bottom .plg2-body {
+    gap: 12px;
+  }
+  .app .bottom .plg2-body > div + div {
+    padding-left: 12px;
+  }
+  .app .bottom .plg2-unit .knob {
+    min-width: 34px;
+    padding: 0 1px;
+  }
+  .app .bottom .plg2-unit .plg2-row em {
+    margin-right: 2px;
+  }
+}
+@container (max-height: 290px) {
+  .app .bottom .plg2-unit {
+    padding: 0 10px;
+  }
+  .app .bottom .plg2-stem .knob {
+    min-width: 36px;
+  }
+  .app .bottom .plg2-stem .plg2-key {
+    width: 36px;
+  }
+}
+
+/* Under each deck's stems: its RIDDIM pads (version, acapella, D&B, all), lined up with the stem keys. */
+.app .bottom .plg2-deckstems {
+  display: grid;
+  gap: 4px;
+}
+.app .bottom .plg2-riddim {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  margin-left: 24px;
+  contain: inline-size; /* as wide as the stems above it, never wider */
+}
+.app .bottom .plg2-riddim .plg2-key {
+  height: 20px;
+  padding: 0;
+  font-size: 8px;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: clip;
+}
+/* Short panel: no % under the stem dials (it shows on hover), tighter rows, so both decks fit. */
+@container (max-height: 290px) {
+  .app .bottom .plg2-stems {
+    gap: 8px;
+  }
+  .app .bottom .plg2-stem .knob span {
+    display: none;
+  }
+  .app .bottom .plg2-stem,
+  .app .bottom .plg2-deckstems {
+    gap: 3px;
+  }
+  .app .bottom .plg2-stem .plg2-key,
+  .app .bottom .plg2-riddim .plg2-key {
+    height: 18px;
+  }
+  .app .bottom .plg2-row.stems em {
+    margin-top: 6px;
+  }
+}
+
+/* ═════════ DUB page: FIRE group and PADS group read apart ═════════
+   Top: everything FIRE (its sound ‹ menu ›, HOLD / LATCH, DROP · FIRE · FX, its knobs), tagged FIRE in
+   the FIRE red. Below a hairline: PADS with its own header (source, REHEARSE, CUE, ⋯) and one row of
+   four pads that play the moment they are pressed. */
+.app .mixer.centre-dub .cp-dub {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  grid-template-areas: 'head' 'big' 'knobs' 'padh' 'pads';
+}
+.app .mixer.centre-dub .cp-dub > .cp-padhead { grid-area: padh; }
+.app .mixer .cp-dub .cp-grp {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  white-space: nowrap;
+  padding-right: 2px;
+}
+.app .mixer .cp-dub .cp-grp.fire {
+  color: #ff5a4e;
+}
+.app .mixer .cp-dub .cp-firehead {
+  gap: 6px;
+}
+.app .mixer .cp-dub .cp-firehead .cp-seg {
+  flex: none;
+}
+.app .mixer .cp-dub .cp-padhead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.app .mixer .cp-dub .cp-padhead button {
+  height: 24px;
+}
+.app .mixer .cp-dub .cp-padhead .cp-more {
+  width: 24px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+/* One row of four pads, as tall as the room left allows (within reason). */
+.app .mixer.centre-dub .cp-dub > .cp-sounds {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(34px, 58px);
+  align-content: start;
+}
+
+/* ═════════ DECK DUB page: two groups, like the DUB page ═════════
+   DUB ECHO (shared by both decks: presets + knobs) and, below a hairline, DUB KEY (how the key on each
+   deck behaves). Group titles left, RESET and ⋯ right; the spare height spreads between the bands. */
+.app .mixer .cp-grp {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.app .mixer .cp-ghead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.app .mixer .cp-ghead .cp-more {
+  width: 24px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+.app .mixer .cp-note {
+  font-size: 9px;
+  color: #8a8373;
+  white-space: nowrap;
+}
+.app .mixer .cp-both {
+  display: inline-flex;
+  gap: 3px;
+}
+.app .mixer .cp-both i {
+  font-style: normal;
+  font-size: 8px;
+  font-weight: 800;
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 3px;
+  color: #fff;
+}
+.app .mixer .cp-both i.a { background: var(--a, #e5484d); }
+.app .mixer .cp-both i.b { background: var(--b, #4aa8ff); }
+.app .mixer .cp-part-echo > .cp-sec.cp-echo {
+  height: 100%;
+  justify-content: space-between;
+}
+/* Presets and knobs are one group now: no line between them; the line goes above DUB KEY. */
+.app .mixer .cp-part-echo .cp-echo .cp-knobs {
+  border-top: 0;
+  padding-top: 2px;
+}
+.app .mixer .cp-part-echo .cp-echo .cp-gsep {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+.app .mixer .cp-part-echo > .cp-sec > .cp-row.cp-keyrows {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* ═════════ TAPE page: same pattern as DUB and DECK DUB ═════════
+   TAPE ECHO title left with ⋯ right; THROW, TIME, TAPE, SPRING and OUTPUT titled like the other
+   groups (9 px, dim, wide tracking); hairlines between the bands and the spare height spread
+   between them instead of left at the bottom. */
+.app .mixer .cp-part-tape > .cp-tape {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+.app .mixer .cp-part-tape .echo-desk {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: space-between;
+}
+.app .mixer .cp-part-tape .mx-sec-head span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+
+/* AI FIRE key (FIRE header): yellow while armed or sounding, with the beats left in a small badge. */
+.app .mixer .cp-dub .cp-aifire {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  white-space: nowrap;
+}
+.app .mixer .cp-dub .cp-aifire .cp-count {
+  min-width: 14px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  line-height: 14px;
+  text-align: center;
+}
+/* What AI FIRE is about to do: a small tag on top of the big keys, taking no room of its own. */
+.app .mixer.centre-dub .cp-dub > .cp-big {
+  position: relative;
+}
+.app .mixer .cp-dub .cp-aisay {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  max-width: calc(100% - 12px);
+  padding: 1px 7px;
+  border-radius: 3px;
+  background: rgba(16, 14, 12, 0.82);
+  color: var(--on-c);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.app .mixer .cp-dub .cp-aisay.firing {
+  background: var(--on-c);
+  color: var(--on-ink);
+}
+
+/* ═════════ MIC page: same pattern as DUB, DECK DUB and TAPE ═════════
+   The page is full, so ⋯ (Voice tab) sits on the right of the MIC title row instead of a header of its
+   own; group titles in the shared 9 px dim style. */
+.app .mixer .cp-mic {
+  position: relative;
+}
+.app .mixer .cp-mic .cp-mic-more {
+  position: absolute;
+  top: 3px;
+  right: 10px;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+.app .mixer .cp-mic .mx-sec-head span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+.app .mixer .cp-dub .cp-knobs .cp-aifire {
+  align-self: center;
 }

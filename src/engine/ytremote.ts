@@ -44,6 +44,13 @@ interface DesktopBridge {
   remoteStop?(): Promise<RemoteInfo>
   remoteInfo?(): Promise<RemoteInfo>
   remoteRenew?(): Promise<RemoteInfo>
+  liveStart?(): Promise<import('../live').LiveInfo>
+  liveStop?(): Promise<import('../live').LiveInfo>
+  liveInfo?(): Promise<import('../live').LiveInfo | null>
+  liveSend?(id: number, text: string): void
+  liveKick?(id: number): void
+  liveReset?(): Promise<import('../live').LiveInfo | null>
+  onLive?(callback: (ev: import('../live').LiveSignal) => void): () => void
   remoteState?(text: string): void
   remoteReply?(client: number, text: string): void
   onRemote?(callback: (msg: Record<string, unknown>, client: number) => void): () => void

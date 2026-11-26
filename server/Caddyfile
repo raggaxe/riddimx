@@ -1,0 +1,8 @@
+# https with an automatic certificate (Let's Encrypt). LiveKit's signalling under /rtc and /twirp,
+# everything else (listener page, tokens) to the relay.
+{$DOMAIN} {
+	encode gzip
+	@livekit path /rtc /rtc/* /twirp/*
+	reverse_proxy @livekit 127.0.0.1:7880
+	reverse_proxy 127.0.0.1:8080
+}

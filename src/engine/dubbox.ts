@@ -578,6 +578,28 @@ class DubBox extends Store<DubBoxState> {
     if (this.state.playing || this.state.slotPlaying !== null) this.set({ playing: false, slotPlaying: null })
   }
 
+  /**
+   * AI FIRE: plays a sound that is not the patch on the FIRE key (sustained ones for `hold` seconds), and
+   * afterwards puts the echo back the way the FIRE patch has it, once its tail has gone. Returns a stop.
+   */
+  aiShot(p: Patch, hold: number): () => void {
+    window.clearTimeout(this.aiTimer)
+    this.trigger(p)
+    const mine = this.voice
+    const restore = () => {
+      if (this.voice && this.voice !== mine) return // the DJ fired something since: theirs now
+      this.applyEcho(this.state.patch)
+    }
+    const stop = () => {
+      window.clearTimeout(this.aiTimer)
+      if (this.voice === mine) this.release()
+      this.aiTimer = window.setTimeout(restore, 2500)
+    }
+    this.aiTimer = window.setTimeout(stop, Math.max(0.05, hold) * 1000)
+    return stop
+  }
+  private aiTimer = 0
+
   /** PANIC: the sound stops, THROW let go, the echo stops repeating. */
   panic(): void {
     this.release()

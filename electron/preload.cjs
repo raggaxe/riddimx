@@ -32,6 +32,17 @@ contextBridge.exposeInMainWorld('vxDesktop', {
   remoteStop: () => ipcRenderer.invoke('vx:remote-stop'),
   remoteInfo: () => ipcRenderer.invoke('vx:remote-info'),
   remoteRenew: () => ipcRenderer.invoke('vx:remote-renew'),
+  liveStart: () => ipcRenderer.invoke('vx:live-start'),
+  liveStop: () => ipcRenderer.invoke('vx:live-stop'),
+  liveInfo: () => ipcRenderer.invoke('vx:live-info'),
+  liveSend: (id, text) => ipcRenderer.send('vx:live-send', id, text),
+  liveKick: (id) => ipcRenderer.send('vx:live-kick', id),
+  liveReset: () => ipcRenderer.invoke('vx:live-reset'),
+  onLive: (callback) => {
+    const listener = (_e, ev) => callback(ev)
+    ipcRenderer.on('vx:live', listener)
+    return () => ipcRenderer.removeListener('vx:live', listener)
+  },
   remoteState: (text) => ipcRenderer.send('vx:remote-state', text),
   remoteReply: (client, text) => ipcRenderer.send('vx:remote-reply', client, text),
   onRemote: (callback) => {

@@ -8,7 +8,7 @@ import { Knob } from './Knob'
 export function AudioPanel() {
   const m = useStore(mixer)
   useEffect(() => {
-    void mixer.refreshDevices()
+    void mixer.rescan()
   }, [])
 
   const ctx = mixer.ctx
@@ -121,14 +121,29 @@ export function AudioPanel() {
           </span>
           <button
             className="ap2-btn"
-            onClick={() => void mixer.refreshDevices()}
+            onClick={() => void mixer.rescan()}
             title="Look for the interface again (after plugging it in)"
           >
             REFRESH
           </button>
+          <button
+            className="ap2-btn"
+            onClick={() => {
+              if (window.confirm('Reset the audio settings? Outputs, headphones, mic, crossfader curve and compressor go back to the defaults (your library and pads stay).'))
+                void mixer.resetAudio()
+            }}
+            title="No sound after an update? Forget every audio setting and start clean on the system default"
+          >
+            RESET AUDIO
+          </button>
         </div>
       </section>
 
+      {m.missing.length > 0 && (
+        <p className="deck-msg error ap2-err">
+          {m.missing.join(' and ')} not connected: playing on the system default for now. Plug it in (or press REFRESH) and the sound goes back to it by itself.
+        </p>
+      )}
       {m.audioError && <p className="deck-msg error ap2-err">{m.audioError}</p>}
       <p className="ap2-hint">
         <b>Audio interface:</b> plug it into USB, click REFRESH, pick the interface as Master output and press TEST. 4-channel interface (or a controller with a headphone out): pick “Channels 3-4” for the headphones. No interface: master on the speakers and headphones on the Mac's headphone jack. Each channel's headphone button in the mixer sends that deck to the cue, even with the fader down.
