@@ -15,6 +15,7 @@ import { MasterPanel } from './components/MasterPanel'
 import { EchoUnit } from './components/Rack'
 import { SettingsModal } from './components/SettingsModal'
 import { SpotifyPanel } from './components/SpotifyPanel'
+import { DownloadPanel } from './components/DownloadPanel'
 import { Splitter } from './components/Splitter'
 import { DubBoxPanel } from './components/DubBoxPanel'
 import { SamplerPanel } from './components/SamplerPanel'
@@ -22,9 +23,14 @@ import { TrackView } from './components/TrackView'
 import { TopBar } from './components/TopBar'
 import { GuestPanel } from './components/GuestPanel'
 import { VoiceTab } from './components/VoiceTab'
+import { Toaster } from './components/Toaster'
+import { startToastWatch } from './toastWatch'
 
-import { SIMPLE_TABS, ui, type Tab } from './ui'
+import { SIMPLE_TABS, shownTab, ui, type Tab } from './ui'
 import { padModes } from './padmode'
+
+// Errors, warnings and new versions reach the DJ as toasts.
+startToastWatch()
 
 export function App() {
   const { tab, layout, mode } = useStore(ui)
@@ -66,7 +72,7 @@ export function App() {
   }, [])
 
   const tabButton = (id: Tab, label: string, on?: boolean) =>
-    (!simple || SIMPLE_TABS.includes(id)) && (
+    shownTab(id) && (!simple || SIMPLE_TABS.includes(id)) && (
     <button className={'tab' + (tab === id ? ' active' : '')} onClick={() => setTab(id)}>
       {label}
       {on !== undefined && <i className={'dot' + (on ? ' on' : '')} />}
@@ -76,6 +82,7 @@ export function App() {
   return (
     <div className={'app mode-' + mode} style={{ '--track-h': layout.track + 'px', '--bottom-h': layout.bottom + 'px' } as React.CSSProperties}>
       <TopBar />
+      <Toaster />
       <TrackView />
       <Splitter part="track" sign={1} label="Waveform height" />
       <main className="stage">
@@ -94,6 +101,7 @@ export function App() {
           {tabButton('plugin', 'FX')}
           {tabButton('master', 'Master')}
           {tabButton('spotify', 'Spotify', sp.loggedIn)}
+          {tabButton('download', 'Download')}
           {/* The open tab's own tools (search, add files…) sit here, on the tab row, not on a row of their own. */}
           <div className="tab-tools" id="tab-tools" />
         </nav>
@@ -109,7 +117,8 @@ export function App() {
           {tab === 'voice' && <VoiceTab />}
           {tab === 'plugin' && <PluginPanel />}
           {tab === 'master' && <MasterPanel />}
-          {tab === 'spotify' && <SpotifyPanel />}
+          {tab === 'spotify' && shownTab('spotify') && <SpotifyPanel />}
+          {tab === 'download' && shownTab('download') && <DownloadPanel />}
         </div>
       </section>
       <SettingsModal />

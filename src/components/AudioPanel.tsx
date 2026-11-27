@@ -139,12 +139,7 @@ export function AudioPanel() {
         </div>
       </section>
 
-      {m.missing.length > 0 && (
-        <p className="deck-msg error ap2-err">
-          {m.missing.join(' and ')} not connected: playing on the system default for now. Plug it in (or press REFRESH) and the sound goes back to it by itself.
-        </p>
-      )}
-      {m.audioError && <p className="deck-msg error ap2-err">{m.audioError}</p>}
+      {/* A missing interface and output errors are shown as toasts. */}
       <p className="ap2-hint">
         <b>Audio interface:</b> plug it into USB, click REFRESH, pick the interface as Master output and press TEST. 4-channel interface (or a controller with a headphone out): pick “Channels 3-4” for the headphones. No interface: master on the speakers and headphones on the Mac's headphone jack. Each channel's headphone button in the mixer sends that deck to the cue, even with the fader down.
       </p>

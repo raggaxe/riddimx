@@ -83,7 +83,6 @@ export function LiveBar() {
               setJoining(false)
             }}
           >
-            {s.joinError && <p className="lv-err">{s.joinError}</p>}
             <input
               ref={field}
               value={link}

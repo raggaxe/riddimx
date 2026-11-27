@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { spotify } from '../engine/spotify'
 import { deckA, deckB, type Deck } from '../engine/deck'
 import { library } from '../library'
+import { musicFolder } from '../musicFolder'
+import { SpotifyFiles } from './SpotifyFiles'
 import { useStore } from '../store'
 import { ui } from '../ui'
+import { useToastError } from './Toaster'
 
 interface Track {
   id: string
@@ -38,13 +41,30 @@ function CopyButton({ text }: { text: string }) {
  * Spotify: setting up the account (once), then searching the catalogue and sending tracks
  * to the library or straight to a deck.
  */
+/** Double-click in the search: the track starts as soon as the deck has it (or the deck says why not). */
+function playWhenLoaded(deck: Deck): void {
+  const started = Date.now()
+  let off = (): void => undefined
+  const check = () => {
+    const s = deck.get()
+    if (s.error || s.kind === 'none' || Date.now() - started > 30000) return off()
+    if (s.loading) return
+    off()
+    deck.play()
+  }
+  off = deck.subscribe(check)
+  window.setTimeout(check, 0)
+}
+
 export function SpotifyPanel() {
   const s = useStore(spotify)
   const [me, setMe] = useState<{ name: string; premium: boolean } | null>(null)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Track[]>([])
   const [searching, setSearching] = useState(false)
+  const [view, setView] = useState<'search' | 'files'>('search')
   const [failed, setFailed] = useState<string | null>(null)
+  useToastError('spotify-search', 'Spotify', failed)
   const asked = useRef(0)
   const added = useStore(library).entries
 
@@ -68,7 +88,12 @@ export function SpotifyPanel() {
     const timer = window.setTimeout(async () => {
       setSearching(true)
       try {
-        const json = await spotify.api('GET', '/search?type=track&limit=30&q=' + encodeURIComponent(q))
+        // Apps in Spotify's development mode get at most 10 results per search (more = "Invalid limit").
+        const path = '/search?type=track&q=' + encodeURIComponent(q) + '&limit='
+        const json = await spotify.api('GET', path + 10).catch((e: Error) => {
+          if (/limit/i.test(e.message)) return spotify.api('GET', path + 5)
+          throw e
+        })
         if (ticket !== asked.current) return
         setResults(
           (json?.tracks?.items ?? []).map((t: any) => ({
@@ -90,10 +115,21 @@ export function SpotifyPanel() {
     return () => window.clearTimeout(timer)
   }, [query, s.loggedIn])
 
-  /** Adds the track to the library (once), then loads it on a deck if one is given. */
-  const send = (t: Track, deck: Deck | null) => {
-    const entry = library.addLink('https://open.spotify.com/track/' + t.id)
-    if (entry && deck) library.load(entry, deck)
+  /** Adds the track to the library (once), named, and linked to the DJ's file of it if there is one. */
+  const add = (t: Track) => {
+    const added = library.addLink('https://open.spotify.com/track/' + t.id)
+    if (!added) return null
+    library.describe(added.id, t.title, t.artist, t.duration)
+    musicFolder.match()
+    return library.byId(added.id) ?? null
+  }
+
+  /** Adds the track, then loads it on a deck if one is given. */
+  const send = (t: Track, deck: Deck | null, play = false) => {
+    const entry = add(t)
+    if (!entry || !deck) return
+    library.load(entry, deck)
+    if (play) playWhenLoaded(deck)
   }
   const inLibrary = (id: string) => added.some((e) => e.kind === 'spotify' && e.ref === id)
 
@@ -114,6 +150,18 @@ export function SpotifyPanel() {
   return (
     <div className="spot on">
       <section className="spot-main">
+        <div className="spot-views">
+          <button className="btn small" aria-pressed={view === 'search'} onClick={() => setView('search')}>
+            Search
+          </button>
+          <button className="btn small" aria-pressed={view === 'files'} onClick={() => setView('files')}>
+            My files
+          </button>
+        </div>
+        {view === 'files' ? (
+          <SpotifyFiles />
+        ) : (
+          <>
         <div className="lib-bar">
           <label className="lib-search">
             <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
@@ -137,12 +185,11 @@ export function SpotifyPanel() {
             {searching && <span className="spot-busy">searching…</span>}
           </label>
         </div>
-        {failed && <p className="deck-msg error">{failed}</p>}
         <div className="lib-tracks spot-results">
           {results.length === 0 ? (
             <p className="empty">
               {query.trim().length < 2
-                ? 'Type to search. A / B plays on the deck, + saves to the library, double-click loads on the free deck.'
+                ? 'Type to search. Double-click plays on the free deck, A / B loads on that deck, + saves to the library.'
                 : searching
                   ? ''
                   : 'Nothing found.'}
@@ -166,8 +213,12 @@ export function SpotifyPanel() {
                     <tr
                       key={t.id}
                       onDoubleClick={() => {
-                        const entry = library.addLink('https://open.spotify.com/track/' + t.id)
-                        if (entry) library.loadFree(entry, deckA, deckB)
+                        const deck = !deckA.get().playing ? deckA : !deckB.get().playing ? deckB : null
+                        if (!deck) {
+                          setFailed('Both decks are playing: use A or B to choose one.')
+                          return
+                        }
+                        send(t, deck, true)
                       }}
                     >
                       <td className="spot-cover">{t.cover && <img src={t.cover} alt="" loading="lazy" />}</td>
@@ -199,6 +250,8 @@ export function SpotifyPanel() {
             </table>
           )}
         </div>
+          </>
+        )}
       </section>
 
       <aside className="spot-side">
@@ -215,7 +268,6 @@ export function SpotifyPanel() {
         <button className="btn small" onClick={() => ui.openSettings('contas')}>
           Account in Settings
         </button>
-        {s.error && <p className="deck-msg error">{s.error}</p>}
       </aside>
     </div>
   )
@@ -252,8 +304,7 @@ export function SpotifyAccount() {
           <button className="btn small" onClick={() => spotify.logout()}>
             Disconnect account
           </button>
-          {s.error && <p className="deck-msg error">{s.error}</p>}
-        </section>
+          </section>
         <Limits />
       </div>
     )
@@ -294,7 +345,11 @@ export function SpotifyAccount() {
             onSubmit={(e) => {
               e.preventDefault()
               spotify.setClientId(clientId)
-              void spotify.login()
+              void spotify.login().then(() => {
+                // Connected: start the app afresh so search and the player begin with the new account,
+                // unless music is playing (then it carries on; a restart later does the same).
+                if (spotify.get().loggedIn && !deckA.get().playing && !deckB.get().playing) location.reload()
+              })
             }}
           >
             <input
@@ -308,8 +363,7 @@ export function SpotifyAccount() {
               Connect account
             </button>
           </form>
-          {s.error && <p className="deck-msg error">{s.error}</p>}
-        </section>
+          </section>
         <Limits />
       </div>
     )

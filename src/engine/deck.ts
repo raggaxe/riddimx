@@ -770,16 +770,28 @@ export class Deck extends Store<DeckState> implements SpotifyOwner {
       }
       if (spotify.owner && spotify.owner !== this) spotify.owner.spotifyReleased()
       spotify.owner = this
+      await spotify.ensurePlayer() // the player may have gone (sleep, network): back first
       await spotify.player.activateElement?.()
-      await spotify.api('PUT', '/me/player/play?device_id=' + spotify.deviceId, {
-        uris: [this.spUri],
-        position_ms: Math.round(this.spPos * 1000),
-      })
+      const body = { uris: [this.spUri], position_ms: Math.round(this.spPos * 1000) }
+      try {
+        await spotify.api('PUT', '/me/player/play?device_id=' + spotify.deviceId, body)
+      } catch (e) {
+        // A player that has just started is not always known to Spotify yet ("Device not found"):
+        // make it the active device, then play again.
+        if (!/not found|404|no active device/i.test((e as Error).message)) throw e
+        await spotify.api('PUT', '/me/player', { device_ids: [spotify.deviceId], play: false })
+        await new Promise((r) => window.setTimeout(r, 600))
+        await spotify.api('PUT', '/me/player/play?device_id=' + spotify.deviceId, body)
+      }
       this.spStarted = true
       this.spPosAt = performance.now()
       this.applyOutput()
     } catch (e) {
-      this.set({ error: (e as Error).message, playing: false })
+      const m = (e as Error).message
+      this.set({
+        playing: false,
+        error: /premium/i.test(m) ? 'Spotify only plays on the decks with a Premium account.' : "Spotify didn't start the track: " + m,
+      })
     }
   }
 

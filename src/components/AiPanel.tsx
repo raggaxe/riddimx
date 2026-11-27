@@ -57,7 +57,6 @@ export function AiPanel() {
             </button>
           )}
         </div>
-        {lyr.modelError && <p className="deck-msg error ap2-err">Install failed: {lyr.modelError}</p>}
       </section>
       )}
 

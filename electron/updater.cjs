@@ -2,7 +2,7 @@
  * Updates of the packaged app, from the project's GitHub releases.
  *
  * On start (and every few hours) the latest release is looked up. When it is newer than this app,
- * the page is told, the zip for this Mac (RiddimX-darwin-<arch>.zip) is downloaded in the background,
+ * the page is told and asks the DJ; only on "download" is the zip for this Mac (RiddimX-darwin-<arch>.zip) fetched,
  * checked against its published SHA-256 (RiddimX-darwin-<arch>.zip.sha256) and unpacked. The new app
  * replaces this one when the DJ asks ("Reiniciar e atualizar") or the next time the app quits.
  *
@@ -87,6 +87,9 @@ function setupUpdater(win) {
     return hash.digest('hex')
   }
 
+  let found = null // { zip, sum, info } of a newer release, waiting for the DJ to say "download"
+
+  /** Looks for a newer release and announces it. Nothing is downloaded until the DJ asks (fetch). */
   async function check(manual = false) {
     if (!app.isPackaged) return send({ status: 'dev' })
     if (busy || ready) return
@@ -103,8 +106,23 @@ function setupUpdater(win) {
       const sum = rel.assets?.find((a) => a.name === asset + '.sha256')
       const info = { version: String(version).replace(/^v/, ''), notes: String(rel.body || '').slice(0, 2000), url: rel.html_url }
       if (!zip || !sum) return send({ status: 'available', ...info, error: 'this version has no file for this computer' })
-      // Windows: the new version is announced with its page; the DJ downloads it (no swap-in-place yet).
-      if (process.platform !== 'darwin') return send({ status: 'available', ...info })
+      found = { zip, sum, info }
+      send({ status: 'available', ...info, error: undefined })
+    } catch (e) {
+      send({ status: 'error', error: String(e?.message || e) })
+    } finally {
+      busy = false
+    }
+  }
+
+  /** The DJ said "download": fetch the announced version, check it and get it ready to install (Mac). */
+  async function fetchUpdate() {
+    if (!app.isPackaged || busy || ready || !found) return
+    // Windows: no swap-in-place yet; the release page opens and the DJ downloads it there.
+    if (process.platform !== 'darwin') return
+    const { zip, sum, info } = found
+    busy = true
+    try {
       send({ status: 'downloading', ...info, progress: 0 })
 
       await fs.promises.rm(dir, { recursive: true, force: true })
@@ -156,6 +174,7 @@ function setupUpdater(win) {
   return {
     state: () => state,
     check,
+    fetch: fetchUpdate,
     /** "Reiniciar e atualizar": quit now; the new version opens by itself. */
     installNow() {
       if (install(true)) app.quit()

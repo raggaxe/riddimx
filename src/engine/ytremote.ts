@@ -29,7 +29,33 @@ export interface RemoteInfo {
   error?: string
 }
 
+/** One download from a direct link (electron/downloads.cjs). */
+export interface DownloadState {
+  id: number
+  url: string
+  status: 'downloading' | 'done' | 'error' | 'cancelled'
+  name?: string
+  received?: number
+  total?: number
+  path?: string
+  error?: string
+}
+
+/** The watched music folder (electron/musicfolder.cjs). */
+export interface MusicScan {
+  folder: string | null
+  files: string[]
+}
+
 interface DesktopBridge {
+  musicScan?(): Promise<MusicScan | null>
+  musicPick?(): Promise<MusicScan | null>
+  musicForget?(): Promise<MusicScan | null>
+  dlStart?(url: string): Promise<number | null>
+  dlCancel?(id: number): Promise<void>
+  dlReveal?(file: string): Promise<void>
+  dlFolder?(): Promise<string | null>
+  onDownload?(callback: (state: DownloadState) => void): () => void
   capture(webContentsId: number): Promise<boolean>
   pathOf(file: File): string | null
   readAudio(filePath: string): Promise<Uint8Array | null>
@@ -38,6 +64,8 @@ interface DesktopBridge {
   setZoom?(factor: number): Promise<void> // size of the whole interface
   updateState?(): Promise<UpdateState | null>
   updateCheck?(): Promise<void>
+  updateDownload?(): Promise<void>
+  spotifyAuth?(url: string, redirect: string): Promise<{ code?: string; error?: string }>
   updateInstall?(): Promise<void>
   onUpdate?(callback: (state: UpdateState) => void): () => void
   remoteStart?(): Promise<RemoteInfo>

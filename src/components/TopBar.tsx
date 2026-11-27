@@ -210,7 +210,8 @@ export function TopBar() {
       </div>
       {/* Right: how the app looks and how it is set up. */}
       <div className="top-actions">
-        {(up.status === 'downloading' || up.status === 'ready' || (up.status === 'available' && !up.error)) && (
+        {/* A new version is offered in a toast; the top bar only keeps the download / ready state. */}
+        {(up.status === 'downloading' || up.status === 'ready') && (
           <button
             className={'tb-update' + (up.status === 'ready' ? ' ready' : '')}
             onClick={() => (up.status === 'ready' ? updates.install() : ui.openSettings('geral'))}

@@ -22110,3 +22110,298 @@ button.lv-chip {
 .app .mixer .cp-dub .cp-knobs .cp-aifire {
   align-self: center;
 }
+
+/* ═════════ Toasts ═════════
+   Every message (errors, warnings, a new version) in the bottom-right corner, over everything.
+   Square panel like the rest of the hardware, a coloured edge by kind, rounded keys, close × on each. */
+.toaster {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  position: relative;
+  padding: 12px 14px 12px 16px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+  color: var(--text);
+  font-size: 12px;
+  transition: opacity 200ms var(--ease-out), translate 200ms var(--ease-out);
+}
+@starting-style {
+  .toast {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: opacity 150ms ease;
+  }
+  @starting-style {
+    .toast {
+      translate: none;
+    }
+  }
+}
+.toast::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--dim);
+}
+.toast.error::before { background: var(--err); }
+.toast.warn::before { background: #f2a33a; }
+.toast.update::before { background: var(--on-c, #f2c230); }
+.toast-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.toast-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.toast-x {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin: -3px -6px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+}
+.toast-x:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+}
+.toast-body {
+  margin: 4px 0 0;
+  color: #c9c1b0;
+  line-height: 1.45;
+}
+.toast-bar {
+  height: 4px;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.toast-bar i {
+  display: block;
+  height: 100%;
+  background: var(--on-c, #f2c230);
+  transition: width 300ms linear;
+}
+.toast-more {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--on-c, #f2c230);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.toast-details {
+  max-height: 220px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: #c9c1b0;
+  font: 11px/1.5 inherit;
+  font-family: inherit;
+  white-space: pre-wrap;
+}
+.toast-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+}
+.toast-btn {
+  height: 26px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #24211b;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: scale 150ms ease-out;
+}
+.toast-btn:not(:disabled):active {
+  scale: 0.96;
+}
+.toast-btn.primary {
+  border-color: transparent;
+  background: linear-gradient(180deg, #f7d35f, #f2c230);
+  color: #1a1c1e;
+}
+
+/* Spotify › My files: the DJ's own file of each track. */
+.spot-views,
+.spot-folder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.spot-views .btn[aria-pressed='true'] {
+  outline: 1px solid currentColor;
+}
+.spot-folder span {
+  opacity: 0.7;
+  overflow-wrap: anywhere;
+}
+.spot-folder b {
+  margin-left: auto;
+}
+.lib-tracks .spot-file-state {
+  width: 22%;
+}
+.lib-tracks .spot-file-act {
+  width: 300px;
+}
+.spot-file-act div {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}
+.spot-file-act a {
+  color: inherit;
+}
+
+/* ── Download tab: a direct link to an audio file goes into the library ── */
+.dl {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.tab-tools .dl-bar {
+  flex: 1;
+}
+.dl-url input[type='url'] {
+  font-size: 12px;
+}
+.dl-empty {
+  padding: 4px 2px;
+}
+.dl-empty .empty {
+  margin: 0 0 8px;
+}
+.dl-hints {
+  margin: 0;
+  padding: 0 0 0 16px;
+  color: var(--dim);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.dl-hints b {
+  color: var(--text);
+  font-weight: 700;
+}
+.dl-list {
+  flex: 1;
+}
+.dl-list thead th {
+  padding: 0 8px;
+  color: var(--dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+}
+.dl-list td {
+  height: 30px;
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dl-list .dl-state {
+  width: 34%;
+}
+.dl-list .c-num {
+  width: 70px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.dl-list .c-act {
+  width: 96px;
+  text-align: right;
+}
+.dl-state small {
+  font-size: 11px;
+  color: var(--dim);
+}
+.dl-state small.ok {
+  color: #7fc98a;
+}
+.dl-state small.err {
+  color: var(--err);
+}
+.dl-progress {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 14px;
+  background: #0a0907;
+  border: 1px solid var(--line);
+}
+.dl-progress i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(#f2c230, #d9a91c);
+  transition: width 150ms linear;
+}
+.dl-progress {
+  margin-right: 40px;
+}
+.dl-progress small {
+  position: absolute;
+  right: -36px;
+  color: var(--text);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.dl-row.error td.c-title,
+.dl-row.cancelled td.c-title {
+  color: var(--dim);
+}
+.dl-clear {
+  align-self: flex-start;
+  margin: 8px 2px 2px;
+}
+
+/* Downloads: the row actions are always there (not only on hover, as in the library). */
+.dl-list .row-btn {
+  opacity: 1;
+}

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { deckA, deckB, type Deck } from '../engine/deck'
 import { ENTRY_DRAG, RIDDIMS_ON, library, type Entry } from '../library'
 import { useStore } from '../store'
+import { FEATURES } from '../ui'
 import { browse, takeBrowse } from '../browse'
 import { bpmStore } from '../engine/bpm'
 import { camelot, harmonic, keyStore } from '../engine/key'
@@ -276,7 +277,7 @@ export function LibraryPanel() {
           ref={search}
           type="search"
           value={query}
-          placeholder="Search, or paste a YouTube / Spotify link"
+          placeholder={FEATURES.spotify ? "Search, or paste a YouTube / Spotify link" : "Search, or paste a YouTube link"}
           aria-label="Search the library or paste a link"
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
@@ -341,7 +342,6 @@ export function LibraryPanel() {
   return (
     <div className="library">
       {slot ? createPortal(bar, slot) : bar}
-      {error && <p className="deck-msg error">{error}</p>}
 
       <div className="lib-body">
         <nav className="lib-lists" aria-label="Lists">

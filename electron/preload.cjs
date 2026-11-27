@@ -13,6 +13,20 @@ contextBridge.exposeInMainWorld('vxDesktop', {
     }
   },
   readAudio: (filePath) => ipcRenderer.invoke('vx:read-audio', filePath),
+  // The DJ's music folder: its audio files, choosing it, and forgetting it.
+  musicScan: () => ipcRenderer.invoke('vx:music-scan'),
+  musicPick: () => ipcRenderer.invoke('vx:music-pick'),
+  musicForget: () => ipcRenderer.invoke('vx:music-forget'),
+  // Audio files from a direct link (Dropbox, Google Drive, a plain .mp3 / .wav URL) into Music/RiddimX Downloads.
+  dlStart: (url) => ipcRenderer.invoke('vx:dl-start', url),
+  dlCancel: (id) => ipcRenderer.invoke('vx:dl-cancel', id),
+  dlReveal: (file) => ipcRenderer.invoke('vx:dl-reveal', file),
+  dlFolder: () => ipcRenderer.invoke('vx:dl-folder'),
+  onDownload: (callback) => {
+    const listener = (_event, state) => callback(state)
+    ipcRenderer.on('vx:dl', listener)
+    return () => ipcRenderer.removeListener('vx:dl', listener)
+  },
   // AI stems of a local file: id = SHA-1 of the file, pcm = interleaved stereo float32.
   stemsAvailable: () => ipcRenderer.invoke('vx:stems-available'),
   stemsHas: (id) => ipcRenderer.invoke('vx:stems-has', id),
@@ -22,6 +36,9 @@ contextBridge.exposeInMainWorld('vxDesktop', {
   updateState: () => ipcRenderer.invoke('vx:update-state'),
   updateCheck: () => ipcRenderer.invoke('vx:update-check'),
   updateInstall: () => ipcRenderer.invoke('vx:update-install'),
+  updateDownload: () => ipcRenderer.invoke('vx:update-download'),
+  // Spotify login in its own window: { code } or { error }.
+  spotifyAuth: (url, redirect) => ipcRenderer.invoke('vx:spotify-auth', url, redirect),
   onUpdate: (callback) => {
     const listener = (_event, state) => callback(state)
     ipcRenderer.on('vx:update', listener)

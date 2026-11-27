@@ -103,7 +103,6 @@ export function MidiPanel() {
             </button>
           </span>
         </div>
-        {s.error && <p className="deck-msg error">{s.error}</p>}
 
         <div className="mp-table">
           <table>

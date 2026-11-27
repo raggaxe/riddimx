@@ -106,9 +106,9 @@ export function SettingsPanel() {
             <button className="ap2-btn st-go" onClick={() => updates.install()}>
               RESTART AND UPDATE
             </button>
-          ) : up.status === 'available' && up.url?.startsWith('https://github.com/') ? (
-            // No update in place here (Windows): the release page, to download the new version.
-            <button className="ap2-btn st-go" onClick={() => window.open(up.url, '_blank')}>
+          ) : up.status === 'available' && !up.error ? (
+            // Mac: downloads and checks it here. Windows: opens the release page to download it.
+            <button className="ap2-btn st-go" onClick={() => updates.download()}>
               DOWNLOAD {up.version}
             </button>
           ) : (

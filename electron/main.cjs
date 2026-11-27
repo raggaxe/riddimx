@@ -5,7 +5,7 @@
  * YouTube decks get no EQ, filter or stems. Here each YouTube deck lives in its own muted
  * <webview>, and the shell hands that page's audio to the app without any "share audio" prompt.
  */
-const { app, BrowserWindow, ipcMain, net, session, shell, systemPreferences, webContents } = require('electron')
+const { app, BrowserWindow, components, dialog, ipcMain, net, session, shell, systemPreferences, webContents } = require('electron')
 const crypto = require('node:crypto')
 const { once } = require('node:events')
 const { spawn, execFile } = require('node:child_process')
@@ -15,6 +15,8 @@ const path = require('node:path')
 const { setupUpdater } = require('./updater.cjs')
 const { createRemote } = require('./remote.cjs')
 const { createLive } = require('./live.cjs')
+const { setupMusicFolder } = require('./musicfolder.cjs')
+const { setupDownloads } = require('./downloads.cjs')
 
 // VX_ORIGIN (from source only) points a test run at another dev server, so it never touches the DJ's app on 5173.
 const ORIGIN = (!app.isPackaged && process.env.VX_ORIGIN) || 'http://127.0.0.1:5173'
@@ -224,15 +226,24 @@ app.on('second-instance', () => {
 
 app.whenReady().then(async () => {
   await ensureServer()
+  // Widevine (Spotify's protected audio), from the castlabs build of Electron: ready before any page loads.
+  // Offline or failed install: the app still opens, only Spotify won't play.
+  if (components) await components.whenReady().catch((e) => console.error('Widevine:', e))
   const ses = session.defaultSession
 
   // Our own pages may use MIDI and capture; nothing else may ask for anything.
   const ours = (url) => typeof url === 'string' && url.startsWith(ORIGIN + '/')
   const allowed = new Set(['midi', 'midiSysex', 'media', 'display-capture', 'speaker-selection'])
+  // Spotify's player lives in its own frame and needs one thing only: protected playback.
+  const drm = (permission, url) =>
+    permission === 'mediaKeySystem' && (url === ORIGIN || ours(url) || String(url).startsWith('https://sdk.scdn.co'))
   ses.setPermissionRequestHandler((wc, permission, callback, details) => {
-    callback(ours(details.requestingUrl || wc.getURL()) && allowed.has(permission))
+    const url = details.requestingUrl || wc.getURL()
+    callback(drm(permission, url) || (ours(url) && allowed.has(permission)))
   })
-  ses.setPermissionCheckHandler((_wc, permission, origin) => (origin === ORIGIN || ours(origin)) && allowed.has(permission))
+  ses.setPermissionCheckHandler(
+    (_wc, permission, origin) => drm(permission, origin) || ((origin === ORIGIN || ours(origin)) && allowed.has(permission)),
+  )
 
   ses.setDisplayMediaRequestHandler((request, callback) => {
     const target = pendingCapture
@@ -313,11 +324,65 @@ app.whenReady().then(async () => {
     }
   })
   ipcMain.handle('vx:stems-available', () => true)
+  setupMusicFolder({ app, dialog, ipcMain, win })
+  setupDownloads({ app, ipcMain, net, shell, win })
   // New versions from GitHub: checked, downloaded and installed when the DJ restarts (see updater.cjs).
   const updater = setupUpdater(win)
   ipcMain.handle('vx:update-state', (event) => (event.sender === win.webContents ? updater.state() : null))
   ipcMain.handle('vx:update-check', (event) => event.sender === win.webContents && updater.check(true))
   ipcMain.handle('vx:update-install', (event) => event.sender === win.webContents && updater.installNow())
+  ipcMain.handle('vx:update-download', (event) => event.sender === win.webContents && updater.fetch())
+
+  // Spotify login in its own window: a wrong Client ID or redirect shows Spotify's error there (and the
+  // app says what it was), never in place of the app. Resolves with the ?code= / ?error= it came back with.
+  let spotifyAuth = null
+  ipcMain.handle('vx:spotify-auth', async (event, url, redirect) => {
+    if (event.sender !== win.webContents) return { error: 'refused' }
+    if (typeof url !== 'string' || !url.startsWith('https://accounts.spotify.com/authorize?')) return { error: 'refused' }
+    if (typeof redirect !== 'string' || !redirect.startsWith(ORIGIN + '/')) return { error: 'refused' }
+    if (spotifyAuth && !spotifyAuth.isDestroyed()) spotifyAuth.close()
+    const auth = new BrowserWindow({
+      parent: win,
+      width: 520,
+      height: 760,
+      title: 'Connect Spotify',
+      backgroundColor: '#121212',
+      autoHideMenuBar: true,
+      webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
+    })
+    spotifyAuth = auth
+    return await new Promise((resolve) => {
+      let done = false
+      const finish = (result) => {
+        if (done) return
+        done = true
+        if (!auth.isDestroyed()) auth.close()
+        resolve(result)
+      }
+      const back = (e, target) => {
+        if (!String(target).startsWith(redirect)) return
+        e.preventDefault()
+        const q = new URL(target).searchParams
+        finish(q.get('code') ? { code: q.get('code') } : { error: q.get('error') || 'refused' })
+      }
+      auth.webContents.on('will-redirect', back)
+      auth.webContents.on('will-navigate', back)
+      // Spotify answers a bad Client ID / redirect with a plain error page instead of redirecting back.
+      auth.webContents.on('did-finish-load', async () => {
+        try {
+          const text = await auth.webContents.executeJavaScript('document.body ? document.body.innerText.slice(0, 400) : ""')
+          if (/INVALID_CLIENT/i.test(text)) finish({ error: /redirect/i.test(text) ? 'invalid_redirect' : 'invalid_client' })
+        } catch {
+          /* page went away */
+        }
+      })
+      auth.webContents.on('did-fail-load', (_e, code, desc, failedUrl, isMain) => {
+        if (isMain && code !== -3) finish({ error: 'network: ' + desc })
+      })
+      auth.on('closed', () => finish({ error: 'closed' }))
+      auth.loadURL(url).catch(() => undefined)
+    })
+  })
   updater.start()
   // Phone as a controller (Ajustes › Celular): a server on the local Wi-Fi, off until the DJ turns it on.
   const remote = createRemote({

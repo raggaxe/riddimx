@@ -184,29 +184,8 @@ export function DeckView({ deck, other }: { deck: Deck; other: Deck }) {
 
   // One line at most, most important first.
   let message: React.ReactNode = null
-  if (s.error) {
-    message = (
-      <p className="deck-msg error">
-        {s.error}
-        {s.blocked && (
-          <>
-            {' '}
-            <a
-              className="link"
-              target="_blank"
-              rel="noreferrer"
-              href={
-                'https://www.youtube.com/results?search_query=' +
-                encodeURIComponent((/^YouTube [\w-]+$/.test(s.title) ? '' : s.title + ' ') + 'audio')
-              }
-            >
-              Look for another version
-            </a>
-          </>
-        )}
-      </p>
-    )
-  } else if (s.syncOn && (s.anchor === null || other.get().anchor === null)) {
+  // Errors go to a toast (toastWatch); this line keeps the deck's own hints.
+  if (s.syncOn && (s.anchor === null || other.get().anchor === null)) {
     const missing = s.anchor === null ? s : other.get()
     message = (
       <p className="deck-msg">

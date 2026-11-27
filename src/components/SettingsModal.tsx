@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { midi } from '../midi'
 import { useStore } from '../store'
-import { ui, type SettingsPage } from '../ui'
+import { FEATURES, ui, type SettingsPage } from '../ui'
 import { AiPanel } from './AiPanel'
 import { AudioPanel } from './AudioPanel'
 import { DubPanel } from './DubPanel'
@@ -12,7 +12,7 @@ import { SettingsPanel } from './SettingsPanel'
 import { PhonePanel } from './PhonePanel'
 import { remote } from '../remote'
 
-const PAGES: { id: SettingsPage; label: string; hint: string }[] = [
+const ALL_PAGES: { id: SettingsPage; label: string; hint: string }[] = [
   { id: 'geral', label: 'General', hint: 'Size, colours, jog and track' },
   { id: 'decks', label: 'Decks', hint: 'DUB and ◀◀ Rewind buttons' },
   { id: 'audio', label: 'Audio interface', hint: 'Master output, headphones, mic input' },
@@ -21,6 +21,8 @@ const PAGES: { id: SettingsPage; label: string; hint: string }[] = [
   { id: 'contas', label: 'Accounts', hint: 'Spotify' },
   { id: 'ia', label: 'AI', hint: 'AI stems' },
 ]
+// Accounts only holds Spotify: away while Spotify is.
+const PAGES = ALL_PAGES.filter((p) => p.id !== 'contas' || FEATURES.spotify)
 
 /**
  * Ajustes: a window in front of the app, with its pages on the left. Closes with ×, Esc or a click
@@ -90,7 +92,7 @@ export function SettingsModal() {
               </div>
             )}
             {page === 'celular' && <PhonePanel />}
-            {page === 'contas' && <SpotifyAccount />}
+            {page === 'contas' && FEATURES.spotify && <SpotifyAccount />}
             {page === 'ia' && <AiPanel />}
           </div>
         </section>

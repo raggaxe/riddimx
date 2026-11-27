@@ -13,7 +13,17 @@ class Updates extends Store<UpdateState> {
     void desktop?.updateCheck?.()
   }
 
-  /** Quits and opens the new version. */
+  /**
+   * The DJ said yes: on the Mac the new version downloads (and is checked) here; elsewhere its release
+   * page opens to download it.
+   */
+  download(): void {
+    const { url } = this.state
+    if (/Mac/.test(navigator.userAgent)) void desktop?.updateDownload?.()
+    else if (url?.startsWith('https://github.com/')) window.open(url, '_blank')
+  }
+
+    /** Quits and opens the new version. */
   install(): void {
     void desktop?.updateInstall?.()
   }

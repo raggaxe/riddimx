@@ -2,7 +2,7 @@ import { Store, clamp } from './store'
 import { settings } from './settings'
 import { desktop } from './engine/ytremote'
 
-export type Tab = 'library' | 'sampler' | 'dubbox' | 'echo' | 'voice' | 'plugin' | 'master' | 'spotify'
+export type Tab = 'library' | 'sampler' | 'dubbox' | 'echo' | 'voice' | 'plugin' | 'master' | 'spotify' | 'download'
 
 /** Pages of the Ajustes window (a modal over the app). */
 export type SettingsPage = 'geral' | 'decks' | 'audio' | 'midi' | 'contas' | 'celular' | 'ia'
@@ -98,8 +98,15 @@ export function defaultLayout(): Layout {
  */
 export type UiMode = 'simple' | 'pro'
 const LS_MODE = 'vx_ui_mode'
+/**
+ * Put away for now: Spotify (its protected audio needs the app signed by castLabs EVS before it plays
+ * on the decks) and Download. Their code stays; true brings each back.
+ */
+export const FEATURES = { spotify: false, download: false }
+/** Tabs that exist in this build. */
+export const shownTab = (t: Tab): boolean => (t === 'spotify' ? FEATURES.spotify : t === 'download' ? FEATURES.download : true)
 /** Tabs shown in Simple mode. */
-export const SIMPLE_TABS: Tab[] = ['library', 'sampler', 'spotify']
+export const SIMPLE_TABS: Tab[] = (['library', 'sampler', 'spotify', 'download'] as Tab[]).filter(shownTab)
 
 function savedMode(): UiMode {
   try {
@@ -128,9 +135,9 @@ class Ui extends Store<{ tab: Tab; layout: Layout; settings: SettingsPage | null
   constructor() {
     // ?tab=plugin opens that tab at start (handy for links and screenshots).
     const asked = new URLSearchParams(location.search).get('tab') as Tab | null
-    const TABS: Tab[] = ['library', 'sampler', 'dubbox', 'echo', 'voice', 'plugin', 'master', 'spotify']
+    const TABS: Tab[] = ['library', 'sampler', 'dubbox', 'echo', 'voice', 'plugin', 'master', 'spotify', 'download']
     const mode = new URLSearchParams(location.search).get('mode') === 'pro' ? 'pro' : savedMode()
-    const tab = asked && TABS.includes(asked) && (mode === 'pro' || SIMPLE_TABS.includes(asked)) ? asked : 'library'
+    const tab = asked && TABS.includes(asked) && shownTab(asked) && (mode === 'pro' || SIMPLE_TABS.includes(asked)) ? asked : 'library'
     applyScale()
     const prefs = savedPrefs()
     const centre = savedCentre()
@@ -148,6 +155,7 @@ class Ui extends Store<{ tab: Tab; layout: Layout; settings: SettingsPage | null
   }
 
   open(tab: Tab): void {
+    if (!shownTab(tab)) return
     // A unit asked from Simple mode (e.g. the Dub Box's settings) switches to Pro so it can show.
     if (this.state.mode === 'simple' && !SIMPLE_TABS.includes(tab)) this.setMode('pro')
     this.set({ tab })

@@ -4,6 +4,9 @@ import { parseYouTubeId } from './engine/youtube'
 import { parseSpotifyTrack } from './engine/spotify'
 import { bpmStore } from './engine/bpm'
 import { desktop } from './engine/ytremote'
+import { knownVerdict, probeYouTube } from './engine/ytprobe'
+import { toast } from './toasts'
+import { FEATURES } from './ui'
 import { mixer } from './engine/mixer'
 import { detectBpm } from './engine/analyze'
 import { detectKey } from './engine/key'
@@ -19,6 +22,8 @@ export interface Entry {
   file?: File // local only, once opened in this session
   path?: string // local, desktop app: where the file is on disk, so it can be opened again next time
   ref?: string // YouTube video id / Spotify track id
+  linked?: string // Spotify: id of the DJ's own file of this track, which goes on the deck instead
+  noAutoLink?: boolean // the DJ unlinked it: the music folder leaves it alone
   list?: string // the list (folder) it was filed under, if any
   bpm?: number // local files: measured when added
   key?: string // local files: measured when added
@@ -105,6 +110,9 @@ class Library extends Store<LibraryState> {
       stemsUpgrade: [],
     })
     this.regroup()
+    // Already known as blocked: out at once; the others are checked a little after start-up.
+    queueMicrotask(() => this.dropBlocked(this.state.entries.filter((e) => e.kind === 'youtube' && e.ref && knownVerdict(e.ref) === 'blocked')))
+    window.setTimeout(() => void this.sweepYouTube(), 6000)
     // Every file gets its AI stems in the background as soon as it is in the library, and can be loaded
     // as soon as its own are done. Files with stems by an older model stay loadable while they are
     // separated again, after the new ones; failed ones are tried again.
@@ -345,8 +353,12 @@ class Library extends Store<LibraryState> {
   addLink(url: string): Entry | null {
     const yt = parseYouTubeId(url)
     const sp = yt ? null : parseSpotifyTrack(url)
+    if (sp && !FEATURES.spotify) {
+      this.set({ error: "Spotify tracks can't be added for now: paste a YouTube link or drop an audio file." })
+      return null
+    }
     if (!yt && !sp) {
-      this.set({ error: 'Link not recognised. Use a YouTube video link or a Spotify track link.' })
+      this.set({ error: FEATURES.spotify ? 'Link not recognised. Use a YouTube video link or a Spotify track link.' : 'Link not recognised. Use a YouTube video link.' })
       return null
     }
     const kind = yt ? 'youtube' : 'spotify'
@@ -366,6 +378,61 @@ class Library extends Store<LibraryState> {
     this.commit([...this.state.entries, entry])
     if (yt) void this.fetchTitle(entry)
     return entry
+  }
+
+  // ───────────────────────── the DJ's own file of a Spotify track ─────────────────────────
+
+  /** Title, artist and length of a Spotify track, known before it ever reaches a deck. */
+  describe(id: string, title: string, artist: string, duration: number): void {
+    const entry = this.byId(id)
+    if (!entry || entry.kind !== 'spotify' || !/^Spotify [A-Za-z0-9]{22}$/.test(entry.title)) return
+    this.patchEntry(id, { title, artist, duration })
+    this.lookup({ ...entry, title, artist })
+  }
+
+  /** The file linked to a Spotify entry, if it is still in the library and can be reached. */
+  localFor(entry: Entry): Entry | undefined {
+    const own = entry.kind === 'spotify' && entry.linked ? this.byId(entry.linked) : undefined
+    return own && this.reachable(own) ? own : undefined
+  }
+
+  /** A file on disk (a download): added once, measured and split like a dropped file. */
+  addPath(path: string): Entry {
+    const known = this.state.entries.find((e) => e.kind === 'local' && e.path === path)
+    if (known) return known
+    const name = path.split(/[\\/]/).pop()!
+    const entry: Entry = { id: crypto.randomUUID(), kind: 'local', title: name.replace(/\.[^.]+$/, ''), artist: '', path }
+    this.commit([...this.state.entries, entry])
+    this.measure([entry.id])
+    this.separate([entry.id])
+    return entry
+  }
+
+  /** Links a file known by its place on disk (the music folder). */
+  linkPath(id: string, path: string): void {
+    let own = this.state.entries.find((e) => e.kind === 'local' && e.path === path)
+    if (!own) {
+      const name = path.split(/[\\/]/).pop()!
+      own = { id: crypto.randomUUID(), kind: 'local', title: name.replace(/\.[^.]+$/, ''), artist: this.byId(id)?.artist ?? '', path }
+      this.commit([...this.state.entries, own])
+      this.measure([own.id])
+      this.separate([own.id])
+    }
+    this.patchEntry(id, { linked: own.id, noAutoLink: undefined })
+  }
+
+  /** Links a file the DJ picked or dropped. False when it is not an audio file. */
+  linkFile(id: string, file: File): boolean {
+    const path = desktop?.pathOf(file) ?? undefined
+    const own = (path && this.state.entries.find((e) => e.kind === 'local' && e.path === path)) || this.addFiles([file])[0]
+    if (!own) return false
+    this.patchEntry(id, { linked: own.id, noAutoLink: undefined })
+    return true
+  }
+
+  /** Back to playing through Spotify; the file stays in the library. */
+  unlink(id: string): void {
+    this.patchEntry(id, { linked: undefined, noAutoLink: true })
   }
 
   private lookup(e: Entry): void {
@@ -399,6 +466,21 @@ class Library extends Store<LibraryState> {
       if (res.ok) meta = await res.json()
     } catch {
       /* offline: added, checked when it loads */
+    }
+    // oEmbed does not know every block (labels' music often only plays on youtube.com): try it for real.
+    const verdict = await probeYouTube(yt)
+    if (verdict === 'blocked') {
+      this.set({ checking: false })
+      toast.error(
+        'Not added to the library',
+        (meta?.title ? '"' + meta.title + '": its' : "This video's") + " owner only lets it play on youtube.com, so it can't play in RiddimX.",
+        { key: 'yt-blocked' },
+      )
+      return null
+    }
+    if (verdict === 'gone') {
+      this.set({ checking: false, error: 'Not added: the video is private, removed or the link is wrong.' })
+      return null
     }
     this.set({ checking: false })
     const entry = this.addLink(url)
@@ -454,6 +536,32 @@ class Library extends Store<LibraryState> {
     })
     queueMicrotask(() => this.regroup()) // a removed version leaves its riddim
     this.commit(this.state.entries.filter((e) => e.id !== id))
+  }
+
+  /** YouTube links whose owner only allows youtube.com: out of the library, with one message. */
+  dropBlocked(entries: Entry[]): void {
+    if (!entries.length) return
+    const ids = new Set(entries.map((e) => e.id))
+    entries.forEach((e) => this.remove(e.id))
+    const named = entries.filter((e) => !/^YouTube [\w-]+$/.test(e.title)).map((e) => '"' + e.title + '"')
+    const what = entries.length === 1 ? (named[0] ?? 'A YouTube video') : entries.length + ' YouTube videos' + (named.length ? ' (' + named.slice(0, 3).join(', ') + (named.length > 3 ? '…' : '') + ')' : '')
+    toast.error(
+      entries.length === 1 ? 'Removed from the library' : entries.length + ' removed from the library',
+      what + (entries.length === 1 ? ": its owner only lets it play on youtube.com, so it can't play in RiddimX." : ": their owners only let them play on youtube.com, so they can't play in RiddimX."),
+      { key: 'yt-blocked' },
+    )
+    this.set({ onDeck: Object.fromEntries(Object.entries(this.state.onDeck).filter(([, id]) => !ids.has(id))) })
+  }
+
+  /** Links saved before this check existed: each one tried once, quietly, the blocked ones taken out. */
+  private async sweepYouTube(): Promise<void> {
+    const todo = this.state.entries.filter((e) => e.kind === 'youtube' && e.ref && !knownVerdict(e.ref))
+    const blocked: Entry[] = []
+    for (const e of todo) {
+      if ((await probeYouTube(e.ref!)) === 'blocked') blocked.push(e)
+    }
+    const still = blocked.filter((e) => this.byId(e.id) && !Object.values(this.state.onDeck).includes(e.id))
+    this.dropBlocked(still)
   }
 
   private rename(id: string, title: string, artist: string): void {
@@ -518,6 +626,16 @@ class Library extends Store<LibraryState> {
   }
 
   load(entry: Entry, deck: Deck): void {
+    // A Spotify track the DJ has a file of: the file goes on the deck, with BPM, waveform and stems.
+    const own = this.localFor(entry)
+    if (own) {
+      this.load(own, deck)
+      return
+    }
+    if (entry.kind === 'youtube' && entry.ref && knownVerdict(entry.ref) === 'blocked') {
+      this.dropBlocked([entry])
+      return
+    }
     if (this.unreadable(entry)) {
       const error = `"${entry.title}" can't be played: the file is damaged or not an audio format the app reads.`
       this.set({ error })

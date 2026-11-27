@@ -14,6 +14,7 @@ import { mixer } from '../engine/mixer'
 import { SFX } from '../engine/soundsystem'
 import { useStore } from '../store'
 import { Knob } from './Knob'
+import { useToastError } from './Toaster'
 
 type Numeric = keyof typeof PATCH_LIMITS
 
@@ -183,6 +184,7 @@ export function DubBoxPanel() {
   })
   const [over, setOver] = useState(false)
   const [failed, setFailed] = useState(false)
+  useToastError('dubbox-file', 'Dub Box', failed && "Couldn't read that audio file.")
   const picker = useRef<HTMLInputElement>(null)
   const set = (change: Partial<Patch>) => dubBox.updatePatch(change)
   const open = (next: Page) => {
@@ -329,7 +331,6 @@ export function DubBoxPanel() {
             >
               Your file…
             </button>
-            {failed && <span className="deck-msg error">Couldn't read that audio file.</span>}
             <input ref={picker} type="file" accept="audio/*" hidden onChange={(e) => void loadFile(e.target.files?.[0])} />
           </div>
         )}

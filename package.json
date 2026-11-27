@@ -1,7 +1,7 @@
 {
   "name": "virtualx",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.6.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,10 +9,10 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "desktop": "electron electron/main.cjs",
-    "package": "npm run build && electron-packager . RiddimX --platform=darwin --arch=arm64 --out=release --overwrite --icon=electron/icon.icns --extend-info=electron/info-extra.plist --app-bundle-id=com.riddimx.app --extra-resource=electron/bin/arm64/whisper-cli --extra-resource=electron/bin/WHISPER-LICENSE.txt --ignore='^/(electron/bin|src|public|release|brand|tools|node_modules|\\.venv-stems|\\.claude|index\\.html|analyzer\\.html|vite\\.config\\.ts|tsconfig.*|README.*|scripts|release-notes\\.md)' && codesign --force --sign - release/RiddimX-darwin-arm64/RiddimX.app/Contents/Resources/whisper-cli && codesign --force --deep --sign - release/RiddimX-darwin-arm64/RiddimX.app",
+    "package": "npm run build && electron-packager . RiddimX --electron-version=45.3.1 --platform=darwin --arch=arm64 --out=release --overwrite --icon=electron/icon.icns --extend-info=electron/info-extra.plist --app-bundle-id=com.riddimx.app --extra-resource=electron/bin/arm64/whisper-cli --extra-resource=electron/bin/WHISPER-LICENSE.txt --ignore='^/(electron/bin|src|public|release|brand|tools|node_modules|\\.venv-stems|\\.claude|index\\.html|analyzer\\.html|vite\\.config\\.ts|tsconfig.*|README.*|scripts|release-notes\\.md)' && codesign --force --sign - release/RiddimX-darwin-arm64/RiddimX.app/Contents/Resources/whisper-cli && codesign --force --deep --sign - release/RiddimX-darwin-arm64/RiddimX.app",
     "release": "sh scripts/release.sh",
-    "package:intel": "npm run build && electron-packager . RiddimX --platform=darwin --arch=x64 --out=release --overwrite --icon=electron/icon.icns --extend-info=electron/info-extra.plist --app-bundle-id=com.riddimx.app --extra-resource=electron/bin/x64/whisper-cli --extra-resource=electron/bin/WHISPER-LICENSE.txt --ignore='^/(electron/bin|src|public|release|brand|tools|node_modules|\\.venv-stems|\\.claude|index\\.html|analyzer\\.html|vite\\.config\\.ts|tsconfig.*|README.*|scripts|release-notes\\.md)' && codesign --force --sign - release/RiddimX-darwin-x64/RiddimX.app/Contents/Resources/whisper-cli && codesign --force --deep --sign - release/RiddimX-darwin-x64/RiddimX.app",
-    "package:win": "npm run build && electron-packager . RiddimX --platform=win32 --arch=x64 --out=release --overwrite --ignore='^/(electron/bin|src|public|release|brand|tools|node_modules|\\.venv-stems|\\.claude|index\\.html|analyzer\\.html|vite\\.config\\.ts|tsconfig.*|README.*|scripts|release-notes\\.md)'",
+    "package:intel": "npm run build && electron-packager . RiddimX --electron-version=45.3.1 --platform=darwin --arch=x64 --out=release --overwrite --icon=electron/icon.icns --extend-info=electron/info-extra.plist --app-bundle-id=com.riddimx.app --extra-resource=electron/bin/x64/whisper-cli --extra-resource=electron/bin/WHISPER-LICENSE.txt --ignore='^/(electron/bin|src|public|release|brand|tools|node_modules|\\.venv-stems|\\.claude|index\\.html|analyzer\\.html|vite\\.config\\.ts|tsconfig.*|README.*|scripts|release-notes\\.md)' && codesign --force --sign - release/RiddimX-darwin-x64/RiddimX.app/Contents/Resources/whisper-cli && codesign --force --deep --sign - release/RiddimX-darwin-x64/RiddimX.app",
+    "package:win": "npm run build && electron-packager . RiddimX --electron-version=45.3.1 --platform=win32 --arch=x64 --out=release --overwrite --ignore='^/(electron/bin|src|public|release|brand|tools|node_modules|\\.venv-stems|\\.claude|index\\.html|analyzer\\.html|vite\\.config\\.ts|tsconfig.*|README.*|scripts|release-notes\\.md)'",
     "relay:sync": "cp electron/remote.html server/relay/remote.html"
   },
   "dependencies": {
@@ -26,7 +26,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
-    "electron": "^45.3.1",
+    "electron": "github:castlabs/electron-releases#v45.2.1+wvcus",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"
   },

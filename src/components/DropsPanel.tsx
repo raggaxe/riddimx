@@ -17,6 +17,7 @@ import { SFX } from '../engine/soundsystem'
 import { useStore } from '../store'
 import { Knob } from './Knob'
 import { ClipPicker } from './ClipPicker'
+import { useToastError } from './Toaster'
 
 const pct = (v: number) => Math.round(v * 100) + '%'
 
@@ -107,6 +108,7 @@ export function DropsPanel() {
   const [drop, setDrop] = useState<AudioBuffer | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  useToastError('drops', 'Drops', error)
   const [playing, setPlaying] = useState(false)
   const [recording, setRecording] = useState(false)
   const [pad, setPad] = useState(() =>
@@ -565,7 +567,6 @@ export function DropsPanel() {
             WAV
           </button>
         </form>
-        {error && <p className="deck-msg error">{error}</p>}
       </section>
 
       {/* My drops: every saved drop, ready for any set */}

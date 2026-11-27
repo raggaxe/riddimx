@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Store } from '../store'
+import { desktop } from './ytremote'
 
 const LS = { client: 'vx_sp_client', token: 'vx_sp_token', verifier: 'vx_sp_verifier' }
 const SCOPES = 'streaming user-read-email user-read-private user-modify-playback-state user-read-playback-state'
@@ -44,6 +45,16 @@ export function parseSpotifyTrack(input: string): string | null {
   return m ? m[1] : null
 }
 
+/** What went wrong at Spotify's login, said so the DJ knows what to fix. */
+function loginError(code: string, redirect: string): string {
+  if (code === 'invalid_client') return "Spotify doesn't know this Client ID. Copy it again from your app's page at developer.spotify.com."
+  if (code === 'invalid_redirect')
+    return 'Spotify refused the return address. In your app at developer.spotify.com, add this Redirect URI exactly: ' + redirect
+  if (code === 'access_denied') return 'Spotify login cancelled.'
+  if (code.startsWith('network')) return "Couldn't reach Spotify. Check the internet connection and try again."
+  return 'Spotify login refused (' + code + ').'
+}
+
 class SpotifyService extends Store<SpotifyState> {
   player: any = null
   deviceId = ''
@@ -73,8 +84,15 @@ class SpotifyService extends Store<SpotifyState> {
   /** Authorization Code + PKCE: no client secret, runs fully in the browser. */
   async login(): Promise<void> {
     const { clientId } = this.state
+    this.set({ error: null }) // the same mistake twice still says so twice
     if (!clientId) {
-      this.set({ error: 'Client ID missing' })
+      this.set({ error: 'Paste the Client ID of the app you created at developer.spotify.com first.' })
+      return
+    }
+    if (!/^[0-9a-f]{32}$/i.test(clientId)) {
+      this.set({
+        error: "That isn't a Client ID: it is 32 letters and numbers, on your app's page at developer.spotify.com (Settings › Basic Information). Not the Client Secret.",
+      })
       return
     }
     const verifier = base64url(crypto.getRandomValues(new Uint8Array(64)))
@@ -88,7 +106,15 @@ class SpotifyService extends Store<SpotifyState> {
       code_challenge: base64url(new Uint8Array(digest)),
       scope: SCOPES,
     })
-    location.href = 'https://accounts.spotify.com/authorize?' + params.toString()
+    const url = 'https://accounts.spotify.com/authorize?' + params.toString()
+    if (!desktop?.spotifyAuth) {
+      location.href = url // browser: back to this page with ?code=
+      return
+    }
+    // Desktop app: in its own window, so a wrong Client ID never replaces the app.
+    const answer = await desktop.spotifyAuth(url, this.redirectUri)
+    if (answer.code) await this.finishLogin(answer.code)
+    else if (answer.error !== 'closed') this.set({ error: loginError(answer.error || 'refused', this.redirectUri) })
   }
 
   /** Call once at startup: completes the login if we were redirected back with ?code=. */
@@ -99,9 +125,13 @@ class SpotifyService extends Store<SpotifyState> {
     if (!code && !error) return
     history.replaceState({}, '', location.pathname)
     if (error || !code) {
-      this.set({ error: 'Spotify login refused: ' + error })
+      this.set({ error: loginError(error || 'refused', this.redirectUri) })
       return
     }
+    await this.finishLogin(code)
+  }
+
+  private async finishLogin(code: string): Promise<void> {
     try {
       await this.requestToken({
         grant_type: 'authorization_code',
@@ -157,12 +187,22 @@ class SpotifyService extends Store<SpotifyState> {
   }
 
   async api(method: string, path: string, body?: unknown): Promise<any> {
-    const token = await this.getToken()
-    const res = await fetch('https://api.spotify.com/v1' + path, {
-      method,
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    })
+    const call = async (): Promise<Response> =>
+      fetch('https://api.spotify.com/v1' + path, {
+        method,
+        headers: { Authorization: 'Bearer ' + (await this.getToken()), 'Content-Type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      })
+    let res = await call()
+    if (res.status === 401 && this.token?.refresh_token) {
+      // A token Spotify no longer takes (e.g. issued just as the app was set up): a fresh one, once.
+      await this.requestToken({ grant_type: 'refresh_token', refresh_token: this.token.refresh_token, client_id: this.state.clientId })
+      res = await call()
+    } else if (res.status === 429) {
+      const wait = Math.min(5, Number(res.headers.get('Retry-After')) || 1)
+      await new Promise((r) => window.setTimeout(r, wait * 1000))
+      res = await call()
+    }
     const text = await res.text()
     let json: any = null
     try {
@@ -179,7 +219,15 @@ class SpotifyService extends Store<SpotifyState> {
     if (!this.playerPromise) {
       this.playerPromise = new Promise<void>((resolve, reject) => {
         const w = window as any
+        // No answer at all (no "ready", no error) must not leave the deck loading forever.
+        const timer = window.setTimeout(
+          () => fail("Spotify's player didn't start. Check the internet connection and that the account has Premium, then load the track again."),
+          20000,
+        )
         const fail = (message: string) => {
+          window.clearTimeout(timer)
+          this.player?.disconnect?.()
+          this.player = null
           this.playerPromise = null
           this.set({ ready: false, error: message })
           reject(new Error(message))
@@ -193,6 +241,7 @@ class SpotifyService extends Store<SpotifyState> {
             },
           })
           player.addListener('ready', ({ device_id }: any) => {
+            window.clearTimeout(timer)
             this.deviceId = device_id
             this.set({ ready: true, error: null })
             resolve()
@@ -200,7 +249,9 @@ class SpotifyService extends Store<SpotifyState> {
           player.addListener('not_ready', () => this.set({ ready: false }))
           player.addListener('initialization_error', (e: any) => fail('Spotify: ' + e.message))
           player.addListener('authentication_error', (e: any) => fail('Spotify auth: ' + e.message))
-          player.addListener('account_error', () => fail('Spotify Premium required'))
+          player.addListener('account_error', () => fail('Spotify only plays on the decks with a Premium account.'))
+          player.addListener('playback_error', (e: any) => this.set({ error: "Spotify couldn't play this track: " + (e?.message || 'unknown error') }))
+          player.addListener('autoplay_failed', () => this.set({ error: 'Spotify needs a click to start: press PLAY on the deck.' }))
           player.addListener('player_state_changed', (s: any) => this.owner?.onSpotifyState(s))
           this.player = player
           void player.connect()
