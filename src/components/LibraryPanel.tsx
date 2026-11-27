@@ -4,6 +4,7 @@ import { deckA, deckB, type Deck } from '../engine/deck'
 import { ENTRY_DRAG, RIDDIMS_ON, library, type Entry } from '../library'
 import { useStore } from '../store'
 import { FEATURES } from '../ui'
+import { BrowseGrid, GroupHeader, artistsOf, albumKeyOf, inGroup, type BrowseMode, type Group } from './LibraryBrowse'
 import { browse, takeBrowse } from '../browse'
 import { bpmStore } from '../engine/bpm'
 import { camelot, harmonic, keyStore } from '../engine/key'
@@ -23,8 +24,8 @@ const SMART: { id: Smart; label: string; hint: string }[] = [
   },
   { id: 'tempo', label: 'Same tempo', hint: 'Tempo within 6% of the deck on air (or half / double)' },
   { id: 'key', label: 'Compatible key', hint: 'Key that mixes with the deck on air (Camelot wheel)' },
-  { id: 'fresh', label: 'Not played', hint: 'Not played yet this session' },
-  { id: 'played', label: 'Played', hint: 'Already loaded on a deck this session, in the order they played' },
+  { id: 'fresh', label: 'Not played', hint: 'Not played yet in this set' },
+  { id: 'played', label: 'Played', hint: 'Already played on a deck in this set (✓), in the order they played' },
 ]
 
 type Column = 'title' | 'artist' | 'bpm' | 'key' | 'duration' | 'kind'
@@ -55,7 +56,7 @@ export function LibraryPanel() {
   // The search bar lives on the tab row (App's #tab-tools), so the list gets that row's height.
   const [slot, setSlot] = useState<HTMLElement | null>(null)
   useEffect(() => setSlot(document.getElementById('tab-tools')), [])
-  const { entries, lists, error, analyzing, onDeck, played, riddims, riddimView, separating, sepProgress, checking } = useStore(library)
+  const { entries, lists, error, analyzing, onDeck, played, playedAt, riddims, riddimView, separating, sepProgress, checking } = useStore(library)
   // Files that cannot be loaded yet (those separated again with the new model play meanwhile, not counted).
   const blocked = entries.filter((e) => library.waitingStems(e)).length
   const riddim = riddims.find((r) => r.key === riddimView) ?? null
@@ -66,6 +67,9 @@ export function LibraryPanel() {
   const [list, setList] = useState<string | null>(null) // null = every track
   // Smart lists, worked out from what is playing now: they need nothing set up.
   const [smart, setSmart] = useState<Smart | null>(null)
+  // Artists / Albums: cards first; one opened shows its tracks in the normal table.
+  const [view, setView] = useState<BrowseMode | null>(null)
+  const [group, setGroup] = useState<Group | null>(null)
   const [naming, setNaming] = useState<string | null>(null) // new list being typed
   const lyr = useStore(lyrics)
   const [query, setQuery] = useState('')
@@ -100,6 +104,7 @@ export function LibraryPanel() {
       : list === null
         ? entries
         : entries.filter((e) => e.list === list)
+    if (group && !riddim) rows = rows.filter((e) => inGroup(e, group))
     // Smart lists (on top of the chosen list): the decks themselves are never offered.
     if (smart) {
       const now = new Set(Object.values(onDeck))
@@ -148,8 +153,10 @@ export function LibraryPanel() {
       return (p < q ? -1 : 1) * dir
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, list, query, sort, bpm, analyzing, lyr.lines, riddim, smart, played, onDeck, liveBpm, liveKey])
+  }, [entries, list, query, sort, bpm, analyzing, lyr.lines, riddim, smart, played, onDeck, liveBpm, liveKey, group])
 
+  const artistCount = useMemo(() => new Set(entries.flatMap((e) => artistsOf(e).map((n) => n.toLowerCase()))).size, [entries])
+  const albumCount = useMemo(() => new Set(entries.map(albumKeyOf).filter(Boolean)).size, [entries])
   const total = shown.reduce((sum, e) => sum + (e.duration ?? 0), 0)
 
   const sortBy = (by: Column) => {
@@ -346,14 +353,34 @@ export function LibraryPanel() {
       <div className="lib-body">
         <nav className="lib-lists" aria-label="Lists">
           <button
-            className={'lib-list' + (list === null && !riddim ? ' active' : '')}
+            className={'lib-list' + (list === null && !riddim && !view ? ' active' : '')}
             onClick={() => {
               setList(null)
+              setView(null)
+              setGroup(null)
               library.showRiddim(null)
             }}
           >
             All <i>{entries.length}</i>
           </button>
+          {(['artists', 'albums'] as const).map((m) => (
+            <button
+              key={m}
+              className={'lib-list browse' + (view === m && !riddim ? ' active' : '')}
+              aria-pressed={view === m}
+              onClick={() => {
+                setList(null)
+                setSmart(null)
+                setGroup(null)
+                setView(m)
+                library.showRiddim(null)
+              }}
+              title={m === 'artists' ? 'Your tracks by artist' : 'Your tracks by album'}
+            >
+              {m === 'artists' ? 'Artists' : 'Albums'}
+              <i>{m === 'artists' ? artistCount : albumCount}</i>
+            </button>
+          ))}
           <h6 className="lib-smart-head" title={live ? 'Compared with deck ' + (live === a ? 'A' : 'B') : 'Get a track playing'}>
             Smart{live ? ' · deck ' + (live === a ? 'A' : 'B') : ''}
           </h6>
@@ -363,13 +390,26 @@ export function LibraryPanel() {
               className={'lib-list smart' + (smart === m.id ? ' active' : '')}
               aria-pressed={smart === m.id}
               disabled={(m.id === 'match' || m.id === 'tempo' || m.id === 'key') && !live}
-              onClick={() => setSmart(smart === m.id ? null : m.id)}
+              onClick={() => {
+                setSmart(smart === m.id ? null : m.id)
+                setView(null)
+                setGroup(null)
+              }}
               title={m.hint}
             >
               {m.label}
               {m.id === 'played' && <i>{played.length}</i>}
             </button>
           ))}
+          {smart === 'played' && played.length > 0 && (
+            <button
+              className="btn small lib-played-clear"
+              onClick={() => window.confirm('Start a new set? The ✓ marks on the played tracks are cleared.') && library.clearPlayed()}
+              title="New set: clear the played marks"
+            >
+              Clear played
+            </button>
+          )}
           <h6 className="lib-smart-head">Lists</h6>
           {lists.map((name) => (
             <div
@@ -385,6 +425,8 @@ export function LibraryPanel() {
               <button
                 onClick={() => {
                   setList(name)
+                  setView(null)
+                  setGroup(null)
                   library.showRiddim(null)
                 }}
               >
@@ -441,7 +483,11 @@ export function LibraryPanel() {
                   <button
                     key={r.key}
                     className={'lib-list riddim' + (riddimView === r.key ? ' active' : '')}
-                    onClick={() => library.showRiddim(r.key)}
+                    onClick={() => {
+                      setView(null)
+                      setGroup(null)
+                      library.showRiddim(r.key)
+                    }}
                     title={'See the ' + r.members.length + ' versions of this riddim'}
                   >
                     {r.name} <i>{r.members.length}</i>
@@ -458,6 +504,7 @@ export function LibraryPanel() {
           onKeyDown={onKeys}
           aria-label="Tracks. Arrows: pick; Enter: load; ← deck A; → deck B"
         >
+          {group && !riddim && <GroupHeader group={group} entries={shown} onBack={() => setGroup(null)} />}
           {riddim && (
             <div className="lib-riddim-bar">
               {renaming === null ? (
@@ -491,7 +538,17 @@ export function LibraryPanel() {
               </button>
             </div>
           )}
-          {shown.length === 0 ? (
+          {view && !group && !riddim ? (
+            <BrowseGrid
+              mode={view}
+              entries={entries}
+              words={words}
+              onOpen={(g) => {
+                setGroup(g)
+                setQuery('')
+              }}
+            />
+          ) : shown.length === 0 && !group ? (
             <p className="empty">
               {entries.length === 0
                 ? 'Empty library. Drag audio files onto the window, or paste a link in the search box next to the tabs.'
@@ -564,6 +621,17 @@ export function LibraryPanel() {
                             {n}
                           </i>
                         ))}
+                        {!deckOn.length && played.includes(entry.id) && (
+                          <i
+                            className="played-mark"
+                            title={'Played' + (playedAt[entry.id] ? ' at ' + new Date(playedAt[entry.id]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}
+                            aria-label="Played"
+                          >
+                            <svg viewBox="0 0 12 12" width="9" height="9" aria-hidden="true">
+                              <path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </i>
+                        )}
                       </td>
                       <td
                         className={'c-title' + (!riddim && library.riddimOf(entry.id) ? ' has-riddim' : '')}

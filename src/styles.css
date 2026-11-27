@@ -22405,3 +22405,200 @@ button.lv-chip {
 .dl-list .row-btn {
   opacity: 1;
 }
+
+/* ── Bottom tabs on short windows: the tab keeps its natural height and the panel scrolls, instead of
+   squeezing its columns on top of each other. Tall enough, it still fills the panel as before. ── */
+.app .bottom .plg2 {
+  height: auto;
+  min-height: 100%;
+  grid-template-rows: minmax(min-content, 1fr) auto;
+  container-type: normal;
+}
+@media (max-height: 820px) {
+  .app .bottom .plg2-dub {
+    gap: 8px;
+  }
+}
+.bottom .panel {
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #3a352c transparent;
+}
+/* Every tab: never shorter than what it holds (it may still fill a taller panel). */
+.app .bottom .panel > * {
+  min-height: min-content;
+}
+/* Dub Box: the editor keeps its height (the panel scrolls); the sound list and the side column keep
+   scrolling on their own and never make the tab taller. */
+.app .bottom .dbp {
+  grid-template-rows: minmax(min-content, 1fr);
+}
+.app .bottom .dbp-main {
+  min-height: min-content;
+}
+.app .bottom .dbp-main > * {
+  flex-shrink: 0;
+}
+.app .bottom .dbp-presets,
+.app .bottom .dbp-side {
+  height: 0;
+  min-height: 100%;
+}
+
+/* Played tracks (like VirtualDJ): a ✓ in the left column and the row dimmed; the time is in its tooltip. */
+.played-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  color: #8f8776;
+  font-style: normal;
+}
+.library tr.played td.c-title::after {
+  content: none;
+}
+.lib-played-clear {
+  margin: 4px 8px 6px;
+  align-self: flex-start;
+}
+.library tr.played td.c-mark {
+  opacity: 1;
+}
+.library tr.played .played-mark {
+  color: #c9c0aa;
+}
+
+/* ── Library: Artists / Albums (cards, like Spotify's library) ── */
+.lb-wrap {
+  padding: 10px 6px 12px;
+}
+.lb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lb-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, scale 150ms ease-out;
+}
+@media (hover: hover) {
+  .lb-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+.lb-card:active {
+  scale: 0.96;
+}
+.lb-card:focus-visible {
+  outline: 2px solid var(--on-c);
+  outline-offset: -2px;
+}
+.lb-art {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  width: 100%;
+  margin-bottom: 5px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: linear-gradient(145deg, #2a2620, #16140f);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+.lb-grid.artists .lb-art,
+.lb-head.artists .lb-art {
+  border-radius: 50%;
+}
+.lb-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  outline: 1px solid rgba(255, 255, 255, 0.1);
+  outline-offset: -1px;
+}
+.lb-art i {
+  color: #8f8776;
+  font-style: normal;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.lb-card b {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lb-card small {
+  overflow: hidden;
+  color: var(--dim);
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lb-missing {
+  margin: 10px 8px 0;
+  color: var(--dim);
+  font-size: 10px;
+}
+.lb-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.lb-head .lb-back {
+  align-self: flex-start;
+}
+.lb-head .lb-art {
+  flex: none;
+  width: 64px;
+  margin: 0;
+}
+.lb-head .lb-art i {
+  font-size: 20px;
+}
+.lb-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.lb-title small {
+  color: var(--dim);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.lb-title b {
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lb-title em {
+  color: var(--dim);
+  font-size: 11px;
+  font-style: normal;
+}
+.lib-list.browse i {
+  font-style: normal;
+}

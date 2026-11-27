@@ -6,6 +6,8 @@ import { bpmStore } from './engine/bpm'
 import { desktop } from './engine/ytremote'
 import { knownVerdict, probeYouTube } from './engine/ytprobe'
 import { toast } from './toasts'
+import { tagsFromName, tagsOf } from './engine/tags'
+import { covers } from './covers'
 import { FEATURES } from './ui'
 import { mixer } from './engine/mixer'
 import { detectBpm } from './engine/analyze'
@@ -30,6 +32,10 @@ export interface Entry {
   duration?: number // seconds (links: once played on a deck)
   riddim?: RiddimPrint | null // local files: what its instrumental sounds like (null = measured, no tempo)
   riddimSolo?: boolean // the DJ said it is not part of the riddim it was grouped in
+  size?: number // local files: bytes, to tell the same file added twice
+  album?: string // local files: from the tags
+  albumArtist?: string // local files: the album's own artist, when the tags give one
+  tagged?: boolean | number // local files: tags read (TAGS = title, artist, album and cover picture)
   stems?: string // local files, desktop app: the model that separated its AI stems, or 'error'; not loadable before either
 }
 
@@ -47,7 +53,8 @@ interface LibraryState {
   checking: boolean // a pasted link is being checked before it is added
   analyzing: string | null // id of the file being measured now
   onDeck: Record<string, string> // deck name → id of the entry last loaded there
-  played: string[] // ids loaded on a deck during this session
+  played: string[] // ids played on a deck (on air) this set, in order
+  playedAt: Record<string, number> // id → when it started playing (ms)
   riddims: Riddim[]
   riddimView: string | null // riddim shown in the library (key), null = the normal lists
   separating: string | null // id of the file whose stems are being separated now
@@ -58,6 +65,32 @@ interface LibraryState {
 
 /** Drag type of a library row being dragged onto a deck (the data is the entry id). */
 export const ENTRY_DRAG = 'application/x-vx-entry'
+
+/** What reading a file's tags gets now (3: title, artist, album, cover and size); older reads are done again once. */
+const TAGS = 3
+
+const LS_PLAYED = 'vx_played'
+/** Played marks last through a restart in the same night; after this long without playing, a new set starts clean. */
+const SET_GAP = 6 * 3600_000
+
+function loadPlayed(): { played: string[]; playedAt: Record<string, number> } {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_PLAYED) || 'null') as { played: string[]; playedAt: Record<string, number> } | null
+    if (!saved?.played?.length) return { played: [], playedAt: {} }
+    const last = Math.max(...Object.values(saved.playedAt ?? {}), 0)
+    return Date.now() - last < SET_GAP ? { played: saved.played, playedAt: saved.playedAt ?? {} } : { played: [], playedAt: {} }
+  } catch {
+    return { played: [], playedAt: {} }
+  }
+}
+
+function savePlayed(played: string[], playedAt: Record<string, number>): void {
+  try {
+    localStorage.setItem(LS_PLAYED, JSON.stringify({ played, playedAt }))
+  } catch {
+    /* kept for this run only */
+  }
+}
 
 const LS_KEY = 'vx_links'
 const LS_LISTS = 'vx_lists'
@@ -101,7 +134,7 @@ class Library extends Store<LibraryState> {
       checking: false,
       analyzing: null,
       onDeck: {},
-      played: [],
+      ...loadPlayed(),
       riddims: [],
       riddimView: null,
       separating: null,
@@ -110,9 +143,19 @@ class Library extends Store<LibraryState> {
       stemsUpgrade: [],
     })
     this.regroup()
+    // The same file on disk listed twice (from before duplicates were checked): the first one stays.
+    queueMicrotask(() => {
+      const seen = new Set<string>()
+      for (const e of [...this.state.entries]) {
+        if (e.kind !== 'local' || !e.path) continue
+        if (seen.has(e.path)) this.dropCopyByPath(e.id)
+        else seen.add(e.path)
+      }
+    })
     // Already known as blocked: out at once; the others are checked a little after start-up.
     queueMicrotask(() => this.dropBlocked(this.state.entries.filter((e) => e.kind === 'youtube' && e.ref && knownVerdict(e.ref) === 'blocked')))
     window.setTimeout(() => void this.sweepYouTube(), 6000)
+    window.setTimeout(() => void this.tagOld(), 4000)
     // Every file gets its AI stems in the background as soon as it is in the library, and can be loaded
     // as soon as its own are done. Files with stems by an older model stay loadable while they are
     // separated again, after the new ones; failed ones are tried again.
@@ -139,6 +182,63 @@ class Library extends Store<LibraryState> {
     if (!this.measuring) void this.drain()
   }
 
+  /** The track on this deck started playing: it counts as played (once; the first time is kept). */
+  markPlayed(deckName: string): void {
+    const id = this.state.onDeck[deckName]
+    if (!id || this.state.played.includes(id) || !this.byId(id)) return
+    this.set({ played: [...this.state.played, id], playedAt: { ...this.state.playedAt, [id]: Date.now() } })
+    savePlayed(this.state.played, this.state.playedAt)
+  }
+
+  /** A new set: nothing counts as played any more. */
+  clearPlayed(): void {
+    this.set({ played: [], playedAt: {} })
+    savePlayed([], {})
+  }
+
+  /** File name without its extension: what a local entry is called until its tags are read. */
+  private static fileTitle(e: Entry): string {
+    const name = e.file?.name ?? e.path?.split(/[\\/]/).pop() ?? ''
+    return name.replace(/\.[^.]+$/, '')
+  }
+
+  /** Title, artist and album from the file's tags, else from an "Artist - Title" name. Never over a name the DJ gave. */
+  private applyTags(entry: Entry, bytes: ArrayBuffer): void {
+    const current = this.byId(entry.id)
+    if (!current) return
+    const fromFile = tagsOf(bytes)
+    const fromName = tagsFromName(Library.fileTitle(current))
+    const untouched = !current.title || current.title === Library.fileTitle(current)
+    const title = untouched ? fromFile.title || (fromFile.artist ? undefined : fromName.title) : undefined
+    const artist = current.artist ? undefined : fromFile.artist || fromName.artist
+    this.patchEntry(entry.id, {
+      size: bytes.byteLength,
+      tagged: TAGS,
+      ...(title ? { title } : {}),
+      ...(artist ? { artist } : {}),
+      ...(fromFile.album && !current.album ? { album: fromFile.album } : {}),
+      ...(fromFile.albumArtist && !current.albumArtist ? { albumArtist: fromFile.albumArtist } : {}),
+    })
+    if (this.dropCopy(entry.id)) return
+    void covers.take(entry.id, bytes)
+  }
+
+  /** Files added before tags were read: each one read once, in the background, a little after start-up. */
+  private async tagOld(): Promise<void> {
+    const todo = this.state.entries.filter((e) => e.kind === 'local' && e.tagged !== TAGS && (e.file || e.path))
+    for (const e of todo) {
+      if (this.measuring) await new Promise((r) => setTimeout(r, 2000))
+      try {
+        const bytes = e.file ? await e.file.arrayBuffer() : e.path && desktop ? (await desktop.readAudio(e.path))?.slice().buffer : null
+        if (bytes) this.applyTags(e, bytes)
+        else this.patchEntry(e.id, { tagged: TAGS })
+      } catch {
+        this.patchEntry(e.id, { tagged: TAGS })
+      }
+      await new Promise((r) => setTimeout(r, 50))
+    }
+  }
+
   private async drain(): Promise<void> {
     this.measuring = true
     while (this.queue.length) {
@@ -153,6 +253,7 @@ class Library extends Store<LibraryState> {
             ? (await desktop.readAudio(entry.path))?.slice().buffer
             : null
         if (bytes) {
+          if (entry.tagged !== TAGS) this.applyTags(entry, bytes) // before decoding: that empties the bytes
           const buffer = await mixer.ctx.decodeAudioData(bytes)
           await new Promise((r) => setTimeout(r, 0))
           const bpm = entry.bpm ?? detectBpm(buffer)
@@ -328,26 +429,98 @@ class Library extends Store<LibraryState> {
     localStorage.setItem(LS_KEY, JSON.stringify(links))
   }
 
+  /**
+   * Adds audio files; one already in the library (same place on disk, or the same file copied
+   * elsewhere: same name and size) is not added again, its entry is returned instead.
+   */
   addFiles(files: Iterable<File>): Entry[] {
     const added: Entry[] = []
+    const result: Entry[] = []
+    const skipped: string[] = []
     for (const file of files) {
       if (!file.type.startsWith('audio/') && !AUDIO_EXT.test(file.name)) continue
-      added.push({
-        id: crypto.randomUUID(),
-        kind: 'local',
-        title: file.name.replace(/\.[^.]+$/, ''),
-        artist: '',
-        file,
-        path: desktop?.pathOf(file) ?? undefined,
-      })
+      const path = desktop?.pathOf(file) ?? undefined
+      const known = this.sameFile(path, file.name, file.size, added)
+      if (known) {
+        // Same file again: it keeps its entry (and gets the file back if it had lost it).
+        if (!known.file && this.byId(known.id)) this.patchEntry(known.id, { file, ...(path && !known.path ? { path } : {}) })
+        result.push(this.byId(known.id) ?? known)
+        skipped.push(known.title)
+        continue
+      }
+      const entry: Entry = { id: crypto.randomUUID(), kind: 'local', title: file.name.replace(/\.[^.]+$/, ''), artist: '', file, path, size: file.size }
+      added.push(entry)
+      result.push(entry)
     }
     if (added.length) {
       this.commit([...this.state.entries, ...added])
       this.measure(added.map((e) => e.id))
       this.separate(added.map((e) => e.id))
     }
-    return added
+    if (skipped.length) {
+      toast.info(
+        skipped.length === 1 ? 'Already in the library' : skipped.length + ' already in the library',
+        skipped.length === 1 ? '"' + skipped[0] + '" is there once: not added again.' : 'Those files are there once: not added again.',
+        { key: 'dup-add' },
+      )
+    }
+    return result
   }
+
+  /** The library's entry for this file, if it is already there: same path, or same file name and size. */
+  private sameFile(path: string | undefined, name: string, size: number | undefined, extra: Entry[] = []): Entry | undefined {
+    const fileName = name.split(/[\\/]/).pop()!.toLowerCase()
+    return [...this.state.entries, ...extra].find(
+      (e) =>
+        e.kind === 'local' &&
+        ((path && e.path === path) ||
+          (size !== undefined && e.size === size && (e.file?.name ?? e.path?.split(/[\\/]/).pop() ?? '').toLowerCase() === fileName)),
+    )
+  }
+
+  /**
+   * Copies that got in before this check: once a file's size is known, a later copy of an earlier entry
+   * leaves the library (the earlier one keeps its list, played mark and stems), with one message.
+   */
+  private dropCopy(id: string): boolean {
+    const e = this.byId(id)
+    if (!e || e.kind !== 'local' || e.size === undefined) return false
+    const nameOf = (x: Entry) => (x.file?.name ?? x.path?.split(/[\\/]/).pop() ?? '').toLowerCase()
+    const other = this.state.entries.find(
+      (x) => x.id !== id && x.kind === 'local' && ((!!x.path && x.path === e.path) || (x.size === e.size && nameOf(x) === nameOf(e))),
+    )
+    if (!other) return false
+    const [keep, drop] = this.state.entries.indexOf(other) < this.state.entries.indexOf(e) ? [other, e] : [e, other]
+    if (Object.values(this.state.onDeck).includes(drop.id)) return false // on a deck now: sorted out next time
+    if (drop.list && !keep.list) this.patchEntry(keep.id, { list: drop.list })
+    this.remove(drop.id)
+    this.copies.push(drop.title)
+    window.clearTimeout(this.copiesTimer)
+    this.copiesTimer = window.setTimeout(() => {
+      const n = this.copies.length
+      toast.info(n === 1 ? 'Duplicate removed' : n + ' duplicates removed', (n === 1 ? '"' + this.copies[0] + '" was' : 'Those tracks were') + ' in the library twice: one copy is kept.', {
+        key: 'dup-clean',
+      })
+      this.copies = []
+    }, 1500)
+    return drop.id === id
+  }
+  private dropCopyByPath(id: string): void {
+    const e = this.byId(id)
+    const first = e && this.state.entries.find((x) => x.kind === 'local' && x.path === e.path)
+    if (!e || !first || first.id === id) return
+    if (e.list && !first.list) this.patchEntry(first.id, { list: e.list })
+    this.remove(id)
+    this.copies.push(e.title)
+    window.clearTimeout(this.copiesTimer)
+    this.copiesTimer = window.setTimeout(() => {
+      const n = this.copies.length
+      toast.info(n === 1 ? 'Duplicate removed' : n + ' duplicates removed', 'One copy of each is kept.', { key: 'dup-clean' })
+      this.copies = []
+    }, 1500)
+  }
+  private copies: string[] = []
+  private copiesTimer = 0
 
   /** Accepts a YouTube or Spotify track link; returns the (new or existing) entry. */
   addLink(url: string): Entry | null {
@@ -530,6 +703,7 @@ class Library extends Store<LibraryState> {
 
   remove(id: string): void {
     this.asked.delete(id)
+    covers.forget(id)
     this.set({
       stemsWaiting: this.state.stemsWaiting.filter((x) => x !== id),
       stemsUpgrade: this.state.stemsUpgrade.filter((x) => x !== id),
@@ -650,10 +824,7 @@ class Library extends Store<LibraryState> {
       if (deck.get().kind === 'none') deck.notice(error)
       return
     }
-    this.set({
-      onDeck: { ...this.state.onDeck, [deck.name]: entry.id },
-      played: this.state.played.includes(entry.id) ? this.state.played : [...this.state.played, entry.id],
-    })
+    this.set({ onDeck: { ...this.state.onDeck, [deck.name]: entry.id } })
     if (entry.kind !== 'local') this.recordLength(entry, deck)
     deck.prepare(entry.title) // loading from now on: a PLAY pressed meanwhile waits for this track
     const onMeta = (title: string, artist: string) => this.rename(entry.id, title, artist)

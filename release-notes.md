@@ -1,20 +1,10 @@
-RiddimX 0.6.1 — messages as toasts, no more YouTube videos that can't play
+RiddimX 0.6.2 — browse by artist and album, played marks, no duplicates
 
-Messages (new)
-- Every error and warning now shows up as a toast in the bottom-right corner, with a close key: decks, audio output, a disconnected audio interface, microphone, MIDI, library, AI install, joining a live session. The red lines inside the panels are gone, so the same error never shows twice.
-- The same subject replaces its old toast instead of stacking up; errors go by themselves after a few seconds and stay while the pointer is over them.
-- A blocked YouTube video on a deck offers FIND ON YOUTUBE; a microphone without permission offers OPEN SETTINGS.
+Library
+- Artists and Albums (new): your tracks as cards, like Spotify's library, with the cover taken from each file. Click a card to see its tracks in the normal list (sort, A / B, drag to a deck all work there).
+- Artist and album now come from the files' own tags (MP3, FLAC, OGG / OPUS, M4A), or from names like "Artist - Title". Tracks already in the library are read once, in the background.
+- Played tracks get a ✓ in the first column, like VirtualDJ, with the time in its tooltip. A track counts as played after a few seconds on air (not just loaded). The marks survive a restart in the same night; Smart › Played has CLEAR PLAYED for a new set.
+- No more duplicates: the same file (or a copy of it elsewhere) is not added twice, and copies already in the library are taken out once, keeping the oldest.
 
-Updates
-- A new version shows as a toast: "What's new" opens these notes, DOWNLOAD fetches it (Mac) or opens its page (Windows), NOT NOW asks again on the next start.
-- On the Mac the update is no longer downloaded without asking: only after DOWNLOAD, with its progress in the toast, then RESTART & UPDATE.
-
-YouTube
-- Videos whose owner only lets them play on youtube.com no longer get into the library: the app tries each pasted link in a hidden, muted player first and says why it was not added.
-- Links already in the library are checked once in the background; the ones that can't play are taken out, with one message listing them.
-
-For now
-- The Spotify tab is put away: Spotify only plays its protected audio inside an app signed for it, which RiddimX is not yet. It comes back when it is.
-
-Fixes
-- Spotify login now opens in its own window, so a wrong Client ID can no longer replace the app with Spotify's error page.
+Screens
+- The bottom tabs scroll when the window is short instead of squeezing their columns on top of each other (FX, Dub Box).

@@ -25,12 +25,15 @@ import { GuestPanel } from './components/GuestPanel'
 import { VoiceTab } from './components/VoiceTab'
 import { Toaster } from './components/Toaster'
 import { startToastWatch } from './toastWatch'
+import { startPlayedWatch } from './playedWatch'
 
 import { SIMPLE_TABS, shownTab, ui, type Tab } from './ui'
 import { padModes } from './padmode'
 
 // Errors, warnings and new versions reach the DJ as toasts.
 startToastWatch()
+// Tracks count as played once they have been on air (the ✓ in the library).
+startPlayedWatch()
 
 export function App() {
   const { tab, layout, mode } = useStore(ui)
